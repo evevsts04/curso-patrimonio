@@ -888,7 +888,8 @@
         // --- Firebase Init ---
         // ATENÇÃO: Para a versão publicada (Vercel), substitua os valores abaixo 
         // pelas credenciais reais do seu projeto no painel do Firebase (Configurações do Projeto).
-        const firebaseConfig = {
+        // Configuração padrão do Firebase
+const defaultFirebaseConfig = {
   apiKey: "AIzaSyCYIHNbK5Hnx6K-qEQSrsCFDYZQ3QKj7vc",
   authDomain: "capacitapatrimonio.firebaseapp.com",
   projectId: "capacitapatrimonio",
@@ -897,9 +898,10 @@
   appId: "1:394627190126:web:c3d656b216336abefe857f"
 };
 
-        const firebaseConfig = typeof __firebase_config !== 'undefined' 
-            ? JSON.parse(__firebase_config) 
-            : productionFirebaseConfig;
+// Usa configuração externa se existir, senão usa a padrão
+const firebaseConfig = typeof __firebase_config !== 'undefined' 
+    ? JSON.parse(__firebase_config) 
+    : defaultFirebaseConfig;
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -1440,28 +1442,28 @@
             }
         };
 
-        function setupFormatToolbar() {
-            const formatBar = document.getElementById('format-toolbar');
-            
-            document.addEventListener('selectionchange', () => {
-                if (!document.body.classList.contains('edit-active')) {
-                    formatBar.style.display = 'none'; return;
-                }
-                const selection = window.getSelection();
-                if (selection.rangeCount > 0 && !selection.isCollapsed) {
-                    const range = selection.getRangeAt(0);
-                    const rect = range.getBoundingClientRect();
-                    // Apenas se o pai for editavel
-                    if(selection.anchorNode.parentElement && selection.anchorNode.parentElement.isContentEditable) {
-                        formatBar.style.display = 'flex';
-                        formatBar.style.top = `${rect.top + window.scrollY - 45}px`;
-                        formatBar.style.left = `${rect.left + (rect.width / 2) - (formatBar.offsetWidth / 2)}px`;
-                    }
-                } else {
-                    formatBar.style.display = 'none';
-                }
-            });
+ function setupFormatToolbar() {
+    const formatBar = document.getElementById('format-toolbar');
+    
+    document.addEventListener('selectionchange', () => {
+        if (!document.body.classList.contains('edit-active')) {
+            formatBar.style.display = 'none'; return;
         }
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0 && !selection.isCollapsed) {
+            const range = selection.getRangeAt(0);
+            const rect = range.getBoundingClientRect();
+            // Apenas se o pai for editavel
+            if(selection.anchorNode.parentElement && selection.anchorNode.parentElement.isContentEditable) {
+                formatBar.style.display = 'flex';
+                formatBar.style.top = `${rect.top + window.scrollY - 45}px`;
+                formatBar.style.left = `${rect.left + (rect.width / 2) - (formatBar.offsetWidth / 2)}px`;
+            }
+        } else {
+            formatBar.style.display = 'none';
+        }
+    });
+}
 
         window.formatText = (command, value = null) => {
             pushHistoryState();
