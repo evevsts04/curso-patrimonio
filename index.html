@@ -886,9 +886,21 @@
         let historyIndex = -1;
 
         // --- Firebase Init ---
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-            // Fallback config if needed outside specific env
-        };
+        // ATENÇÃO: Para a versão publicada (Vercel), substitua os valores abaixo 
+        // pelas credenciais reais do seu projeto no painel do Firebase (Configurações do Projeto).
+        const firebaseConfig = {
+  apiKey: "AIzaSyCYIHNbK5Hnx6K-qEQSrsCFDYZQ3QKj7vc",
+  authDomain: "capacitapatrimonio.firebaseapp.com",
+  projectId: "capacitapatrimonio",
+  storageBucket: "capacitapatrimonio.firebasestorage.app",
+  messagingSenderId: "394627190126",
+  appId: "1:394627190126:web:c3d656b216336abefe857f"
+};
+
+        const firebaseConfig = typeof __firebase_config !== 'undefined' 
+            ? JSON.parse(__firebase_config) 
+            : productionFirebaseConfig;
+
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
