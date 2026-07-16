@@ -315,7 +315,7 @@
 
                             <div class="editable-block w-full bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                                 <h3 class="text-xl font-bold text-slate-800 mb-4 editable-element">Critérios dos Bens Permanentes</h3>
-                                <p class="text-slate-600 mb-6 editable-element">Os bens permanentes são adquiridos por compra ou recebidos em doação e são incorporados ao patrimônio tendo em vista as suas propriedades físicas. Características principais:</p>
+                                <p class="editable-element text-slate-600 mb-6">Os bens permanentes são adquiridos por compra ou recebidos em doação e são incorporados ao patrimônio tendo em vista as suas propriedades físicas. Características principais:</p>
                                 
                                 <ul class="space-y-3 mb-6 list-none pl-0 text-slate-600">
                                     <li class="flex items-center"><i class="fas fa-calendar-alt text-blue-500 w-6"></i> <span class="editable-element">Possuem inúmeras aplicações durante um longo período.</span></li>
@@ -324,7 +324,7 @@
                                     <li class="flex items-center"><i class="fas fa-tools text-blue-500 w-6"></i> <span class="editable-element">São econômica e tecnicamente passíveis de revisões e manutenção.</span></li>
                                 </ul>
 
-                                <p class="text-slate-600 text-sm editable-element"><em>Nota:</em> A Prefeitura pode receber bens em doação (novos ou em perfeito estado de utilização), consoante as normas do Decreto Municipal nº 4.107, de 31 de julho de 2006.</p>
+                                <p class="editable-element text-slate-600 text-sm"><em>Nota:</em> A Prefeitura pode receber bens em doação (novos ou em perfeito estado de utilização), consoante as normas do Decreto Municipal nº 4.107, de 31 de julho de 2006.</p>
                             </div>
                         </div>
                         
@@ -940,7 +940,13 @@
             <input type="hidden" id="pdf-id">
             <input type="text" id="pdf-title" class="w-full border border-slate-300 rounded-lg p-2.5 mb-3 outline-none focus:border-blue-500 transition-all" placeholder="Título do Documento (Obrigatório)">
             <textarea id="pdf-desc" class="w-full border border-slate-300 rounded-lg p-2.5 mb-3 outline-none focus:border-blue-500 transition-all" placeholder="Descrição rápida..." rows="2"></textarea>
-            <input type="url" id="pdf-url" class="w-full border border-slate-300 rounded-lg p-2.5 mb-3 outline-none focus:border-blue-500 transition-all" placeholder="URL do Arquivo PDF (Obrigatório)">
+            
+            <label class="block text-sm font-medium text-slate-700 mb-1">Arquivo PDF (Upload):</label>
+            <input type="file" id="pdf-file" accept="application/pdf" class="w-full border border-slate-300 rounded-lg p-2 mb-3 outline-none focus:border-blue-500 transition-all text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+            
+            <div class="text-center text-xs text-slate-400 mb-2">- OU -</div>
+            
+            <input type="url" id="pdf-url" class="w-full border border-slate-300 rounded-lg p-2.5 mb-3 outline-none focus:border-blue-500 transition-all" placeholder="URL Externa do Arquivo (Se não fizer upload)">
             <input type="number" id="pdf-order" class="w-full border border-slate-300 rounded-lg p-2.5 mb-4 outline-none focus:border-blue-500 transition-all" placeholder="Ordem de Exibição (Ex: 1)">
             
             <div class="flex justify-end space-x-2">
@@ -1011,6 +1017,8 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, addDoc, serverTimestamp, onSnapshot, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        // Importando os módulos de Storage para o upload de PDFs
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
         window.firebaseDoc = doc;
         window.firebaseSetDoc = setDoc;
@@ -1020,12 +1028,20 @@
         window.firebaseOnSnapshot = onSnapshot;
         window.firebaseDeleteDoc = deleteDoc;
         window.firebaseUpdateDoc = updateDoc;
+        
+        window.firebaseGetStorage = getStorage;
+        window.firebaseStorageRef = ref;
+        window.firebaseUploadBytes = uploadBytes;
+        window.firebaseGetDownloadURL = getDownloadURL;
 
+        // Configuração do Firebase
+        // ATENÇÃO EQUIPE DE TI: Substitua os dados abaixo pelas credenciais do painel do Firebase
+        // Lembre-se de verificar se o Firebase Storage está ativado no seu painel para uploads de PDF
         const defaultFirebaseConfig = {
-            apiKey: "COLE_SUA_API_KEY_AQUI", // Equipe TI: Insira a API Key do seu projeto Firebase
+            apiKey: "COLE_SUA_API_KEY_AQUI", 
             authDomain: "seu-projeto.firebaseapp.com",
             projectId: "seu-projeto-id",
-            storageBucket: "seu-projeto.appspot.com",
+            storageBucket: "seu-projeto.appspot.com", // Importante para o Upload de PDFs
             messagingSenderId: "1234567890",
             appId: "1:1234567890:web:abcdef123456"
         };
@@ -1034,9 +1050,12 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const storage = window.firebaseGetStorage(app);
+        
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'patrimonio-app';
         
         window.db = db;
+        window.storage = storage;
         window.appId = appId;
         window.auth = auth;
         window.isUserAdmin = false;
@@ -1121,7 +1140,7 @@
             }
         }
 
-        // --- SISTEMA DE PDFs VIA FIRESTORE ---
+        // --- SISTEMA DE PDFs VIA FIRESTORE E STORAGE ---
         window.initPDFListener = () => {
             const q = window.firebaseCollection(window.db, 'artifacts', window.appId, 'public', 'data', 'pdf_tools');
             window.firebaseOnSnapshot(q, (snapshot) => {
@@ -1181,15 +1200,33 @@
             const id = document.getElementById('pdf-id').value;
             const title = document.getElementById('pdf-title').value;
             const desc = document.getElementById('pdf-desc').value;
-            const url = document.getElementById('pdf-url').value;
+            let url = document.getElementById('pdf-url').value;
             const order = parseInt(document.getElementById('pdf-order').value) || 0;
+            
+            const fileInput = document.getElementById('pdf-file');
+            const file = fileInput.files[0];
 
-            if(!title || !url) {
-                alert('O Título e a URL do PDF são obrigatórios!');
+            if(!title) {
+                alert('O Título do Documento é obrigatório!');
+                return;
+            }
+
+            if(!url && !file) {
+                alert('Faça o upload do arquivo PDF ou forneça uma URL externa!');
                 return;
             }
 
             try {
+                // Upload via Firebase Storage
+                if(file) {
+                    window.showModal('info', 'Fazendo Upload...', 'A enviar o arquivo PDF para a nuvem. Por favor, aguarde...');
+                    
+                    const storageRef = window.firebaseStorageRef(window.storage, `artifacts/${window.appId}/public/data/pdfs/${Date.now()}_${file.name}`);
+                    const snapshot = await window.firebaseUploadBytes(storageRef, file);
+                    url = await window.firebaseGetDownloadURL(snapshot.ref);
+                }
+
+                // Salvar dados no Firestore
                 if(id) {
                     const docRef = window.firebaseDoc(window.db, 'artifacts', window.appId, 'public', 'data', 'pdf_tools', id);
                     await window.firebaseUpdateDoc(docRef, { title, description: desc, url, order });
@@ -1199,8 +1236,13 @@
                     await window.firebaseAddDoc(colRef, { title, description: desc, url, order, createdAt: window.firebaseServerTimestamp() });
                     window.logAction(`Adicionou um novo PDF: ${title}`);
                 }
+                
                 window.closePDFModal();
-                window.showModal('success', 'Documento Salvo', 'As configurações do PDF foram salvas com sucesso no sistema.');
+                
+                setTimeout(() => {
+                    window.showModal('success', 'Documento Salvo', 'O PDF foi configurado e salvo com sucesso no sistema.');
+                }, 350);
+
             } catch(e) {
                 window.showModal('error', 'Erro ao Salvar', e.message);
             }
@@ -1410,6 +1452,7 @@
             document.getElementById('pdf-title').value = '';
             document.getElementById('pdf-desc').value = '';
             document.getElementById('pdf-url').value = '';
+            document.getElementById('pdf-file').value = ''; // Limpa o campo de arquivo
             document.getElementById('pdf-order').value = '';
             document.getElementById('pdf-modal-title').innerText = 'Adicionar Novo PDF';
             
@@ -1426,6 +1469,7 @@
             document.getElementById('pdf-title').value = pdf.title || '';
             document.getElementById('pdf-desc').value = pdf.description || '';
             document.getElementById('pdf-url').value = pdf.url || '';
+            document.getElementById('pdf-file').value = ''; // Limpa o arquivo no modo editar
             document.getElementById('pdf-order').value = pdf.order || 0;
             document.getElementById('pdf-modal-title').innerText = 'Editar Configuração de PDF';
             
