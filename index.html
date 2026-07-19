@@ -1012,14 +1012,14 @@
         </div>
     </div>
 
-    <!-- FIREBASE MODULE & LOGIC -->
+    <!-- FIREBASE MODULE E LOGICA DE APLICAÇÃO -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, addDoc, serverTimestamp, onSnapshot, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-        // Importando os módulos de Storage para o upload de PDFs
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
+        // Expor para Window
         window.firebaseDoc = doc;
         window.firebaseSetDoc = setDoc;
         window.firebaseCollection = collection;
@@ -1028,17 +1028,14 @@
         window.firebaseOnSnapshot = onSnapshot;
         window.firebaseDeleteDoc = deleteDoc;
         window.firebaseUpdateDoc = updateDoc;
-        
         window.firebaseGetStorage = getStorage;
         window.firebaseStorageRef = ref;
         window.firebaseUploadBytes = uploadBytes;
         window.firebaseGetDownloadURL = getDownloadURL;
 
         // Configuração do Firebase
-        // ATENÇÃO EQUIPE DE TI: Substitua os dados abaixo pelas credenciais do painel do Firebase
-        // Lembre-se de verificar se o Firebase Storage está ativado no seu painel para uploads de PDF
         const defaultFirebaseConfig = {
-            apiKey: "COLE_SUA_API_KEY_AQUI", 
+            apiKey: "COLE_SUA_API_KEY_AQUI", // Equipe TI: Insira a API Key do seu projeto Firebase
             authDomain: "seu-projeto.firebaseapp.com",
             projectId: "seu-projeto-id",
             storageBucket: "seu-projeto.appspot.com", // Importante para o Upload de PDFs
@@ -1063,9 +1060,7 @@
         window.bgColors = ['bg-white', 'bg-slate-50', 'bg-blue-50', 'bg-yellow-50', 'bg-green-50', 'bg-red-50', 'bg-blue-600'];
 
         document.addEventListener('DOMContentLoaded', async () => {
-            setupAdminPanelDrag();
-            setupFormatToolbar();
-
+            
             const initAuth = async () => {
                 try {
                     if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
@@ -1139,8 +1134,83 @@
                 document.getElementById('content-container').insertAdjacentHTML('beforeend', toolsHTML);
             }
         }
+    </script>
 
-        // --- SISTEMA DE PDFs VIA FIRESTORE E STORAGE ---
+    <!-- NAVEGAÇÃO, UI E FUNÇÕES WINDOW -->
+    <script>
+        // Setup Drag Admin Panel na Inicialização
+        document.addEventListener('DOMContentLoaded', () => {
+            setupAdminPanelDrag();
+            setupFormatToolbar();
+        });
+
+        window.toggleSidebar = () => {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        };
+
+        window.navigate = (viewId) => {
+            if(document.body.classList.contains('edit-active')) {
+                if(event && event.target.tagName === 'SPAN') return;
+            }
+
+            document.querySelectorAll('.view-section').forEach(sec => {
+                sec.classList.add('hidden');
+                sec.classList.remove('fade-in');
+            });
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+
+            const target = document.getElementById('view-' + viewId);
+            if(target) {
+                target.classList.remove('hidden');
+                void target.offsetWidth; 
+                target.classList.add('fade-in');
+            }
+
+            const links = document.querySelectorAll(`a[onclick*="'${viewId}'"]`);
+            links.forEach(l => l.classList.add('active'));
+
+            if(window.innerWidth < 768) {
+                const sidebar = document.getElementById('sidebar');
+                if(!sidebar.classList.contains('-translate-x-full')){
+                    window.toggleSidebar();
+                }
+            }
+            document.getElementById('content-container').scrollTop = 0;
+        };
+
+        window.toggleFAQ = (id) => {
+            if(document.body.classList.contains('edit-active')) return;
+            const content = document.getElementById('faq-ans-' + id);
+            const icon = document.getElementById('faq-icon-' + id);
+            if(content && icon) {
+                content.classList.toggle('hidden');
+                icon.classList.toggle('rotate-180');
+            }
+        };
+
+        window.finishCourse = () => {
+            window.showModal('success', 'Parabéns! Curso Concluído', 'Você finalizou a trilha de capacitação sobre Patrimônio Público!<br><br>Consulte o Departamento pelos ramais <strong>5624</strong> ou <strong>5644</strong>.', () => window.navigate('home'));
+        };
+
+        window.openAdminLogin = () => {
+            document.getElementById('admin-login-modal').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('admin-login-modal').classList.remove('opacity-0');
+                document.getElementById('admin-login-box').classList.remove('scale-95');
+                document.getElementById('admin-email').focus();
+            }, 10);
+        };
+
+        window.closeAdminLogin = () => {
+            document.getElementById('admin-login-modal').classList.add('opacity-0');
+            document.getElementById('admin-login-box').classList.add('scale-95');
+            setTimeout(() => { document.getElementById('admin-login-modal').classList.add('hidden'); }, 300);
+        };
+
+        // --- FUNCOES PDF ---
         window.initPDFListener = () => {
             const q = window.firebaseCollection(window.db, 'artifacts', window.appId, 'public', 'data', 'pdf_tools');
             window.firebaseOnSnapshot(q, (snapshot) => {
@@ -1195,6 +1265,44 @@
             });
         };
 
+        window.openPDFModal = () => {
+            if(!window.isUserAdmin) return;
+            document.getElementById('pdf-id').value = '';
+            document.getElementById('pdf-title').value = '';
+            document.getElementById('pdf-desc').value = '';
+            document.getElementById('pdf-url').value = '';
+            document.getElementById('pdf-file').value = ''; 
+            document.getElementById('pdf-order').value = '';
+            document.getElementById('pdf-modal-title').innerText = 'Adicionar Novo PDF';
+            
+            const modal = document.getElementById('pdf-form-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        }
+
+        window.editPDF = (id) => {
+            if(!window.isUserAdmin) return;
+            const pdf = window.pdfList.find(p => p.id === id);
+            if(!pdf) return;
+            document.getElementById('pdf-id').value = pdf.id;
+            document.getElementById('pdf-title').value = pdf.title || '';
+            document.getElementById('pdf-desc').value = pdf.description || '';
+            document.getElementById('pdf-url').value = pdf.url || '';
+            document.getElementById('pdf-file').value = ''; 
+            document.getElementById('pdf-order').value = pdf.order || 0;
+            document.getElementById('pdf-modal-title').innerText = 'Editar Configuração de PDF';
+            
+            const modal = document.getElementById('pdf-form-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        }
+
+        window.closePDFModal = () => {
+            const modal = document.getElementById('pdf-form-modal');
+            modal.classList.add('opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
         window.savePDF = async () => {
             if(!window.isUserAdmin) return;
             const id = document.getElementById('pdf-id').value;
@@ -1217,16 +1325,13 @@
             }
 
             try {
-                // Upload via Firebase Storage
                 if(file) {
                     window.showModal('info', 'Fazendo Upload...', 'A enviar o arquivo PDF para a nuvem. Por favor, aguarde...');
-                    
                     const storageRef = window.firebaseStorageRef(window.storage, `artifacts/${window.appId}/public/data/pdfs/${Date.now()}_${file.name}`);
                     const snapshot = await window.firebaseUploadBytes(storageRef, file);
                     url = await window.firebaseGetDownloadURL(snapshot.ref);
                 }
 
-                // Salvar dados no Firestore
                 if(id) {
                     const docRef = window.firebaseDoc(window.db, 'artifacts', window.appId, 'public', 'data', 'pdf_tools', id);
                     await window.firebaseUpdateDoc(docRef, { title, description: desc, url, order });
@@ -1238,11 +1343,7 @@
                 }
                 
                 window.closePDFModal();
-                
-                setTimeout(() => {
-                    window.showModal('success', 'Documento Salvo', 'O PDF foi configurado e salvo com sucesso no sistema.');
-                }, 350);
-
+                setTimeout(() => window.showModal('success', 'Documento Salvo', 'O PDF foi configurado e salvo com sucesso.'), 350);
             } catch(e) {
                 window.showModal('error', 'Erro ao Salvar', e.message);
             }
@@ -1263,227 +1364,6 @@
             }
         }
 
-        window.logAction = async (actionDesc) => {
-            if(!window.auth.currentUser) return;
-            const logRef = window.firebaseCollection(window.db, 'artifacts', window.appId, 'public', 'data', 'change_logs');
-            await window.firebaseAddDoc(logRef, {
-                userEmail: window.auth.currentUser.email,
-                timestamp: window.firebaseServerTimestamp(),
-                action: actionDesc
-            });
-        }
-
-        window.doAdminLogin = async () => {
-            const email = document.getElementById('admin-email').value;
-            const pass = document.getElementById('admin-password').value;
-            const feedback = document.getElementById('login-feedback');
-            if(!email || !pass) return;
-            feedback.innerText = "Autenticando...";
-            try {
-                await signInWithEmailAndPassword(auth, email, pass);
-                window.closeAdminLogin();
-            } catch(error) {
-                feedback.innerText = "Erro: " + error.message;
-            }
-        };
-
-        window.doAdminRegister = async () => {
-            const email = document.getElementById('admin-email').value;
-            const pass = document.getElementById('admin-password').value;
-            const feedback = document.getElementById('login-feedback');
-            if(!email || !pass) return;
-            feedback.innerText = "Criando conta...";
-            try {
-                await createUserWithEmailAndPassword(auth, email, pass);
-                window.closeAdminLogin();
-                window.showModal('success', 'Conta Criada!', 'Acesso administrativo criado com sucesso.');
-            } catch(error) {
-                feedback.innerText = "Erro: " + error.message;
-            }
-        };
-
-        window.logoutAdmin = async () => {
-            if(window.editorActive) window.toggleGrapesJS();
-            if(document.body.classList.contains('edit-active')) window.toggleEditMode();
-            await signOut(auth);
-            await signInAnonymously(auth);
-        };
-
-        // --- SISTEMA DE SALVAMENTO PARA EDIÇÃO SIMPLES ---
-        window.saveSimpleChanges = async () => {
-            if(!window.isUserAdmin) return;
-            if(document.body.classList.contains('edit-active')) window.toggleEditMode();
-            
-            const contentHTML = document.getElementById('content-container').innerHTML;
-            const navHTML = document.getElementById('nav-theory').innerHTML;
-            
-            window.showModal('info', 'Salvando...', 'A gravar alterações na nuvem...');
-            
-            try {
-                const docRef = window.firebaseDoc(window.db, 'artifacts', window.appId, 'public', 'data', 'site_content', 'latest');
-                await window.firebaseSetDoc(docRef, {
-                    content: contentHTML,
-                    nav: navHTML,
-                    updatedAt: window.firebaseServerTimestamp()
-                });
-                
-                await window.logAction("Publicou atualizações via Modo de Edição Simples.");
-                window.showModal('success', 'Salvo na Nuvem!', 'As alterações de texto e blocos foram guardadas com sucesso.');
-            } catch (err) {
-                window.showModal('error', 'Falha', 'Erro ao salvar: ' + err.message);
-            }
-        };
-
-        // Arraste do Painel Administrador
-        function setupAdminPanelDrag() {
-            const panel = document.getElementById('admin-panel');
-            const header = document.getElementById('admin-panel-header');
-            let isDragging = false, startX, startY, initialX, initialY;
-
-            header.addEventListener('mousedown', (e) => {
-                isDragging = true;
-                startX = e.clientX;
-                startY = e.clientY;
-                const rect = panel.getBoundingClientRect();
-                initialX = rect.left;
-                initialY = rect.top;
-                
-                panel.style.right = 'auto'; 
-                panel.style.bottom = 'auto';
-                panel.style.left = initialX + 'px';
-                panel.style.top = initialY + 'px';
-
-                document.addEventListener('mousemove', onDrag);
-                document.addEventListener('mouseup', stopDrag);
-            });
-
-            function onDrag(e) {
-                if(!isDragging) return;
-                const dx = e.clientX - startX;
-                const dy = e.clientY - startY;
-                panel.style.left = (initialX + dx) + 'px';
-                panel.style.top = (initialY + dy) + 'px';
-            }
-
-            function stopDrag() {
-                isDragging = false;
-                document.removeEventListener('mousemove', onDrag);
-                document.removeEventListener('mouseup', stopDrag);
-            }
-        }
-
-        // Barra Flutuante de Formatação de Texto (Edição Simples)
-        function setupFormatToolbar() {
-            const formatBar = document.getElementById('format-toolbar');
-            
-            document.addEventListener('selectionchange', () => {
-                if (!document.body.classList.contains('edit-active')) {
-                    formatBar.style.display = 'none'; return;
-                }
-                const selection = window.getSelection();
-                if (selection.rangeCount > 0 && !selection.isCollapsed) {
-                    const range = selection.getRangeAt(0);
-                    const rect = range.getBoundingClientRect();
-                    // Apenas se o pai for editável
-                    if(selection.anchorNode.parentElement && selection.anchorNode.parentElement.isContentEditable) {
-                        formatBar.style.display = 'flex';
-                        formatBar.style.top = `${rect.top + window.scrollY - 45}px`;
-                        formatBar.style.left = `${rect.left + (rect.width / 2) - (formatBar.offsetWidth / 2)}px`;
-                    }
-                } else {
-                    formatBar.style.display = 'none';
-                }
-            });
-        }
-    </script>
-
-    <!-- NAVEGAÇÃO E EDIÇÃO SIMPLES -->
-    <script>
-        window.toggleSidebar = () => {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('mobile-overlay');
-            sidebar.classList.toggle('-translate-x-full');
-            overlay.classList.toggle('hidden');
-        };
-
-        window.navigate = (viewId) => {
-            if(document.body.classList.contains('edit-active')) {
-                if(event && event.target.tagName === 'SPAN') return;
-            }
-
-            document.querySelectorAll('.view-section').forEach(sec => {
-                sec.classList.add('hidden');
-                sec.classList.remove('fade-in');
-            });
-            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-
-            const target = document.getElementById('view-' + viewId);
-            if(target) {
-                target.classList.remove('hidden');
-                void target.offsetWidth; 
-                target.classList.add('fade-in');
-            }
-
-            const links = document.querySelectorAll(`a[onclick*="'${viewId}'"]`);
-            links.forEach(l => l.classList.add('active'));
-
-            if(window.innerWidth < 768) {
-                const sidebar = document.getElementById('sidebar');
-                if(!sidebar.classList.contains('-translate-x-full')){
-                    window.toggleSidebar();
-                }
-            }
-            document.getElementById('content-container').scrollTop = 0;
-        };
-
-        window.toggleFAQ = (id) => {
-            if(document.body.classList.contains('edit-active')) return;
-            const content = document.getElementById('faq-ans-' + id);
-            const icon = document.getElementById('faq-icon-' + id);
-            if(content && icon) {
-                content.classList.toggle('hidden');
-                icon.classList.toggle('rotate-180');
-            }
-        };
-
-        window.openPDFModal = () => {
-            if(!window.isUserAdmin) return;
-            document.getElementById('pdf-id').value = '';
-            document.getElementById('pdf-title').value = '';
-            document.getElementById('pdf-desc').value = '';
-            document.getElementById('pdf-url').value = '';
-            document.getElementById('pdf-file').value = ''; // Limpa o campo de arquivo
-            document.getElementById('pdf-order').value = '';
-            document.getElementById('pdf-modal-title').innerText = 'Adicionar Novo PDF';
-            
-            const modal = document.getElementById('pdf-form-modal');
-            modal.classList.remove('hidden');
-            setTimeout(() => modal.classList.remove('opacity-0'), 10);
-        }
-
-        window.editPDF = (id) => {
-            if(!window.isUserAdmin) return;
-            const pdf = window.pdfList.find(p => p.id === id);
-            if(!pdf) return;
-            document.getElementById('pdf-id').value = pdf.id;
-            document.getElementById('pdf-title').value = pdf.title || '';
-            document.getElementById('pdf-desc').value = pdf.description || '';
-            document.getElementById('pdf-url').value = pdf.url || '';
-            document.getElementById('pdf-file').value = ''; // Limpa o arquivo no modo editar
-            document.getElementById('pdf-order').value = pdf.order || 0;
-            document.getElementById('pdf-modal-title').innerText = 'Editar Configuração de PDF';
-            
-            const modal = document.getElementById('pdf-form-modal');
-            modal.classList.remove('hidden');
-            setTimeout(() => modal.classList.remove('opacity-0'), 10);
-        }
-
-        window.closePDFModal = () => {
-            const modal = document.getElementById('pdf-form-modal');
-            modal.classList.add('opacity-0');
-            setTimeout(() => modal.classList.add('hidden'), 300);
-        }
-
         window.openPDFViewer = (url, title) => {
             document.getElementById('viewer-title').innerText = title;
             document.getElementById('pdf-iframe').src = url;
@@ -1501,24 +1381,61 @@
             }, 300);
         }
 
-        window.openAdminLogin = () => {
-            document.getElementById('admin-login-modal').classList.remove('hidden');
-            setTimeout(() => {
-                document.getElementById('admin-login-modal').classList.remove('opacity-0');
-                document.getElementById('admin-login-box').classList.remove('scale-95');
-                document.getElementById('admin-email').focus();
-            }, 10);
+        // --- AUTH E LOGIN FIREBASE (Interface) ---
+        window.doAdminLogin = async () => {
+            const email = document.getElementById('admin-email').value;
+            const pass = document.getElementById('admin-password').value;
+            const feedback = document.getElementById('login-feedback');
+            if(!email || !pass) return;
+            feedback.innerText = "Autenticando...";
+            try {
+                const { signInWithEmailAndPassword } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
+                await signInWithEmailAndPassword(window.auth, email, pass);
+                window.closeAdminLogin();
+            } catch(error) {
+                feedback.innerText = "Erro: " + error.message;
+            }
         };
 
-        window.closeAdminLogin = () => {
-            document.getElementById('admin-login-modal').classList.add('opacity-0');
-            document.getElementById('admin-login-box').classList.add('scale-95');
-            setTimeout(() => { document.getElementById('admin-login-modal').classList.add('hidden'); }, 300);
+        window.doAdminRegister = async () => {
+            const email = document.getElementById('admin-email').value;
+            const pass = document.getElementById('admin-password').value;
+            const feedback = document.getElementById('login-feedback');
+            if(!email || !pass) return;
+            feedback.innerText = "Criando conta...";
+            try {
+                const { createUserWithEmailAndPassword } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
+                await createUserWithEmailAndPassword(window.auth, email, pass);
+                window.closeAdminLogin();
+                window.showModal('success', 'Conta Criada!', 'Acesso administrativo criado com sucesso.');
+            } catch(error) {
+                feedback.innerText = "Erro: " + error.message;
+            }
         };
+
+        window.logoutAdmin = async () => {
+            if(window.editorActive) window.toggleGrapesJS();
+            if(document.body.classList.contains('edit-active')) window.toggleEditMode();
+            try {
+                const { signOut, signInAnonymously } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
+                await signOut(window.auth);
+                await signInAnonymously(window.auth);
+            } catch(e) { console.error(e); }
+        };
+
+        window.logAction = async (actionDesc) => {
+            if(!window.auth.currentUser) return;
+            const logRef = window.firebaseCollection(window.db, 'artifacts', window.appId, 'public', 'data', 'change_logs');
+            await window.firebaseAddDoc(logRef, {
+                userEmail: window.auth.currentUser.email,
+                timestamp: window.firebaseServerTimestamp(),
+                action: actionDesc
+            });
+        }
 
         // --- SISTEMA DE EDIÇÃO SIMPLES ---
         window.toggleEditMode = () => {
-            if(window.editorActive) return; // Não permitir edição simples junto com GrapesJS
+            if(window.editorActive) return; 
             
             const isEditing = document.body.classList.toggle('edit-active');
             const btn = document.getElementById('btn-toggle-simple-edit');
@@ -1688,9 +1605,33 @@
             }
         };
 
+        window.saveSimpleChanges = async () => {
+            if(!window.isUserAdmin) return;
+            if(document.body.classList.contains('edit-active')) window.toggleEditMode();
+            
+            const contentHTML = document.getElementById('content-container').innerHTML;
+            const navHTML = document.getElementById('nav-theory').innerHTML;
+            
+            window.showModal('info', 'Salvando...', 'A gravar alterações na nuvem...');
+            
+            try {
+                const docRef = window.firebaseDoc(window.db, 'artifacts', window.appId, 'public', 'data', 'site_content', 'latest');
+                await window.firebaseSetDoc(docRef, {
+                    content: contentHTML,
+                    nav: navHTML,
+                    updatedAt: window.firebaseServerTimestamp()
+                });
+                
+                await window.logAction("Publicou atualizações via Modo de Edição Simples.");
+                window.showModal('success', 'Salvo na Nuvem!', 'As alterações de texto e blocos foram guardadas com sucesso.');
+            } catch (err) {
+                window.showModal('error', 'Falha', 'Erro ao salvar: ' + err.message);
+            }
+        };
+
         // --- SISTEMA GRAPESJS (EDITOR VISUAL PROFUNDO) ---
         window.toggleGrapesJS = () => {
-            if(document.body.classList.contains('edit-active')) return; // Bloqueia se a edição simples estiver ligada
+            if(document.body.classList.contains('edit-active')) return;
 
             const liveSite = document.getElementById('live-site');
             const gjsContainer = document.getElementById('gjs-container');
@@ -1810,6 +1751,114 @@
                 setTimeout(() => window.location.reload(), 1000);
             }
         };
+
+        // UI HELPERS (Modais)
+        window.showModal = function(type, title, message, actionCallback = null) {
+            const modal = document.getElementById('custom-modal');
+            const iconContainer = document.getElementById('modal-icon');
+            const titleEl = document.getElementById('modal-title');
+            const messageEl = document.getElementById('modal-message');
+            const btnEl = document.getElementById('modal-btn');
+            
+            window.currentModalAction = actionCallback;
+
+            if(type === 'success') {
+                iconContainer.className = "w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 text-3xl bg-green-100 text-green-500";
+                iconContainer.innerHTML = '<i class="fas fa-check"></i>';
+                btnEl.className = "w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition";
+                btnEl.innerText = "Continuar";
+            } else if(type === 'error') {
+                iconContainer.className = "w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 text-3xl bg-red-100 text-red-500";
+                iconContainer.innerHTML = '<i class="fas fa-times"></i>';
+                btnEl.className = "w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 px-4 rounded-lg transition";
+                btnEl.innerText = "Tentar Novamente";
+            } else {
+                iconContainer.className = "w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 text-3xl bg-blue-100 text-blue-500";
+                iconContainer.innerHTML = '<i class="fas fa-info"></i>';
+                btnEl.className = "w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition";
+                btnEl.innerText = "Entendi";
+            }
+            titleEl.innerText = title;
+            messageEl.innerHTML = message;
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                document.getElementById('modal-content-box').classList.remove('scale-95');
+            }, 10);
+        };
+
+        window.closeModal = function() {
+            const modal = document.getElementById('custom-modal');
+            modal.classList.add('opacity-0');
+            document.getElementById('modal-content-box').classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                if(window.currentModalAction) {
+                    window.currentModalAction();
+                    window.currentModalAction = null;
+                }
+            }, 300);
+        };
+
+        function setupAdminPanelDrag() {
+            const panel = document.getElementById('admin-panel');
+            const header = document.getElementById('admin-panel-header');
+            let isDragging = false, startX, startY, initialX, initialY;
+
+            header.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                const rect = panel.getBoundingClientRect();
+                initialX = rect.left;
+                initialY = rect.top;
+                
+                panel.style.right = 'auto'; 
+                panel.style.bottom = 'auto';
+                panel.style.left = initialX + 'px';
+                panel.style.top = initialY + 'px';
+
+                document.addEventListener('mousemove', onDrag);
+                document.addEventListener('mouseup', stopDrag);
+            });
+
+            function onDrag(e) {
+                if(!isDragging) return;
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+                panel.style.left = (initialX + dx) + 'px';
+                panel.style.top = (initialY + dy) + 'px';
+            }
+
+            function stopDrag() {
+                isDragging = false;
+                document.removeEventListener('mousemove', onDrag);
+                document.removeEventListener('mouseup', stopDrag);
+            }
+        }
+
+        function setupFormatToolbar() {
+            const formatBar = document.getElementById('format-toolbar');
+            
+            document.addEventListener('selectionchange', () => {
+                if (!document.body.classList.contains('edit-active')) {
+                    formatBar.style.display = 'none'; return;
+                }
+                const selection = window.getSelection();
+                if (selection.rangeCount > 0 && !selection.isCollapsed) {
+                    const range = selection.getRangeAt(0);
+                    const rect = range.getBoundingClientRect();
+                    if(selection.anchorNode.parentElement && selection.anchorNode.parentElement.isContentEditable) {
+                        formatBar.style.display = 'flex';
+                        formatBar.style.top = `${rect.top + window.scrollY - 45}px`;
+                        formatBar.style.left = `${rect.left + (rect.width / 2) - (formatBar.offsetWidth / 2)}px`;
+                    }
+                } else {
+                    formatBar.style.display = 'none';
+                }
+            });
+        }
     </script>
 </body>
 </html>
