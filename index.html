@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Capacitação: Patrimônio Público - Praia Grande</title>
     
-    <!-- Tailwind CSS -->
+    <!-- Tailwind CSS (O aviso no console é padrão do CDN e inofensivo) -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Google Fonts (Inter) -->
@@ -181,7 +181,7 @@
     <!-- WRAPPER DO SITE ORIGINAL -->
     <div id="live-site" class="flex h-screen w-full relative">
         <!-- Overlay Mobile -->
-        <div id="mobile-overlay" class="fixed inset-0 bg-slate-900/50 z-20 hidden md:hidden" onclick="window.toggleSidebar()"></div>
+        <div id="mobile-overlay" class="fixed inset-0 bg-slate-900/50 z-20 hidden md:hidden" onclick="toggleSidebar()"></div>
 
         <!-- Menu Lateral -->
         <aside id="sidebar" class="bg-white w-72 h-full border-r border-slate-200 flex flex-col absolute md:relative z-30 transform -translate-x-full md:translate-x-0 transition-transform duration-300">
@@ -190,7 +190,7 @@
                     <h1 class="text-xl font-bold text-blue-700 leading-tight">Escola de Governo</h1>
                     <p class="text-xs text-slate-500 mt-1">Prefeitura de Praia Grande</p>
                 </div>
-                <button onclick="window.toggleSidebar()" class="md:hidden text-slate-500 hover:text-slate-800">
+                <button onclick="toggleSidebar()" class="md:hidden text-slate-500 hover:text-slate-800">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
@@ -198,31 +198,31 @@
             <div class="flex-1 overflow-y-auto py-4">
                 <div class="px-6 mb-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">Módulos</div>
                 <nav class="space-y-1" id="nav-theory">
-                    <a href="#" onclick="window.navigate('home')" id="nav-home" class="nav-item active flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
+                    <a href="#" onclick="navigateTo('home')" id="nav-home" class="nav-item active flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
                         <i class="fas fa-home w-6 text-center mr-2"></i> <span class="nav-title editable-element">Início & Objetivos</span>
                     </a>
-                    <a href="#" onclick="window.navigate('mod1')" id="nav-mod1" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
+                    <a href="#" onclick="navigateTo('mod1')" id="nav-mod1" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
                         <i class="fas fa-book w-6 text-center mr-2"></i> <span class="nav-title editable-element">Módulo 1: Conceitos</span>
                     </a>
-                    <a href="#" onclick="window.navigate('mod2')" id="nav-mod2" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
+                    <a href="#" onclick="navigateTo('mod2')" id="nav-mod2" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
                         <i class="fas fa-tags w-6 text-center mr-2"></i> <span class="nav-title editable-element">Módulo 2: Incorporação</span>
                     </a>
-                    <a href="#" onclick="window.navigate('mod3')" id="nav-mod3" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
+                    <a href="#" onclick="navigateTo('mod3')" id="nav-mod3" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
                         <i class="fas fa-user-shield w-6 text-center mr-2"></i> <span class="nav-title editable-element">Módulo 3: Responsabilidade</span>
                     </a>
-                    <a href="#" onclick="window.navigate('mod4')" id="nav-mod4" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
+                    <a href="#" onclick="navigateTo('mod4')" id="nav-mod4" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
                         <i class="fas fa-trash-alt w-6 text-center mr-2"></i> <span class="nav-title editable-element">Módulo 4: Baixa</span>
                     </a>
-                    <a href="#" onclick="window.navigate('mod5')" id="nav-mod5" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
+                    <a href="#" onclick="navigateTo('mod5')" id="nav-mod5" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
                         <i class="fas fa-calendar-day w-6 text-center mr-2"></i> <span class="nav-title editable-element">Módulo 5: Dia a Dia</span>
                     </a>
-                    <a href="#" onclick="window.navigate('mod6')" id="nav-mod6" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
+                    <a href="#" onclick="navigateTo('mod6')" id="nav-mod6" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
                         <i class="fas fa-folder-open w-6 text-center mr-2"></i> <span class="nav-title editable-element">Módulo 6: Processo</span>
                     </a>
-                    <a href="#" onclick="window.navigate('faq')" id="nav-faq" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
+                    <a href="#" onclick="navigateTo('faq')" id="nav-faq" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
                         <i class="fas fa-question-circle w-6 text-center mr-2"></i> <span class="nav-title editable-element">FAQ</span>
                     </a>
-                    <a href="#" onclick="window.navigate('tools')" id="nav-tools" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
+                    <a href="#" onclick="navigateTo('tools')" id="nav-tools" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
                         <i class="fas fa-toolbox w-6 text-center mr-2"></i> <span class="nav-title editable-element">FERRAMENTAS</span>
                     </a>
                 </nav>
@@ -237,7 +237,7 @@
                         <p class="text-xs font-bold text-slate-700 editable-element">Dúvidas?</p>
                         <p class="text-xs text-slate-500 editable-element">Ramais: 5624 e 5644</p>
                         <div class="mt-2 pt-2 border-t border-blue-200/50" id="admin-auth-area">
-                            <button onclick="window.openAdminLogin()" class="text-[11px] font-semibold text-slate-400 hover:text-blue-600 transition-colors flex items-center w-full justify-start">
+                            <button onclick="openAdminLogin()" class="text-[11px] font-semibold text-slate-400 hover:text-blue-600 transition-colors flex items-center w-full justify-start">
                                 <i class="fas fa-lock mr-1.5"></i> Acesso Admin
                             </button>
                         </div>
@@ -250,7 +250,7 @@
         <main class="flex-1 flex flex-col h-full relative">
             <header class="md:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center">
                 <h1 class="text-lg font-bold text-blue-700">Patrimônio PG</h1>
-                <button onclick="window.toggleSidebar()" class="text-slate-600 hover:text-slate-900 focus:outline-none">
+                <button onclick="toggleSidebar()" class="text-slate-600 hover:text-slate-900 focus:outline-none">
                     <i class="fas fa-bars text-2xl"></i>
                 </button>
             </header>
@@ -259,17 +259,17 @@
                 
                 <!-- Barra de formatação flutuante (Estilo Notion + Alinhamentos) -->
                 <div id="format-toolbar">
-                    <button onmousedown="event.preventDefault(); window.formatText('bold')" title="Negrito"><i class="fas fa-bold"></i></button>
-                    <button onmousedown="event.preventDefault(); window.formatText('italic')" title="Itálico"><i class="fas fa-italic"></i></button>
-                    <button onmousedown="event.preventDefault(); window.formatText('underline')" title="Sublinhado"><i class="fas fa-underline"></i></button>
+                    <button onmousedown="event.preventDefault(); formatText('bold')" title="Negrito"><i class="fas fa-bold"></i></button>
+                    <button onmousedown="event.preventDefault(); formatText('italic')" title="Itálico"><i class="fas fa-italic"></i></button>
+                    <button onmousedown="event.preventDefault(); formatText('underline')" title="Sublinhado"><i class="fas fa-underline"></i></button>
                     <div class="divider"></div>
-                    <button onmousedown="event.preventDefault(); window.formatText('justifyLeft')" title="Alinhar à Esquerda"><i class="fas fa-align-left"></i></button>
-                    <button onmousedown="event.preventDefault(); window.formatText('justifyCenter')" title="Centralizar"><i class="fas fa-align-center"></i></button>
-                    <button onmousedown="event.preventDefault(); window.formatText('justifyRight')" title="Alinhar à Direita"><i class="fas fa-align-right"></i></button>
-                    <button onmousedown="event.preventDefault(); window.formatText('justifyFull')" title="Justificar"><i class="fas fa-align-justify"></i></button>
+                    <button onmousedown="event.preventDefault(); formatText('justifyLeft')" title="Alinhar à Esquerda"><i class="fas fa-align-left"></i></button>
+                    <button onmousedown="event.preventDefault(); formatText('justifyCenter')" title="Centralizar"><i class="fas fa-align-center"></i></button>
+                    <button onmousedown="event.preventDefault(); formatText('justifyRight')" title="Alinhar à Direita"><i class="fas fa-align-right"></i></button>
+                    <button onmousedown="event.preventDefault(); formatText('justifyFull')" title="Justificar"><i class="fas fa-align-justify"></i></button>
                 </div>
 
-                <!-- CONTEÚDO DE FÁBRICA ORIGINAL -->
+                <!-- CONTEÚDO DE FÁBRICA ORIGINAL (Mantido 100% Intacto + Aba Ferramentas) -->
                 <div id="factory-content" class="hidden">
                     <!-- VIEW: HOME -->
                     <section id="view-home" class="view-section fade-in max-w-4xl mx-auto">
@@ -297,7 +297,7 @@
                                 </div>
                                 <h3 class="text-xl font-bold mb-2 editable-element">Resultado Esperado</h3>
                                 <p class="text-slate-600 editable-element">Utilização responsável dos bens com a efetiva colaboração de todos os servidores do departamento.</p>
-                                <button onclick="window.navigate('mod1')" class="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors">
+                                <button onclick="navigateTo('mod1')" class="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors">
                                     Começar o Curso <i class="fas fa-arrow-right ml-2"></i>
                                 </button>
                             </div>
@@ -334,8 +334,8 @@
                         </div>
                         
                         <div class="mt-10 flex justify-between w-full nav-buttons-area">
-                            <button onclick="window.navigate('home')" class="px-5 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium transition"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
-                            <button onclick="window.navigate('mod2')" class="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium transition">Próximo <i class="fas fa-arrow-right ml-2"></i></button>
+                            <button onclick="navigateTo('home')" class="px-5 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium transition"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
+                            <button onclick="navigateTo('mod2')" class="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium transition">Próximo <i class="fas fa-arrow-right ml-2"></i></button>
                         </div>
                     </section>
 
@@ -425,8 +425,8 @@
                         </div>
                         
                         <div class="mt-10 flex justify-between w-full nav-buttons-area">
-                            <button onclick="window.navigate('mod1')" class="px-5 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium transition"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
-                            <button onclick="window.navigate('mod3')" class="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium transition">Próximo <i class="fas fa-arrow-right ml-2"></i></button>
+                            <button onclick="navigateTo('mod1')" class="px-5 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium transition"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
+                            <button onclick="navigateTo('mod3')" class="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium transition">Próximo <i class="fas fa-arrow-right ml-2"></i></button>
                         </div>
                     </section>
 
@@ -459,8 +459,8 @@
                         </div>
 
                         <div class="mt-10 flex justify-between w-full nav-buttons-area">
-                            <button onclick="window.navigate('mod2')" class="px-5 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium transition"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
-                            <button onclick="window.navigate('mod4')" class="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium transition">Próximo <i class="fas fa-arrow-right ml-2"></i></button>
+                            <button onclick="navigateTo('mod2')" class="px-5 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium transition"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
+                            <button onclick="navigateTo('mod4')" class="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium transition">Próximo <i class="fas fa-arrow-right ml-2"></i></button>
                         </div>
                     </section>
 
@@ -493,8 +493,8 @@
                         </div>
 
                         <div class="mt-10 flex justify-between w-full nav-buttons-area">
-                            <button onclick="window.navigate('mod3')" class="px-5 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium transition"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
-                            <button onclick="window.navigate('mod5')" class="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium transition">Próximo <i class="fas fa-arrow-right ml-2"></i></button>
+                            <button onclick="navigateTo('mod3')" class="px-5 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium transition"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
+                            <button onclick="navigateTo('mod5')" class="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium transition">Próximo <i class="fas fa-arrow-right ml-2"></i></button>
                         </div>
                     </section>
 
@@ -670,8 +670,8 @@
                         </div>
 
                         <div class="mt-10 flex justify-between w-full nav-buttons-area">
-                            <button onclick="window.navigate('mod4')" class="px-5 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium transition"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
-                            <button onclick="window.navigate('mod6')" class="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium transition">Próximo <i class="fas fa-arrow-right ml-2"></i></button>
+                            <button onclick="navigateTo('mod4')" class="px-5 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium transition"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
+                            <button onclick="navigateTo('mod6')" class="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium transition">Próximo <i class="fas fa-arrow-right ml-2"></i></button>
                         </div>
                     </section>
 
@@ -764,8 +764,8 @@
                         </div>
 
                         <div class="mt-10 flex justify-between w-full nav-buttons-area">
-                            <button onclick="window.navigate('mod5')" class="px-5 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium transition"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
-                            <button onclick="window.navigate('faq')" class="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium transition">Próximo <i class="fas fa-arrow-right ml-2"></i></button>
+                            <button onclick="navigateTo('mod5')" class="px-5 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium transition"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
+                            <button onclick="navigateTo('faq')" class="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium transition">Próximo <i class="fas fa-arrow-right ml-2"></i></button>
                         </div>
                     </section>
 
@@ -777,7 +777,7 @@
                         <div class="content-wrapper flex flex-wrap gap-6 w-full items-start" id="faq-container">
                             <!-- Pergunta 1 -->
                             <div class="editable-block w-full bg-white p-6 rounded-xl shadow-sm border border-slate-200 transition-all duration-200">
-                                <div class="flex items-center justify-between cursor-pointer select-none" onclick="window.toggleFAQ(1)">
+                                <div class="flex items-center justify-between cursor-pointer select-none" onclick="toggleFAQ(1)">
                                     <h4 class="font-bold text-lg text-slate-800 flex items-start">
                                         <i class="fas fa-question-circle text-blue-500 mt-1 mr-3 text-xl"></i> 
                                         <span class="editable-element">1. Guia de movimentação, onde encontrar e como preencher?</span>
@@ -829,7 +829,7 @@
 
                             <!-- Pergunta 2 -->
                             <div class="editable-block w-full bg-white p-6 rounded-xl shadow-sm border border-slate-200 transition-all duration-200">
-                                <div class="flex items-center justify-between cursor-pointer select-none" onclick="window.toggleFAQ(2)">
+                                <div class="flex items-center justify-between cursor-pointer select-none" onclick="toggleFAQ(2)">
                                     <h4 class="font-bold text-lg text-slate-800 flex items-start">
                                         <i class="fas fa-question-circle text-blue-500 mt-1 mr-3 text-xl"></i> 
                                         <span class="editable-element">2. Como faço para recolher a assinatura dos diretores responsáveis?</span>
@@ -849,7 +849,7 @@
 
                             <!-- Pergunta 3 -->
                             <div class="editable-block w-full bg-white p-6 rounded-xl shadow-sm border border-slate-200 transition-all duration-200">
-                                <div class="flex items-center justify-between cursor-pointer select-none" onclick="window.toggleFAQ(3)">
+                                <div class="flex items-center justify-between cursor-pointer select-none" onclick="toggleFAQ(3)">
                                     <h4 class="font-bold text-lg text-slate-800 flex items-start">
                                         <i class="fas fa-question-circle text-blue-500 mt-1 mr-3 text-xl"></i> 
                                         <span class="editable-element">3. Após recolher as assinaturas, qual versão baixo: VERSÃO DE IMPRESSÃO ou VERSÃO ASSINADA?</span>
@@ -863,8 +863,8 @@
                         </div>
 
                         <div class="mt-10 flex justify-between w-full nav-buttons-area">
-                            <button onclick="window.navigate('mod6')" class="px-5 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium transition"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
-                            <button onclick="window.navigate('tools')" class="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium transition">Próximo <i class="fas fa-arrow-right ml-2"></i></button>
+                            <button onclick="navigateTo('mod6')" class="px-5 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium transition"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
+                            <button onclick="navigateTo('tools')" class="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium transition">Próximo <i class="fas fa-arrow-right ml-2"></i></button>
                         </div>
                     </section>
 
@@ -875,7 +875,7 @@
                                 <span class="text-blue-600 font-semibold tracking-wider text-sm uppercase editable-element">Ferramentas Extras</span>
                                 <h2 class="text-3xl font-bold text-slate-800 mt-2 editable-element">Visualizador de Documentos (PDF)</h2>
                             </div>
-                            <button id="btn-add-pdf" onclick="window.openPDFModal()" class="hidden bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium shadow transition-colors">
+                            <button id="btn-add-pdf" onclick="openPDFModal()" class="hidden bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium shadow transition-colors">
                                 <i class="fas fa-plus mr-2"></i> Novo PDF
                             </button>
                         </div>
@@ -891,8 +891,8 @@
                         </div>
 
                         <div class="mt-10 flex justify-between w-full nav-buttons-area">
-                            <button onclick="window.navigate('faq')" class="px-5 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium transition"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
-                            <button onclick="window.finishCourse()" class="px-8 py-3 bg-green-600 text-white hover:bg-green-700 rounded-lg font-bold shadow-lg shadow-green-200 transition transform hover:-translate-y-1"><i class="fas fa-check-circle mr-2"></i> Finalizar Curso</button>
+                            <button onclick="navigateTo('faq')" class="px-5 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium transition"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
+                            <button onclick="finishCourse()" class="px-8 py-3 bg-green-600 text-white hover:bg-green-700 rounded-lg font-bold shadow-lg shadow-green-200 transition transform hover:-translate-y-1"><i class="fas fa-check-circle mr-2"></i> Finalizar Curso</button>
                         </div>
                     </section>
                 </div>
@@ -908,7 +908,7 @@
                 <h3 id="modal-title" class="text-2xl font-bold text-slate-800 mb-2">Título</h3>
                 <p id="modal-message" class="text-slate-600 mb-6">Mensagem</p>
                 <div id="modal-action-area" class="flex gap-2 justify-center">
-                    <button onclick="window.closeModal()" id="modal-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition">
+                    <button onclick="closeModal()" id="modal-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition">
                         Continuar
                     </button>
                 </div>
@@ -927,12 +927,12 @@
             </div>
             <p class="text-sm text-slate-600 mb-4" id="login-feedback">Entre para gerenciar o conteúdo.</p>
             <input type="email" id="admin-email" class="w-full border border-slate-300 rounded-lg p-2.5 mb-2 outline-none focus:border-blue-500 transition-all" placeholder="E-mail">
-            <input type="password" id="admin-password" class="w-full border border-slate-300 rounded-lg p-2.5 mb-4 outline-none focus:border-blue-500 transition-all" placeholder="Senha" onkeyup="if(event.key === 'Enter') window.doAdminLogin()">
+            <input type="password" id="admin-password" class="w-full border border-slate-300 rounded-lg p-2.5 mb-4 outline-none focus:border-blue-500 transition-all" placeholder="Senha" onkeyup="if(event.key === 'Enter') doAdminLogin()">
             <div class="flex justify-between items-center mt-2">
-                <button onclick="window.doAdminRegister()" class="text-sm text-blue-600 hover:underline font-medium">Criar Conta</button>
+                <button onclick="doAdminRegister()" class="text-sm text-blue-600 hover:underline font-medium">Criar Conta</button>
                 <div class="space-x-2">
-                    <button onclick="window.closeAdminLogin()" class="px-4 py-2 text-slate-600 hover:bg-slate-100 font-medium rounded-lg">Cancelar</button>
-                    <button onclick="window.doAdminLogin()" class="px-4 py-2 bg-slate-800 text-white hover:bg-slate-900 font-medium rounded-lg">Entrar</button>
+                    <button onclick="closeAdminLogin()" class="px-4 py-2 text-slate-600 hover:bg-slate-100 font-medium rounded-lg">Cancelar</button>
+                    <button onclick="doAdminLogin()" class="px-4 py-2 bg-slate-800 text-white hover:bg-slate-900 font-medium rounded-lg">Entrar</button>
                 </div>
             </div>
         </div>
@@ -955,8 +955,8 @@
             <input type="number" id="pdf-order" class="w-full border border-slate-300 rounded-lg p-2.5 mb-4 outline-none focus:border-blue-500 transition-all" placeholder="Ordem de Exibição (Ex: 1)">
             
             <div class="flex justify-end space-x-2">
-                <button onclick="window.closePDFModal()" class="px-4 py-2 text-slate-600 hover:bg-slate-100 font-medium rounded-lg transition-colors">Cancelar</button>
-                <button onclick="window.savePDF()" class="px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 font-medium rounded-lg transition-colors">Salvar PDF</button>
+                <button onclick="closePDFModal()" class="px-4 py-2 text-slate-600 hover:bg-slate-100 font-medium rounded-lg transition-colors">Cancelar</button>
+                <button onclick="savePDF()" class="px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 font-medium rounded-lg transition-colors">Salvar PDF</button>
             </div>
         </div>
     </div>
@@ -966,7 +966,7 @@
         <div class="bg-white rounded-xl shadow-2xl flex flex-col w-11/12 h-[90vh] mx-4 transform scale-95 transition-transform duration-300">
             <div class="flex justify-between items-center p-4 border-b border-slate-200">
                 <h3 class="text-lg font-bold text-slate-800" id="viewer-title">Visualizador de PDF</h3>
-                <button onclick="window.closePDFViewer()" class="text-slate-500 hover:text-red-500 text-3xl leading-none transition-colors">&times;</button>
+                <button onclick="closePDFViewer()" class="text-slate-500 hover:text-red-500 text-3xl leading-none transition-colors">&times;</button>
             </div>
             <div class="flex-1 bg-slate-100 p-2 overflow-hidden relative rounded-b-xl">
                 <iframe id="pdf-iframe" class="w-full h-full border-0 rounded" src=""></iframe>
@@ -978,38 +978,38 @@
     <div id="admin-panel" class="fixed bottom-6 right-6 bg-slate-800 text-white rounded-xl shadow-2xl z-[900] hidden flex-col border border-slate-700 w-80">
         <div id="admin-panel-header" class="text-sm font-bold flex items-center justify-between border-b border-slate-600 p-3 bg-slate-900 rounded-t-xl select-none">
             <span class="flex items-center"><i class="fas fa-grip-lines text-slate-500 mr-3"></i> Painel de Administração</span>
-            <button onclick="window.logoutAdmin()" class="text-slate-400 hover:text-red-400" title="Sair da Sessão"><i class="fas fa-sign-out-alt"></i> Sair</button>
+            <button onclick="logoutAdmin()" class="text-slate-400 hover:text-red-400" title="Sair da Sessão"><i class="fas fa-sign-out-alt"></i> Sair</button>
         </div>
         
         <div class="p-4 flex flex-col gap-3">
             
             <!-- Botões de Acesso Rápido -->
             <div class="grid grid-cols-2 gap-2">
-                <button onclick="window.toggleEditMode()" id="btn-toggle-simple-edit" class="bg-teal-600 hover:bg-teal-500 px-2 py-2 rounded text-xs font-medium transition flex items-center justify-center shadow">
+                <button onclick="toggleEditMode()" id="btn-toggle-simple-edit" class="bg-teal-600 hover:bg-teal-500 px-2 py-2 rounded text-xs font-medium transition flex items-center justify-center shadow">
                     <i class="fas fa-pen mr-2"></i> Edição Simples
                 </button>
-                <button onclick="window.navigate('tools')" class="bg-orange-600 hover:bg-orange-500 px-2 py-2 rounded text-xs font-medium transition flex items-center justify-center shadow">
+                <button onclick="navigateTo('tools')" class="bg-orange-600 hover:bg-orange-500 px-2 py-2 rounded text-xs font-medium transition flex items-center justify-center shadow">
                     <i class="fas fa-file-pdf mr-2"></i> Gerir PDFs
                 </button>
             </div>
 
             <!-- Controles que só aparecem durante a EDIÇÃO SIMPLES -->
             <div class="grid grid-cols-2 gap-2" id="simple-edit-controls" style="display: none;">
-                <button onclick="window.addPage()" class="bg-indigo-600 hover:bg-indigo-500 px-2 py-2 rounded text-xs font-medium transition flex items-center justify-center shadow">
+                <button onclick="addPage()" class="bg-indigo-600 hover:bg-indigo-500 px-2 py-2 rounded text-xs font-medium transition flex items-center justify-center shadow">
                     <i class="fas fa-file-medical mr-2"></i> Nova Página
                 </button>
-                <button onclick="window.addTextBox()" class="bg-emerald-600 hover:bg-emerald-500 px-2 py-2 rounded text-xs font-medium transition flex items-center justify-center shadow">
+                <button onclick="addTextBox()" class="bg-emerald-600 hover:bg-emerald-500 px-2 py-2 rounded text-xs font-medium transition flex items-center justify-center shadow">
                     <i class="fas fa-plus-square mr-2"></i> Novo Bloco
                 </button>
             </div>
 
             <!-- Botões de Ação Principais -->
-            <button onclick="window.toggleGrapesJS()" id="btn-toggle-grapes-edit" class="bg-blue-600 hover:bg-blue-500 px-4 py-3 rounded text-sm font-medium transition flex items-center justify-center shadow">
+            <button onclick="toggleGrapesJS()" id="btn-toggle-grapes-edit" class="bg-blue-600 hover:bg-blue-500 px-4 py-3 rounded text-sm font-medium transition flex items-center justify-center shadow">
                 <i class="fas fa-magic mr-2"></i> Editor Visual Profundo
             </button>
 
             <!-- Botão de Salvar da Edição Simples (Só aparece quando a edição simples está ligada) -->
-            <button onclick="window.saveSimpleChanges()" id="btn-save-simple" class="bg-green-600 hover:bg-green-500 px-4 py-2 rounded text-sm font-medium transition items-center justify-center shadow-lg shadow-green-900/50 hidden">
+            <button onclick="saveSimpleChanges()" id="btn-save-simple" class="bg-green-600 hover:bg-green-500 px-4 py-2 rounded text-sm font-medium transition items-center justify-center shadow-lg shadow-green-900/50 hidden">
                 <i class="fas fa-cloud-upload-alt mr-2"></i> Salvar na Nuvem
             </button>
 
@@ -1017,190 +1017,130 @@
         </div>
     </div>
 
-    <!-- FIREBASE MODULE E LOGICA DE APLICAÇÃO UNIFICADA -->
+    <!-- FIREBASE MODULE E LÓGICA DE APLICAÇÃO UNIFICADA -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, addDoc, serverTimestamp, onSnapshot, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
-        // Configuração do Firebase
-        const defaultFirebaseConfig = {
-            apiKey: "COLE_SUA_API_KEY_AQUI", // Equipe TI: Insira a API Key do seu projeto Firebase
-            authDomain: "seu-projeto.firebaseapp.com",
-            projectId: "seu-projeto-id",
-            storageBucket: "seu-projeto.appspot.com", // Importante para o Upload de PDFs
-            messagingSenderId: "1234567890",
-            appId: "1:1234567890:web:abcdef123456"
-        };
-
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : defaultFirebaseConfig;
+        // === 1. DECLARAÇÃO GLOBAL DAS FUNÇÕES DE UI E COMPORTAMENTO ===
+        // Ao invés de dependermos de injeções quebradas, todas as funções chamadas pelo HTML estão aqui.
         
-        window.isPlaceholderKey = firebaseConfig.apiKey === "COLE_SUA_API_KEY_AQUI";
-        
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const storage = getStorage(app);
-        
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'patrimonio-app';
-        
-        window.db = db;
-        window.storage = storage;
-        window.appId = appId;
-        window.auth = auth;
-        window.isUserAdmin = false;
-        window.pdfList = [];
         window.bgColors = ['bg-white', 'bg-slate-50', 'bg-blue-50', 'bg-yellow-50', 'bg-green-50', 'bg-red-50', 'bg-blue-600'];
+        window.pdfList = [];
+        window.isUserAdmin = false;
+        window.editorActive = false;
+        window.currentModalAction = null;
 
-        document.addEventListener('DOMContentLoaded', async () => {
-            setupAdminPanelDrag();
-            setupFormatToolbar();
-
-            const initAuth = async () => {
-                if (window.isPlaceholderKey) {
-                    console.warn("⚠️ MODO OFFLINE: Chaves do Firebase ausentes. Banco de dados e Login desativados.");
-                    return;
-                }
-                try {
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-                } catch(e) { console.error("Auth init error:", e); }
-            };
-            await initAuth();
-
-            onAuthStateChanged(auth, (user) => {
-                if (user && !user.isAnonymous) {
-                    window.isUserAdmin = true;
-                    document.getElementById('admin-panel').classList.remove('hidden');
-                    document.getElementById('admin-panel').classList.add('flex');
-                    document.getElementById('admin-auth-area').classList.add('hidden'); 
-                } else {
-                    window.isUserAdmin = false;
-                    document.getElementById('admin-panel').classList.add('hidden');
-                    document.getElementById('admin-panel').classList.remove('flex');
-                    document.getElementById('admin-auth-area').classList.remove('hidden');
-                }
-                window.renderPDFs();
+        window.navigateTo = (viewId) => {
+            if(document.body.classList.contains('edit-active')) {
+                if(event && event.target.tagName === 'SPAN') return;
+            }
+            document.querySelectorAll('.view-section').forEach(sec => {
+                sec.classList.add('hidden');
+                sec.classList.remove('fade-in');
             });
-
-            await loadContentFromCloud();
-        });
-
-        async function loadContentFromCloud() {
-            if (window.isPlaceholderKey) {
-                document.getElementById('content-container').innerHTML = document.getElementById('factory-content').innerHTML;
-                injectToolsTabIfMissing();
-                window.renderPDFs();
-                setTimeout(() => {
-                    document.getElementById('loader').classList.add('opacity-0');
-                    setTimeout(() => document.getElementById('loader').classList.add('hidden'), 500);
-                    window.navigate('home');
-                }, 800);
-                return;
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+            const target = document.getElementById('view-' + viewId);
+            if(target) {
+                target.classList.remove('hidden');
+                void target.offsetWidth; 
+                target.classList.add('fade-in');
             }
+            const links = document.querySelectorAll(`a[onclick*="'${viewId}'"]`);
+            links.forEach(l => l.classList.add('active'));
 
-            try {
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'site_content', 'latest');
-                const docSnap = await getDoc(docRef);
-                
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    document.getElementById('content-container').innerHTML = data.content;
-                    document.getElementById('nav-theory').innerHTML = data.nav;
-                } else {
-                    document.getElementById('content-container').innerHTML = document.getElementById('factory-content').innerHTML;
+            if(window.innerWidth < 768) {
+                const sidebar = document.getElementById('sidebar');
+                if(!sidebar.classList.contains('-translate-x-full')){
+                    window.toggleSidebar();
                 }
-                
-                injectToolsTabIfMissing();
-                window.initPDFListener();
-
-            } catch(e) {
-                console.error("Cloud load error:", e);
-                document.getElementById('content-container').innerHTML = document.getElementById('factory-content').innerHTML;
-                injectToolsTabIfMissing();
-                window.initPDFListener();
-            } finally {
-                setTimeout(() => {
-                    document.getElementById('loader').classList.add('opacity-0');
-                    setTimeout(() => document.getElementById('loader').classList.add('hidden'), 500);
-                    window.navigate('home');
-                }, 800);
             }
-        }
-
-        function injectToolsTabIfMissing() {
-            if(!document.getElementById('nav-tools')) {
-                const navHTML = `
-                    <a href="#" onclick="window.navigate('tools')" id="nav-tools" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
-                        <i class="fas fa-toolbox w-6 text-center mr-2"></i> <span class="nav-title editable-element">FERRAMENTAS</span>
-                    </a>
-                `;
-                document.getElementById('nav-theory').insertAdjacentHTML('beforeend', navHTML);
-            }
-            if(!document.getElementById('view-tools')) {
-                const toolsHTML = document.querySelector('#factory-content #view-tools').outerHTML;
-                document.getElementById('content-container').insertAdjacentHTML('beforeend', toolsHTML);
-            }
-        }
-
-        // --- SISTEMA DE PDFs VIA FIRESTORE E STORAGE ---
-        window.initPDFListener = () => {
-            if (window.isPlaceholderKey) return;
-            const q = collection(window.db, 'artifacts', window.appId, 'public', 'data', 'pdf_tools');
-            onSnapshot(q, (snapshot) => {
-                window.pdfList = [];
-                snapshot.forEach((doc) => {
-                    window.pdfList.push({ id: doc.id, ...doc.data() });
-                });
-                window.pdfList.sort((a, b) => (a.order || 0) - (b.order || 0));
-                window.renderPDFs();
-            }, (error) => {
-                console.error("Error listening to PDFs: ", error);
-            });
+            document.getElementById('content-container').scrollTop = 0;
         };
 
-        window.renderPDFs = () => {
-            document.querySelectorAll('#pdf-dynamic-list').forEach(container => {
-                container.innerHTML = '';
-                
-                window.pdfList.forEach(pdf => {
-                    const adminControls = window.isUserAdmin ? `
-                        <div class="mt-4 pt-4 border-t border-slate-100 flex justify-end space-x-3">
-                            <button onclick="window.editPDF('${pdf.id}')" class="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors"><i class="fas fa-edit"></i> Editar</button>
-                            <button onclick="window.deletePDF('${pdf.id}')" class="text-xs text-red-600 hover:text-red-800 font-medium transition-colors"><i class="fas fa-trash"></i> Excluir</button>
-                        </div>
-                    ` : '';
+        window.toggleSidebar = () => {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        };
 
-                    container.innerHTML += `
-                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col h-full hover:shadow-md transition-shadow">
-                            <div class="flex items-center mb-3">
-                                <div class="w-10 h-10 bg-red-100 text-red-600 rounded-lg flex items-center justify-center text-xl mr-3 flex-shrink-0">
-                                    <i class="fas fa-file-pdf"></i>
-                                </div>
-                                <h4 class="font-bold text-slate-800 leading-tight">${pdf.title}</h4>
-                            </div>
-                            <p class="text-sm text-slate-600 flex-grow mb-4">${pdf.description || ''}</p>
-                            <button onclick="window.openPDFViewer('${pdf.url}', '${pdf.title}')" class="w-full bg-slate-800 hover:bg-slate-900 text-white text-sm font-medium py-2.5 rounded-lg transition-colors shadow">
-                                <i class="fas fa-eye mr-1"></i> Visualizar Documento
-                            </button>
-                            ${adminControls}
-                        </div>
-                    `;
-                });
+        window.toggleFAQ = (id) => {
+            if(document.body.classList.contains('edit-active')) return;
+            const content = document.getElementById('faq-ans-' + id);
+            const icon = document.getElementById('faq-icon-' + id);
+            if(content && icon) {
+                content.classList.toggle('hidden');
+                icon.classList.toggle('rotate-180');
+            }
+        };
 
-                if(window.pdfList.length === 0) {
-                    container.innerHTML = '<div class="col-span-2 text-center p-8 bg-slate-50 rounded-lg border border-dashed border-slate-300"><i class="fas fa-folder-open text-3xl text-slate-300 mb-2"></i><p class="text-slate-500 italic">Nenhum documento PDF cadastrado no momento.</p></div>';
+        window.showModal = (type, title, message, actionCallback = null) => {
+            const modal = document.getElementById('custom-modal');
+            const iconContainer = document.getElementById('modal-icon');
+            const titleEl = document.getElementById('modal-title');
+            const messageEl = document.getElementById('modal-message');
+            const btnEl = document.getElementById('modal-btn');
+            window.currentModalAction = actionCallback;
+
+            if(type === 'success') {
+                iconContainer.className = "w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 text-3xl bg-green-100 text-green-500";
+                iconContainer.innerHTML = '<i class="fas fa-check"></i>';
+                btnEl.className = "w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition";
+                btnEl.innerText = "Continuar";
+            } else if(type === 'error') {
+                iconContainer.className = "w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 text-3xl bg-red-100 text-red-500";
+                iconContainer.innerHTML = '<i class="fas fa-times"></i>';
+                btnEl.className = "w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 px-4 rounded-lg transition";
+                btnEl.innerText = "Tentar Novamente";
+            } else {
+                iconContainer.className = "w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 text-3xl bg-blue-100 text-blue-500";
+                iconContainer.innerHTML = '<i class="fas fa-info"></i>';
+                btnEl.className = "w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition";
+                btnEl.innerText = "Entendi";
+            }
+            titleEl.innerText = title;
+            messageEl.innerHTML = message;
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                document.getElementById('modal-content-box').classList.remove('scale-95');
+            }, 10);
+        };
+
+        window.closeModal = () => {
+            const modal = document.getElementById('custom-modal');
+            modal.classList.add('opacity-0');
+            document.getElementById('modal-content-box').classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                if(window.currentModalAction) {
+                    window.currentModalAction();
+                    window.currentModalAction = null;
                 }
-            });
+            }, 300);
+        };
 
-            document.querySelectorAll('#btn-add-pdf').forEach(btn => {
-                if(window.isUserAdmin) btn.classList.remove('hidden');
-                else btn.classList.add('hidden');
-            });
+        window.finishCourse = () => {
+            window.showModal('success', 'Parabéns! Curso Concluído', 'Você finalizou a trilha de capacitação sobre Patrimônio Público!<br><br>Consulte o Departamento pelos ramais <strong>5624</strong> ou <strong>5644</strong>.', () => window.navigateTo('home'));
+        };
+
+        window.openAdminLogin = () => {
+            document.getElementById('admin-login-modal').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('admin-login-modal').classList.remove('opacity-0');
+                document.getElementById('admin-login-box').classList.remove('scale-95');
+                document.getElementById('admin-email').focus();
+            }, 10);
+        };
+
+        window.closeAdminLogin = () => {
+            document.getElementById('admin-login-modal').classList.add('opacity-0');
+            document.getElementById('admin-login-box').classList.add('scale-95');
+            setTimeout(() => { document.getElementById('admin-login-modal').classList.add('hidden'); }, 300);
         };
 
         window.openPDFModal = () => {
@@ -1216,102 +1156,13 @@
             const modal = document.getElementById('pdf-form-modal');
             modal.classList.remove('hidden');
             setTimeout(() => modal.classList.remove('opacity-0'), 10);
-        }
-
-        window.editPDF = (id) => {
-            if(!window.isUserAdmin) return;
-            const pdf = window.pdfList.find(p => p.id === id);
-            if(!pdf) return;
-            document.getElementById('pdf-id').value = pdf.id;
-            document.getElementById('pdf-title').value = pdf.title || '';
-            document.getElementById('pdf-desc').value = pdf.description || '';
-            document.getElementById('pdf-url').value = pdf.url || '';
-            document.getElementById('pdf-file').value = ''; 
-            document.getElementById('pdf-order').value = pdf.order || 0;
-            document.getElementById('pdf-modal-title').innerText = 'Editar Configuração de PDF';
-            
-            const modal = document.getElementById('pdf-form-modal');
-            modal.classList.remove('hidden');
-            setTimeout(() => modal.classList.remove('opacity-0'), 10);
-        }
+        };
 
         window.closePDFModal = () => {
             const modal = document.getElementById('pdf-form-modal');
             modal.classList.add('opacity-0');
             setTimeout(() => modal.classList.add('hidden'), 300);
-        }
-
-        window.savePDF = async () => {
-            if(!window.isUserAdmin) return;
-            const id = document.getElementById('pdf-id').value;
-            const title = document.getElementById('pdf-title').value;
-            const desc = document.getElementById('pdf-desc').value;
-            let url = document.getElementById('pdf-url').value;
-            const order = parseInt(document.getElementById('pdf-order').value) || 0;
-            
-            const fileInput = document.getElementById('pdf-file');
-            const file = fileInput.files[0];
-
-            if(!title) {
-                alert('O Título do Documento é obrigatório!');
-                return;
-            }
-
-            if(!url && !file) {
-                alert('Faça o upload do arquivo PDF ou forneça uma URL externa!');
-                return;
-            }
-
-            if (window.isPlaceholderKey) {
-                window.showModal('info', 'Modo Offline', 'Não é possível fazer upload de arquivos no momento. A equipe de TI precisa configurar a API do Firebase.');
-                return;
-            }
-
-            try {
-                if(file) {
-                    window.showModal('info', 'Fazendo Upload...', 'A enviar o arquivo PDF para a nuvem. Por favor, aguarde...');
-                    const storageRef = ref(window.storage, `artifacts/${window.appId}/public/data/pdfs/${Date.now()}_${file.name}`);
-                    const snapshot = await uploadBytes(storageRef, file);
-                    url = await getDownloadURL(snapshot.ref);
-                }
-
-                if(id) {
-                    const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'pdf_tools', id);
-                    await updateDoc(docRef, { title, description: desc, url, order });
-                    window.logAction(`Editou as configurações do PDF: ${title}`);
-                } else {
-                    const colRef = collection(window.db, 'artifacts', window.appId, 'public', 'data', 'pdf_tools');
-                    await addDoc(colRef, { title, description: desc, url, order, createdAt: serverTimestamp() });
-                    window.logAction(`Adicionou um novo PDF: ${title}`);
-                }
-                
-                window.closePDFModal();
-                setTimeout(() => window.showModal('success', 'Documento Salvo', 'O PDF foi configurado e salvo com sucesso.'), 350);
-            } catch(e) {
-                window.showModal('error', 'Erro ao Salvar', e.message);
-            }
-        }
-
-        window.deletePDF = async (id) => {
-            if(!window.isUserAdmin) return;
-            const pdf = window.pdfList.find(p => p.id === id);
-            
-            if (window.isPlaceholderKey) {
-                window.showModal('info', 'Modo Offline', 'Ação indisponível sem as chaves do Firebase.');
-                return;
-            }
-
-            if(confirm(`ATENÇÃO: Confirma a exclusão definitiva do documento "${pdf?.title}" da plataforma?`)) {
-                try {
-                    const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'pdf_tools', id);
-                    await deleteDoc(docRef);
-                    window.logAction(`Excluiu definitivamente o PDF: ${pdf?.title}`);
-                    window.showModal('success', 'Removido!', 'Documento retirado da plataforma com sucesso.');
-                } catch(e) {
-                    window.showModal('error', 'Erro', e.message);
-                }
-            }
-        }
+        };
 
         window.openPDFViewer = (url, title) => {
             document.getElementById('viewer-title').innerText = title;
@@ -1319,7 +1170,7 @@
             const modal = document.getElementById('pdf-viewer-modal');
             modal.classList.remove('hidden');
             setTimeout(() => modal.classList.remove('opacity-0'), 10);
-        }
+        };
 
         window.closePDFViewer = () => {
             const modal = document.getElementById('pdf-viewer-modal');
@@ -1328,177 +1179,10 @@
                 modal.classList.add('hidden');
                 document.getElementById('pdf-iframe').src = '';
             }, 300);
-        }
-
-        window.doAdminLogin = async () => {
-            if (window.isPlaceholderKey) {
-                const feedback = document.getElementById('login-feedback');
-                feedback.innerText = "⚠️ Erro: Substitua 'COLE_SUA_API_KEY_AQUI' pelas chaves reais do Firebase no código-fonte para prosseguir.";
-                feedback.classList.add('text-red-500');
-                return;
-            }
-
-            const email = document.getElementById('admin-email').value;
-            const pass = document.getElementById('admin-password').value;
-            const feedback = document.getElementById('login-feedback');
-            if(!email || !pass) return;
-            feedback.innerText = "Autenticando...";
-            try {
-                await signInWithEmailAndPassword(auth, email, pass);
-                window.closeAdminLogin();
-            } catch(error) {
-                feedback.innerText = "Erro: " + error.message;
-            }
-        };
-
-        window.doAdminRegister = async () => {
-            if (window.isPlaceholderKey) {
-                const feedback = document.getElementById('login-feedback');
-                feedback.innerText = "⚠️ Erro: Substitua 'COLE_SUA_API_KEY_AQUI' pelas chaves reais do Firebase no código-fonte para prosseguir.";
-                feedback.classList.add('text-red-500');
-                return;
-            }
-
-            const email = document.getElementById('admin-email').value;
-            const pass = document.getElementById('admin-password').value;
-            const feedback = document.getElementById('login-feedback');
-            if(!email || !pass) return;
-            feedback.innerText = "Criando conta...";
-            try {
-                await createUserWithEmailAndPassword(auth, email, pass);
-                window.closeAdminLogin();
-                window.showModal('success', 'Conta Criada!', 'Acesso administrativo criado com sucesso.');
-            } catch(error) {
-                feedback.innerText = "Erro: " + error.message;
-            }
-        };
-
-        window.logoutAdmin = async () => {
-            if(window.editorActive) window.toggleGrapesJS();
-            if(document.body.classList.contains('edit-active')) window.toggleEditMode();
-            try {
-                await signOut(auth);
-                await signInAnonymously(auth);
-            } catch(e) { console.error(e); }
-        };
-
-        window.logAction = async (actionDesc) => {
-            if(!window.auth.currentUser || window.isPlaceholderKey) return;
-            const logRef = collection(window.db, 'artifacts', window.appId, 'public', 'data', 'change_logs');
-            await addDoc(logRef, {
-                userEmail: window.auth.currentUser.email,
-                timestamp: serverTimestamp(),
-                action: actionDesc
-            });
-        }
-
-        // --- SISTEMA DE EDIÇÃO SIMPLES ---
-        window.toggleEditMode = () => {
-            if(window.editorActive) return; 
-            
-            const isEditing = document.body.classList.toggle('edit-active');
-            const btn = document.getElementById('btn-toggle-simple-edit');
-            const simpleControls = document.getElementById('simple-edit-controls');
-            const btnSave = document.getElementById('btn-save-simple');
-            const grapesBtn = document.getElementById('btn-toggle-grapes-edit');
-            
-            const elements = document.querySelectorAll('.editable-element, .nav-title');
-            elements.forEach(el => el.contentEditable = isEditing);
-
-            if(isEditing) {
-                btn.innerHTML = '<i class="fas fa-lock mr-2"></i> Fechar Edição';
-                btn.classList.replace('bg-teal-600', 'bg-rose-600');
-                btn.classList.replace('hover:bg-teal-500', 'hover:bg-rose-500');
-                
-                simpleControls.style.display = 'grid';
-                btnSave.classList.remove('hidden');
-                btnSave.classList.add('flex');
-                grapesBtn.classList.add('hidden'); 
-                
-                document.querySelectorAll('[id^="faq-ans-"]').forEach(el => el.classList.remove('hidden'));
-                document.querySelectorAll('[id^="faq-icon-"]').forEach(el => el.classList.add('rotate-180'));
-                
-                window.injectBlockToolbars();
-            } else {
-                btn.innerHTML = '<i class="fas fa-pen mr-2"></i> Edição Simples';
-                btn.classList.replace('bg-rose-600', 'bg-teal-600');
-                btn.classList.replace('hover:bg-rose-500', 'hover:bg-teal-500');
-                
-                simpleControls.style.display = 'none';
-                btnSave.classList.add('hidden');
-                btnSave.classList.remove('flex');
-                grapesBtn.classList.remove('hidden');
-                
-                document.querySelectorAll('[id^="faq-ans-"]').forEach(el => el.classList.add('hidden'));
-                document.querySelectorAll('[id^="faq-icon-"]').forEach(el => el.classList.remove('rotate-180'));
-
-                window.removeBlockToolbars();
-            }
         };
 
         window.formatText = (command, value = null) => {
             document.execCommand(command, false, value);
-        };
-
-        window.addPage = () => {
-            const title = prompt("Digite o nome da Nova Página:");
-            if (!title) return;
-            
-            const uniqueId = 'page-' + Date.now();
-            
-            const navHTML = `
-                <a href="#" onclick="window.navigate('${uniqueId}')" id="nav-${uniqueId}" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
-                    <i class="fas fa-file-alt w-6 text-center mr-2" contenteditable="false"></i> <span class="editable-element nav-title">${title}</span>
-                </a>
-            `;
-            document.getElementById('nav-theory').insertAdjacentHTML('beforeend', navHTML);
-
-            const secHTML = `
-                <section id="view-${uniqueId}" class="view-section hidden fade-in max-w-4xl mx-auto pb-10">
-                    <span class="text-blue-600 font-semibold tracking-wider text-sm uppercase editable-element">NOVO MÓDULO</span>
-                    <h2 class="text-3xl font-bold text-slate-800 mt-2 mb-6 editable-element">${title}</h2>
-                    <div class="content-wrapper flex flex-wrap gap-6 w-full items-start">
-                        <div class="editable-block w-full bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                            <p class="editable-element text-slate-600">O seu novo conteúdo começa aqui. Pode editar este texto e redimensionar a caixa no canto inferior direito.</p>
-                        </div>
-                    </div>
-                </section>
-            `;
-            document.getElementById('content-container').insertAdjacentHTML('beforeend', secHTML);
-            
-            if(document.body.classList.contains('edit-active')) {
-                window.toggleEditMode();
-                window.toggleEditMode();
-            }
-            window.navigate(uniqueId);
-        };
-
-        window.addTextBox = () => {
-            const currentView = document.querySelector('.view-section:not(.hidden)');
-            if (!currentView) return;
-            
-            let wrapper = currentView.querySelector('.content-wrapper') || currentView;
-            
-            const boxHTML = `
-                <div class="editable-block w-full bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                    <h3 class="text-xl font-bold text-slate-800 mb-2 editable-element">Novo Título</h3>
-                    <p class="text-slate-600 editable-element">Escreva aqui o seu novo parágrafo. Utilize a aba inferior direita para redimensionar (esticar) a caixa livremente.</p>
-                </div>
-            `;
-            
-            const navButtons = currentView.querySelector('.nav-buttons-area');
-            if(navButtons && wrapper === currentView) {
-                navButtons.insertAdjacentHTML('beforebegin', boxHTML);
-            } else {
-                wrapper.insertAdjacentHTML('beforeend', boxHTML);
-            }
-
-            if(document.body.classList.contains('edit-active')) {
-                window.removeBlockToolbars();
-                window.injectBlockToolbars();
-                const novosEls = currentView.querySelectorAll('.editable-block:last-of-type .editable-element');
-                novosEls.forEach(el => el.contentEditable = "true");
-            }
         };
 
         window.injectBlockToolbars = () => {
@@ -1564,6 +1248,455 @@
             }
         };
 
+        window.addPage = () => {
+            const title = prompt("Digite o nome da Nova Página:");
+            if (!title) return;
+            
+            const uniqueId = 'page-' + Date.now();
+            
+            const navHTML = `
+                <a href="#" onclick="navigateTo('${uniqueId}')" id="nav-${uniqueId}" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
+                    <i class="fas fa-file-alt w-6 text-center mr-2" contenteditable="false"></i> <span class="editable-element nav-title">${title}</span>
+                </a>
+            `;
+            document.getElementById('nav-theory').insertAdjacentHTML('beforeend', navHTML);
+
+            const secHTML = `
+                <section id="view-${uniqueId}" class="view-section hidden fade-in max-w-4xl mx-auto pb-10">
+                    <span class="text-blue-600 font-semibold tracking-wider text-sm uppercase editable-element">NOVO MÓDULO</span>
+                    <h2 class="text-3xl font-bold text-slate-800 mt-2 mb-6 editable-element">${title}</h2>
+                    <div class="content-wrapper flex flex-wrap gap-6 w-full items-start">
+                        <div class="editable-block w-full bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                            <p class="editable-element text-slate-600">O seu novo conteúdo começa aqui. Pode editar este texto e redimensionar a caixa no canto inferior direito.</p>
+                        </div>
+                    </div>
+                </section>
+            `;
+            document.getElementById('content-container').insertAdjacentHTML('beforeend', secHTML);
+            
+            if(document.body.classList.contains('edit-active')) {
+                window.toggleEditMode();
+                window.toggleEditMode();
+            }
+            window.navigateTo(uniqueId);
+        };
+
+        window.addTextBox = () => {
+            const currentView = document.querySelector('.view-section:not(.hidden)');
+            if (!currentView) return;
+            
+            let wrapper = currentView.querySelector('.content-wrapper') || currentView;
+            
+            const boxHTML = `
+                <div class="editable-block w-full bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-xl font-bold text-slate-800 mb-2 editable-element">Novo Título</h3>
+                    <p class="text-slate-600 editable-element">Escreva aqui o seu novo parágrafo. Utilize a aba inferior direita para redimensionar (esticar) a caixa livremente.</p>
+                </div>
+            `;
+            
+            const navButtons = currentView.querySelector('.nav-buttons-area');
+            if(navButtons && wrapper === currentView) {
+                navButtons.insertAdjacentHTML('beforebegin', boxHTML);
+            } else {
+                wrapper.insertAdjacentHTML('beforeend', boxHTML);
+            }
+
+            if(document.body.classList.contains('edit-active')) {
+                window.removeBlockToolbars();
+                window.injectBlockToolbars();
+                const novosEls = currentView.querySelectorAll('.editable-block:last-of-type .editable-element');
+                novosEls.forEach(el => el.contentEditable = "true");
+            }
+        };
+
+        window.removeCurrentPage = () => {
+            const currentView = document.querySelector('.view-section:not(.hidden)');
+            if (!currentView || currentView.id === 'view-home') {
+                window.showModal('error', 'Ação Inválida', 'Não é possível remover a página inicial.');
+                return;
+            }
+            if (confirm("ATENÇÃO: Deseja realmente APAGAR a página atual e todo o seu conteúdo?")) {
+                const viewId = currentView.id.replace('view-', '');
+                currentView.remove(); 
+                const navLink = document.getElementById('nav-' + viewId);
+                if(navLink) navLink.remove(); 
+                window.navigateTo('home');
+            }
+        };
+
+        window.toggleEditMode = () => {
+            if(window.editorActive) return; 
+            
+            const isEditing = document.body.classList.toggle('edit-active');
+            const btn = document.getElementById('btn-toggle-simple-edit');
+            const simpleControls = document.getElementById('simple-edit-controls');
+            const btnSave = document.getElementById('btn-save-simple');
+            const grapesBtn = document.getElementById('btn-toggle-grapes-edit');
+            
+            const elements = document.querySelectorAll('.editable-element, .nav-title');
+            elements.forEach(el => el.contentEditable = isEditing);
+
+            if(isEditing) {
+                btn.innerHTML = '<i class="fas fa-lock mr-2"></i> Fechar Edição';
+                btn.classList.replace('bg-teal-600', 'bg-rose-600');
+                btn.classList.replace('hover:bg-teal-500', 'hover:bg-rose-500');
+                
+                simpleControls.style.display = 'grid';
+                btnSave.classList.remove('hidden');
+                btnSave.classList.add('flex');
+                grapesBtn.classList.add('hidden'); 
+                
+                document.querySelectorAll('[id^="faq-ans-"]').forEach(el => el.classList.remove('hidden'));
+                document.querySelectorAll('[id^="faq-icon-"]').forEach(el => el.classList.add('rotate-180'));
+                
+                window.injectBlockToolbars();
+            } else {
+                btn.innerHTML = '<i class="fas fa-pen mr-2"></i> Edição Simples';
+                btn.classList.replace('bg-rose-600', 'bg-teal-600');
+                btn.classList.replace('hover:bg-rose-500', 'hover:bg-teal-500');
+                
+                simpleControls.style.display = 'none';
+                btnSave.classList.add('hidden');
+                btnSave.classList.remove('flex');
+                grapesBtn.classList.remove('hidden');
+                
+                document.querySelectorAll('[id^="faq-ans-"]').forEach(el => el.classList.add('hidden'));
+                document.querySelectorAll('[id^="faq-icon-"]').forEach(el => el.classList.remove('rotate-180'));
+
+                window.removeBlockToolbars();
+            }
+        };
+
+        // --- SETUP FIREBASE ---
+        const defaultFirebaseConfig = {
+            apiKey: "COLE_SUA_API_KEY_AQUI", // Equipe TI: Insira a API Key do seu projeto Firebase
+            authDomain: "seu-projeto.firebaseapp.com",
+            projectId: "seu-projeto-id",
+            storageBucket: "seu-projeto.appspot.com", 
+            messagingSenderId: "1234567890",
+            appId: "1:1234567890:web:abcdef123456"
+        };
+
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : defaultFirebaseConfig;
+        window.isPlaceholderKey = firebaseConfig.apiKey === "COLE_SUA_API_KEY_AQUI";
+        
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'patrimonio-app';
+        
+        window.db = db;
+        window.storage = storage;
+        window.appId = appId;
+        window.auth = auth;
+
+        // --- INIT PRINCIPAL ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            
+            // Arraste do painel
+            const panel = document.getElementById('admin-panel');
+            const header = document.getElementById('admin-panel-header');
+            let isDragging = false, startX, startY, initialX, initialY;
+
+            header.addEventListener('mousedown', (e) => {
+                isDragging = true; startX = e.clientX; startY = e.clientY;
+                const rect = panel.getBoundingClientRect();
+                initialX = rect.left; initialY = rect.top;
+                panel.style.right = 'auto'; panel.style.bottom = 'auto';
+                panel.style.left = initialX + 'px'; panel.style.top = initialY + 'px';
+                document.addEventListener('mousemove', onDrag);
+                document.addEventListener('mouseup', stopDrag);
+            });
+            function onDrag(e) {
+                if(!isDragging) return;
+                panel.style.left = (initialX + (e.clientX - startX)) + 'px';
+                panel.style.top = (initialY + (e.clientY - startY)) + 'px';
+            }
+            function stopDrag() {
+                isDragging = false;
+                document.removeEventListener('mousemove', onDrag);
+                document.removeEventListener('mouseup', stopDrag);
+            }
+
+            // Toolbar formatação
+            const formatBar = document.getElementById('format-toolbar');
+            document.addEventListener('selectionchange', () => {
+                if (!document.body.classList.contains('edit-active')) { formatBar.style.display = 'none'; return; }
+                const selection = window.getSelection();
+                if (selection.rangeCount > 0 && !selection.isCollapsed) {
+                    const range = selection.getRangeAt(0);
+                    const rect = range.getBoundingClientRect();
+                    if(selection.anchorNode.parentElement && selection.anchorNode.parentElement.isContentEditable) {
+                        formatBar.style.display = 'flex';
+                        formatBar.style.top = `${rect.top + window.scrollY - 45}px`;
+                        formatBar.style.left = `${rect.left + (rect.width / 2) - (formatBar.offsetWidth / 2)}px`;
+                    }
+                } else { formatBar.style.display = 'none'; }
+            });
+
+            // Firebase Auth
+            const initAuth = async () => {
+                if (window.isPlaceholderKey) {
+                    console.warn("⚠️ MODO OFFLINE: Chaves do Firebase ausentes.");
+                    return;
+                }
+                try {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                } catch(e) { console.error("Auth init error:", e); }
+            };
+            await initAuth();
+
+            onAuthStateChanged(auth, (user) => {
+                if (user && !user.isAnonymous) {
+                    window.isUserAdmin = true;
+                    document.getElementById('admin-panel').classList.remove('hidden');
+                    document.getElementById('admin-panel').classList.add('flex');
+                    document.getElementById('admin-auth-area').classList.add('hidden'); 
+                } else {
+                    window.isUserAdmin = false;
+                    document.getElementById('admin-panel').classList.add('hidden');
+                    document.getElementById('admin-panel').classList.remove('flex');
+                    document.getElementById('admin-auth-area').classList.remove('hidden');
+                }
+                window.renderPDFs();
+            });
+
+            // Load Cloud Content
+            const loadContentFromCloud = async () => {
+                if (window.isPlaceholderKey) {
+                    document.getElementById('content-container').innerHTML = document.getElementById('factory-content').innerHTML;
+                    injectToolsTabIfMissing();
+                    window.renderPDFs();
+                    setTimeout(() => {
+                        document.getElementById('loader').classList.add('opacity-0');
+                        setTimeout(() => document.getElementById('loader').classList.add('hidden'), 500);
+                        window.navigateTo('home');
+                    }, 800);
+                    return;
+                }
+
+                try {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'site_content', 'latest');
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        document.getElementById('content-container').innerHTML = data.content;
+                        document.getElementById('nav-theory').innerHTML = data.nav;
+                    } else {
+                        document.getElementById('content-container').innerHTML = document.getElementById('factory-content').innerHTML;
+                    }
+                    injectToolsTabIfMissing();
+                    window.initPDFListener();
+                } catch(e) {
+                    console.error("Cloud load error:", e);
+                    document.getElementById('content-container').innerHTML = document.getElementById('factory-content').innerHTML;
+                    injectToolsTabIfMissing();
+                    window.initPDFListener();
+                } finally {
+                    setTimeout(() => {
+                        document.getElementById('loader').classList.add('opacity-0');
+                        setTimeout(() => document.getElementById('loader').classList.add('hidden'), 500);
+                        window.navigateTo('home');
+                    }, 800);
+                }
+            };
+            await loadContentFromCloud();
+
+            function injectToolsTabIfMissing() {
+                if(!document.getElementById('nav-tools')) {
+                    const navHTML = `
+                        <a href="#" onclick="navigateTo('tools')" id="nav-tools" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
+                            <i class="fas fa-toolbox w-6 text-center mr-2"></i> <span class="nav-title editable-element">FERRAMENTAS</span>
+                        </a>
+                    `;
+                    document.getElementById('nav-theory').insertAdjacentHTML('beforeend', navHTML);
+                }
+                if(!document.getElementById('view-tools')) {
+                    const toolsHTML = document.querySelector('#factory-content #view-tools').outerHTML;
+                    document.getElementById('content-container').insertAdjacentHTML('beforeend', toolsHTML);
+                }
+            }
+        });
+
+        // --- SISTEMA DE PDFs E BANCO DE DADOS ---
+        window.initPDFListener = () => {
+            if (window.isPlaceholderKey) return;
+            const q = collection(window.db, 'artifacts', window.appId, 'public', 'data', 'pdf_tools');
+            onSnapshot(q, (snapshot) => {
+                window.pdfList = [];
+                snapshot.forEach((doc) => { window.pdfList.push({ id: doc.id, ...doc.data() }); });
+                window.pdfList.sort((a, b) => (a.order || 0) - (b.order || 0));
+                window.renderPDFs();
+            }, (error) => { console.error("Error listening to PDFs: ", error); });
+        };
+
+        window.renderPDFs = () => {
+            document.querySelectorAll('#pdf-dynamic-list').forEach(container => {
+                container.innerHTML = '';
+                window.pdfList.forEach(pdf => {
+                    const adminControls = window.isUserAdmin ? `
+                        <div class="mt-4 pt-4 border-t border-slate-100 flex justify-end space-x-3">
+                            <button onclick="window.editPDF('${pdf.id}')" class="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors"><i class="fas fa-edit"></i> Editar</button>
+                            <button onclick="window.deletePDF('${pdf.id}')" class="text-xs text-red-600 hover:text-red-800 font-medium transition-colors"><i class="fas fa-trash"></i> Excluir</button>
+                        </div>
+                    ` : '';
+                    container.innerHTML += `
+                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col h-full hover:shadow-md transition-shadow">
+                            <div class="flex items-center mb-3">
+                                <div class="w-10 h-10 bg-red-100 text-red-600 rounded-lg flex items-center justify-center text-xl mr-3 flex-shrink-0">
+                                    <i class="fas fa-file-pdf"></i>
+                                </div>
+                                <h4 class="font-bold text-slate-800 leading-tight">${pdf.title}</h4>
+                            </div>
+                            <p class="text-sm text-slate-600 flex-grow mb-4">${pdf.description || ''}</p>
+                            <button onclick="window.openPDFViewer('${pdf.url}', '${pdf.title}')" class="w-full bg-slate-800 hover:bg-slate-900 text-white text-sm font-medium py-2.5 rounded-lg transition-colors shadow">
+                                <i class="fas fa-eye mr-1"></i> Visualizar Documento
+                            </button>
+                            ${adminControls}
+                        </div>
+                    `;
+                });
+                if(window.pdfList.length === 0) {
+                    container.innerHTML = '<div class="col-span-2 text-center p-8 bg-slate-50 rounded-lg border border-dashed border-slate-300"><i class="fas fa-folder-open text-3xl text-slate-300 mb-2"></i><p class="text-slate-500 italic">Nenhum documento PDF cadastrado no momento.</p></div>';
+                }
+            });
+            document.querySelectorAll('#btn-add-pdf').forEach(btn => {
+                if(window.isUserAdmin) btn.classList.remove('hidden');
+                else btn.classList.add('hidden');
+            });
+        };
+
+        window.editPDF = (id) => {
+            if(!window.isUserAdmin) return;
+            const pdf = window.pdfList.find(p => p.id === id);
+            if(!pdf) return;
+            document.getElementById('pdf-id').value = pdf.id;
+            document.getElementById('pdf-title').value = pdf.title || '';
+            document.getElementById('pdf-desc').value = pdf.description || '';
+            document.getElementById('pdf-url').value = pdf.url || '';
+            document.getElementById('pdf-file').value = ''; 
+            document.getElementById('pdf-order').value = pdf.order || 0;
+            document.getElementById('pdf-modal-title').innerText = 'Editar Configuração de PDF';
+            const modal = document.getElementById('pdf-form-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        };
+
+        window.savePDF = async () => {
+            if(!window.isUserAdmin) return;
+            const id = document.getElementById('pdf-id').value;
+            const title = document.getElementById('pdf-title').value;
+            const desc = document.getElementById('pdf-desc').value;
+            let url = document.getElementById('pdf-url').value;
+            const order = parseInt(document.getElementById('pdf-order').value) || 0;
+            
+            const fileInput = document.getElementById('pdf-file');
+            const file = fileInput.files[0];
+
+            if(!title) { alert('O Título do Documento é obrigatório!'); return; }
+            if(!url && !file) { alert('Faça o upload do arquivo PDF ou forneça uma URL externa!'); return; }
+
+            if (window.isPlaceholderKey) {
+                window.showModal('info', 'Modo Offline', 'Não é possível fazer upload de arquivos no momento. A equipe de TI precisa configurar a API do Firebase.');
+                return;
+            }
+
+            try {
+                if(file) {
+                    window.showModal('info', 'Fazendo Upload...', 'A enviar o arquivo PDF para a nuvem. Por favor, aguarde...');
+                    const storageRef = ref(window.storage, `artifacts/${window.appId}/public/data/pdfs/${Date.now()}_${file.name}`);
+                    const snapshot = await uploadBytes(storageRef, file);
+                    url = await getDownloadURL(snapshot.ref);
+                }
+
+                if(id) {
+                    const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'pdf_tools', id);
+                    await updateDoc(docRef, { title, description: desc, url, order });
+                    window.logAction(`Editou as configurações do PDF: ${title}`);
+                } else {
+                    const colRef = collection(window.db, 'artifacts', window.appId, 'public', 'data', 'pdf_tools');
+                    await addDoc(colRef, { title, description: desc, url, order, createdAt: serverTimestamp() });
+                    window.logAction(`Adicionou um novo PDF: ${title}`);
+                }
+                
+                window.closePDFModal();
+                setTimeout(() => window.showModal('success', 'Documento Salvo', 'O PDF foi configurado e salvo com sucesso.'), 350);
+            } catch(e) { window.showModal('error', 'Erro ao Salvar', e.message); }
+        };
+
+        window.deletePDF = async (id) => {
+            if(!window.isUserAdmin) return;
+            const pdf = window.pdfList.find(p => p.id === id);
+            if (window.isPlaceholderKey) {
+                window.showModal('info', 'Modo Offline', 'Ação indisponível sem as chaves do Firebase.'); return;
+            }
+            if(confirm(`ATENÇÃO: Confirma a exclusão definitiva do documento "${pdf?.title}" da plataforma?`)) {
+                try {
+                    const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'pdf_tools', id);
+                    await deleteDoc(docRef);
+                    window.logAction(`Excluiu definitivamente o PDF: ${pdf?.title}`);
+                    window.showModal('success', 'Removido!', 'Documento retirado da plataforma com sucesso.');
+                } catch(e) { window.showModal('error', 'Erro', e.message); }
+            }
+        };
+
+        window.logAction = async (actionDesc) => {
+            if(!window.auth.currentUser || window.isPlaceholderKey) return;
+            const logRef = collection(window.db, 'artifacts', window.appId, 'public', 'data', 'change_logs');
+            await addDoc(logRef, { userEmail: window.auth.currentUser.email, timestamp: serverTimestamp(), action: actionDesc });
+        };
+
+        window.doAdminLogin = async () => {
+            if (window.isPlaceholderKey) {
+                const feedback = document.getElementById('login-feedback');
+                feedback.innerText = "⚠️ Erro: Substitua 'COLE_SUA_API_KEY_AQUI' pelas chaves reais do Firebase no código-fonte para prosseguir.";
+                feedback.classList.add('text-red-500');
+                return;
+            }
+            const email = document.getElementById('admin-email').value;
+            const pass = document.getElementById('admin-password').value;
+            const feedback = document.getElementById('login-feedback');
+            if(!email || !pass) return;
+            feedback.innerText = "Autenticando...";
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+                window.closeAdminLogin();
+            } catch(error) { feedback.innerText = "Erro: " + error.message; }
+        };
+
+        window.doAdminRegister = async () => {
+            if (window.isPlaceholderKey) {
+                const feedback = document.getElementById('login-feedback');
+                feedback.innerText = "⚠️ Erro: Substitua 'COLE_SUA_API_KEY_AQUI' pelas chaves reais do Firebase no código-fonte para prosseguir.";
+                feedback.classList.add('text-red-500');
+                return;
+            }
+            const email = document.getElementById('admin-email').value;
+            const pass = document.getElementById('admin-password').value;
+            const feedback = document.getElementById('login-feedback');
+            if(!email || !pass) return;
+            feedback.innerText = "Criando conta...";
+            try {
+                await createUserWithEmailAndPassword(auth, email, pass);
+                window.closeAdminLogin();
+                window.showModal('success', 'Conta Criada!', 'Acesso administrativo criado com sucesso.');
+            } catch(error) { feedback.innerText = "Erro: " + error.message; }
+        };
+
+        window.logoutAdmin = async () => {
+            if(window.editorActive) window.toggleGrapesJS();
+            if(document.body.classList.contains('edit-active')) window.toggleEditMode();
+            try {
+                await signOut(auth);
+                await signInAnonymously(auth);
+            } catch(e) { console.error(e); }
+        };
+
         window.saveSimpleChanges = async () => {
             if(!window.isUserAdmin) return;
             if(document.body.classList.contains('edit-active')) window.toggleEditMode();
@@ -1580,17 +1713,10 @@
             
             try {
                 const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'site_content', 'latest');
-                await setDoc(docRef, {
-                    content: contentHTML,
-                    nav: navHTML,
-                    updatedAt: serverTimestamp()
-                });
-                
+                await setDoc(docRef, { content: contentHTML, nav: navHTML, updatedAt: serverTimestamp() });
                 await window.logAction("Publicou atualizações via Modo de Edição Simples.");
                 window.showModal('success', 'Salvo na Nuvem!', 'As alterações de texto e blocos foram guardadas com sucesso.');
-            } catch (err) {
-                window.showModal('error', 'Falha', 'Erro ao salvar: ' + err.message);
-            }
+            } catch (err) { window.showModal('error', 'Falha', 'Erro ao salvar: ' + err.message); }
         };
 
         // --- SISTEMA GRAPESJS (EDITOR VISUAL PROFUNDO) ---
@@ -1694,15 +1820,9 @@
                                                              .replace(/paddingBottom="3rem"/g, "");
 
                                 const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'site_content', 'latest');
-                                await setDoc(docRef, {
-                                    content: cleanHtml,
-                                    nav: navHTMLToSave,
-                                    updatedAt: serverTimestamp()
-                                });
-                                
+                                await setDoc(docRef, { content: cleanHtml, nav: navHTMLToSave, updatedAt: serverTimestamp() });
                                 await window.logAction("Publicou atualizações via Editor GrapesJS Avançado.");
                             }
-
                             window.showModal('success', 'Layout Salvo!', 'As alterações estruturais foram guardadas com sucesso.');
                         } catch (err) {
                             window.showModal('error', 'Falha', 'Erro: ' + err.message);
@@ -1720,114 +1840,6 @@
                 setTimeout(() => window.location.reload(), 1000);
             }
         };
-
-        // UI HELPERS (Modais e Utilidades de Tela)
-        window.showModal = function(type, title, message, actionCallback = null) {
-            const modal = document.getElementById('custom-modal');
-            const iconContainer = document.getElementById('modal-icon');
-            const titleEl = document.getElementById('modal-title');
-            const messageEl = document.getElementById('modal-message');
-            const btnEl = document.getElementById('modal-btn');
-            
-            window.currentModalAction = actionCallback;
-
-            if(type === 'success') {
-                iconContainer.className = "w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 text-3xl bg-green-100 text-green-500";
-                iconContainer.innerHTML = '<i class="fas fa-check"></i>';
-                btnEl.className = "w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition";
-                btnEl.innerText = "Continuar";
-            } else if(type === 'error') {
-                iconContainer.className = "w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 text-3xl bg-red-100 text-red-500";
-                iconContainer.innerHTML = '<i class="fas fa-times"></i>';
-                btnEl.className = "w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 px-4 rounded-lg transition";
-                btnEl.innerText = "Tentar Novamente";
-            } else {
-                iconContainer.className = "w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 text-3xl bg-blue-100 text-blue-500";
-                iconContainer.innerHTML = '<i class="fas fa-info"></i>';
-                btnEl.className = "w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition";
-                btnEl.innerText = "Entendi";
-            }
-            titleEl.innerText = title;
-            messageEl.innerHTML = message;
-            
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.classList.remove('opacity-0');
-                document.getElementById('modal-content-box').classList.remove('scale-95');
-            }, 10);
-        };
-
-        window.closeModal = function() {
-            const modal = document.getElementById('custom-modal');
-            modal.classList.add('opacity-0');
-            document.getElementById('modal-content-box').classList.add('scale-95');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-                if(window.currentModalAction) {
-                    window.currentModalAction();
-                    window.currentModalAction = null;
-                }
-            }, 300);
-        };
-
-        function setupAdminPanelDrag() {
-            const panel = document.getElementById('admin-panel');
-            const header = document.getElementById('admin-panel-header');
-            let isDragging = false, startX, startY, initialX, initialY;
-
-            header.addEventListener('mousedown', (e) => {
-                isDragging = true;
-                startX = e.clientX;
-                startY = e.clientY;
-                const rect = panel.getBoundingClientRect();
-                initialX = rect.left;
-                initialY = rect.top;
-                
-                panel.style.right = 'auto'; 
-                panel.style.bottom = 'auto';
-                panel.style.left = initialX + 'px';
-                panel.style.top = initialY + 'px';
-
-                document.addEventListener('mousemove', onDrag);
-                document.addEventListener('mouseup', stopDrag);
-            });
-
-            function onDrag(e) {
-                if(!isDragging) return;
-                const dx = e.clientX - startX;
-                const dy = e.clientY - startY;
-                panel.style.left = (initialX + dx) + 'px';
-                panel.style.top = (initialY + dy) + 'px';
-            }
-
-            function stopDrag() {
-                isDragging = false;
-                document.removeEventListener('mousemove', onDrag);
-                document.removeEventListener('mouseup', stopDrag);
-            }
-        }
-
-        function setupFormatToolbar() {
-            const formatBar = document.getElementById('format-toolbar');
-            
-            document.addEventListener('selectionchange', () => {
-                if (!document.body.classList.contains('edit-active')) {
-                    formatBar.style.display = 'none'; return;
-                }
-                const selection = window.getSelection();
-                if (selection.rangeCount > 0 && !selection.isCollapsed) {
-                    const range = selection.getRangeAt(0);
-                    const rect = range.getBoundingClientRect();
-                    if(selection.anchorNode.parentElement && selection.anchorNode.parentElement.isContentEditable) {
-                        formatBar.style.display = 'flex';
-                        formatBar.style.top = `${rect.top + window.scrollY - 45}px`;
-                        formatBar.style.left = `${rect.left + (rect.width / 2) - (formatBar.offsetWidth / 2)}px`;
-                    }
-                } else {
-                    formatBar.style.display = 'none';
-                }
-            });
-        }
     </script>
 </body>
 </html>
