@@ -1017,7 +1017,7 @@
         </div>
     </div>
 
-    <!-- SCRIPT UNIFICADO ÚNICO -->
+    <!-- FIREBASE MODULE E LÓGICA DE APLICAÇÃO UNIFICADA -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -1036,18 +1036,18 @@
 
         // =========================================================================
         // ATENÇÃO EQUIPE DE TI: 
-        // Substitua os dados abaixo pelas suas credenciais reais do projeto Firebase
+        // Credenciais do projeto Firebase (Unificadas em um único bloco)
         // =========================================================================
-        const firebaseConfig = {
-  apiKey: "AIzaSyCYIHNbK5Hnx6K-qEQSrsCFDYZQ3QKj7vc",
-  authDomain: "capacitapatrimonio.firebaseapp.com",
-  projectId: "capacitapatrimonio",
-  storageBucket: "capacitapatrimonio.firebasestorage.app",
-  messagingSenderId: "394627190126",
-  appId: "1:394627190126:web:c3d656b216336abefe857f"
-};
+        const manualFirebaseConfig = {
+            apiKey: "AIzaSyCYIHNbK5Hnx6K-qEQSrsCFDYZQ3QKj7vc",
+            authDomain: "capacitapatrimonio.firebaseapp.com",
+            projectId: "capacitapatrimonio",
+            storageBucket: "capacitapatrimonio.firebasestorage.app",
+            messagingSenderId: "394627190126",
+            appId: "1:394627190126:web:c3d656b216336abefe857f"
+        };
 
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : defaultFirebaseConfig;
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : manualFirebaseConfig;
         
         window.isPlaceholderKey = firebaseConfig.apiKey === "COLE_SUA_API_KEY_AQUI";
         window.firebaseInitError = false;
@@ -1065,196 +1065,129 @@
             window.firebaseInitError = true;
         }
 
-        // ==========================================
-        // 2. FUNÇÕES DE UI E NAVEGAÇÃO
-        // ==========================================
-        window.navigateTo = (viewId) => {
-            if(document.body.classList.contains('edit-active')) {
-                if(event && event.target.tagName === 'SPAN') return;
+        // Exportando módulos Firebase para funções globais usarem de forma segura
+        window.firebaseDoc = doc; window.firebaseSetDoc = setDoc; window.firebaseCollection = collection;
+        window.firebaseAddDoc = addDoc; window.firebaseServerTimestamp = serverTimestamp;
+        window.firebaseOnSnapshot = onSnapshot; window.firebaseDeleteDoc = deleteDoc;
+        window.firebaseUpdateDoc = updateDoc; window.firebaseStorageRef = ref;
+        window.firebaseUploadBytes = uploadBytes; window.firebaseGetDownloadURL = getDownloadURL;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            setupAdminPanelDrag();
+            setupFormatToolbar();
+
+            // Firebase Auth Bootstrap
+            const initAuth = async () => {
+                if (window.isPlaceholderKey) return; // MODO OFFLINE SEGURO
+                try {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(window.auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(window.auth);
+                    }
+                } catch(e) { console.error("Auth init error:", e); }
+            };
+            await initAuth();
+
+            if (!window.isPlaceholderKey) {
+                onAuthStateChanged(window.auth, (user) => {
+                    if (user && !user.isAnonymous) {
+                        window.isUserAdmin = true;
+                        document.getElementById('admin-panel').classList.remove('hidden');
+                        document.getElementById('admin-panel').classList.add('flex');
+                        document.getElementById('admin-auth-area').classList.add('hidden'); 
+                    } else {
+                        window.isUserAdmin = false;
+                        document.getElementById('admin-panel').classList.add('hidden');
+                        document.getElementById('admin-panel').classList.remove('flex');
+                        document.getElementById('admin-auth-area').classList.remove('hidden');
+                    }
+                    window.renderPDFs();
+                });
             }
-            document.querySelectorAll('.view-section').forEach(sec => {
-                sec.classList.add('hidden');
-                sec.classList.remove('fade-in');
-            });
-            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
 
-            const target = document.getElementById('view-' + viewId);
-            if(target) {
-                target.classList.remove('hidden');
-                void target.offsetWidth; 
-                target.classList.add('fade-in');
+            await loadContentFromCloud();
+        });
+
+        async function loadContentFromCloud() {
+            // Fallback Offline
+            if (window.isPlaceholderKey) {
+                document.getElementById('content-container').innerHTML = document.getElementById('factory-content').innerHTML;
+                injectToolsTabIfMissing();
+                window.renderPDFs();
+                setTimeout(() => {
+                    document.getElementById('loader').classList.add('opacity-0');
+                    setTimeout(() => document.getElementById('loader').classList.add('hidden'), 500);
+                    window.navigateTo('home');
+                }, 800);
+                return;
             }
-            document.querySelectorAll(`a[onclick*="'${viewId}'"]`).forEach(l => l.classList.add('active'));
 
-            if(window.innerWidth < 768) {
-                const sidebar = document.getElementById('sidebar');
-                if(!sidebar.classList.contains('-translate-x-full')) window.toggleSidebar();
-            }
-            document.getElementById('content-container').scrollTop = 0;
-        };
-
-        window.toggleSidebar = () => {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('mobile-overlay');
-            sidebar.classList.toggle('-translate-x-full');
-            overlay.classList.toggle('hidden');
-        };
-
-        window.toggleFAQ = (id) => {
-            if(document.body.classList.contains('edit-active')) return;
-            const content = document.getElementById('faq-ans-' + id);
-            const icon = document.getElementById('faq-icon-' + id);
-            if(content && icon) {
-                content.classList.toggle('hidden');
-                icon.classList.toggle('rotate-180');
-            }
-        };
-
-        window.showModal = (type, title, message, actionCallback = null) => {
-            const modal = document.getElementById('custom-modal');
-            const iconContainer = document.getElementById('modal-icon');
-            const titleEl = document.getElementById('modal-title');
-            const messageEl = document.getElementById('modal-message');
-            const btnEl = document.getElementById('modal-btn');
-            window.currentModalAction = actionCallback;
-
-            if(type === 'success') {
-                iconContainer.className = "w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 text-3xl bg-green-100 text-green-500";
-                iconContainer.innerHTML = '<i class="fas fa-check"></i>';
-                btnEl.className = "w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition";
-            } else if(type === 'error') {
-                iconContainer.className = "w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 text-3xl bg-red-100 text-red-500";
-                iconContainer.innerHTML = '<i class="fas fa-times"></i>';
-                btnEl.className = "w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 px-4 rounded-lg transition";
-                btnEl.innerText = "Tentar Novamente";
-            } else {
-                iconContainer.className = "w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 text-3xl bg-blue-100 text-blue-500";
-                iconContainer.innerHTML = '<i class="fas fa-info"></i>';
-                btnEl.className = "w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition";
-                btnEl.innerText = "Entendi";
-            }
-            titleEl.innerText = title; messageEl.innerHTML = message;
-            
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.classList.remove('opacity-0');
-                document.getElementById('modal-content-box').classList.remove('scale-95');
-            }, 10);
-        };
-
-        window.closeModal = () => {
-            const modal = document.getElementById('custom-modal');
-            modal.classList.add('opacity-0');
-            document.getElementById('modal-content-box').classList.add('scale-95');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-                if(window.currentModalAction) {
-                    window.currentModalAction(); window.currentModalAction = null;
-                }
-            }, 300);
-        };
-
-        window.finishCourse = () => {
-            window.showModal('success', 'Parabéns! Curso Concluído', 'Você finalizou a trilha de capacitação sobre Patrimônio Público!<br><br>Consulte o Departamento pelos ramais <strong>5624</strong> ou <strong>5644</strong>.', () => window.navigateTo('home'));
-        };
-
-        // ==========================================
-        // 3. SISTEMA DE LOGIN E AUTENTICAÇÃO
-        // ==========================================
-        window.openAdminLogin = () => {
-            document.getElementById('admin-login-modal').classList.remove('hidden');
-            setTimeout(() => {
-                document.getElementById('admin-login-modal').classList.remove('opacity-0');
-                document.getElementById('admin-login-box').classList.remove('scale-95');
-                document.getElementById('admin-email').focus();
+            // Nuvem (Firebase)
+            try {
+                const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'site_content', 'latest');
+                const docSnap = await getDoc(docRef);
                 
-                const feedback = document.getElementById('login-feedback');
-                if (window.isPlaceholderKey || window.firebaseInitError) {
-                    feedback.innerHTML = `
-                        <div class="bg-amber-50 border border-amber-200 text-amber-700 p-3 rounded mb-3 text-xs">
-                            <i class="fas fa-exclamation-triangle mr-1"></i> <b>Modo Offline Ativo.</b><br>As chaves do Firebase não foram detetadas no código. Por favor, solicite à equipa de TI que substitua "COLE_SUA_API_KEY_AQUI" pelas chaves reais no ficheiro <b>index.html</b>.
-                        </div>
-                    `;
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    document.getElementById('content-container').innerHTML = data.content;
+                    document.getElementById('nav-theory').innerHTML = data.nav;
                 } else {
-                    feedback.innerText = "Entre para gerenciar o conteúdo.";
-                    feedback.className = "text-sm text-slate-600 mb-4";
+                    document.getElementById('content-container').innerHTML = document.getElementById('factory-content').innerHTML;
                 }
-            }, 10);
-        };
+                
+                injectToolsTabIfMissing();
+                window.initPDFListener();
 
-        window.closeAdminLogin = () => {
-            document.getElementById('admin-login-modal').classList.add('opacity-0');
-            document.getElementById('admin-login-box').classList.add('scale-95');
-            setTimeout(() => { document.getElementById('admin-login-modal').classList.add('hidden'); }, 300);
-        };
-
-        window.doAdminLogin = async () => {
-            if (window.isPlaceholderKey) {
-                window.showModal('info', 'Atenção', 'Você precisa configurar as Chaves da API no código antes de realizar login.'); return;
+            } catch(e) {
+                console.error("Cloud load error:", e);
+                document.getElementById('content-container').innerHTML = document.getElementById('factory-content').innerHTML;
+                injectToolsTabIfMissing();
+                window.initPDFListener();
+            } finally {
+                setTimeout(() => {
+                    document.getElementById('loader').classList.add('opacity-0');
+                    setTimeout(() => document.getElementById('loader').classList.add('hidden'), 500);
+                    window.navigateTo('home');
+                }, 800);
             }
-            const email = document.getElementById('admin-email').value;
-            const pass = document.getElementById('admin-password').value;
-            const feedback = document.getElementById('login-feedback');
-            if(!email || !pass) return;
-            
-            feedback.innerText = "Autenticando...";
-            try {
-                await signInWithEmailAndPassword(window.auth, email, pass);
-                window.closeAdminLogin();
-            } catch(error) { feedback.innerText = "Erro: " + error.message; }
-        };
+        }
 
-        window.doAdminRegister = async () => {
-            if (window.isPlaceholderKey) {
-                window.showModal('info', 'Atenção', 'Você precisa configurar as Chaves da API no código antes de registrar a conta.'); return;
+        function injectToolsTabIfMissing() {
+            if(!document.getElementById('nav-tools')) {
+                const navHTML = `
+                    <a href="#" onclick="window.navigateTo('tools')" id="nav-tools" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
+                        <i class="fas fa-toolbox w-6 text-center mr-2"></i> <span class="nav-title editable-element">FERRAMENTAS</span>
+                    </a>
+                `;
+                document.getElementById('nav-theory').insertAdjacentHTML('beforeend', navHTML);
             }
-            const email = document.getElementById('admin-email').value;
-            const pass = document.getElementById('admin-password').value;
-            const feedback = document.getElementById('login-feedback');
-            if(!email || !pass) return;
+            if(!document.getElementById('view-tools')) {
+                const toolsHTML = document.querySelector('#factory-content #view-tools').outerHTML;
+                document.getElementById('content-container').insertAdjacentHTML('beforeend', toolsHTML);
+            }
+        }
 
-            feedback.innerText = "Criando conta...";
-            try {
-                await createUserWithEmailAndPassword(window.auth, email, pass);
-                window.closeAdminLogin();
-                window.showModal('success', 'Conta Criada!', 'Acesso administrativo criado com sucesso.');
-            } catch(error) { feedback.innerText = "Erro: " + error.message; }
-        };
-
-        window.logoutAdmin = async () => {
-            if(window.editorActive) window.toggleGrapesJS();
-            if(document.body.classList.contains('edit-active')) window.toggleEditMode();
-            try {
-                await signOut(window.auth);
-                await signInAnonymously(window.auth);
-            } catch(e) { console.error(e); }
-        };
-
-        window.logAction = async (actionDesc) => {
-            if(!window.auth || !window.auth.currentUser || window.isPlaceholderKey) return;
-            try {
-                const logRef = collection(window.db, 'artifacts', window.appId, 'public', 'data', 'change_logs');
-                await addDoc(logRef, { userEmail: window.auth.currentUser.email, timestamp: serverTimestamp(), action: actionDesc });
-            } catch(e){}
-        };
-
-        // ==========================================
-        // 4. SISTEMA DE PDFs
-        // ==========================================
+        // --- SISTEMA DE PDFs VIA FIRESTORE E STORAGE ---
         window.initPDFListener = () => {
             if (window.isPlaceholderKey) return;
             const q = collection(window.db, 'artifacts', window.appId, 'public', 'data', 'pdf_tools');
             onSnapshot(q, (snapshot) => {
                 window.pdfList = [];
-                snapshot.forEach((doc) => { window.pdfList.push({ id: doc.id, ...doc.data() }); });
+                snapshot.forEach((doc) => {
+                    window.pdfList.push({ id: doc.id, ...doc.data() });
+                });
                 window.pdfList.sort((a, b) => (a.order || 0) - (b.order || 0));
                 window.renderPDFs();
-            }, (error) => { console.error("Error listening to PDFs: ", error); });
+            }, (error) => {
+                console.error("Error listening to PDFs: ", error);
+            });
         };
 
         window.renderPDFs = () => {
             document.querySelectorAll('#pdf-dynamic-list').forEach(container => {
                 container.innerHTML = '';
+                
                 window.pdfList.forEach(pdf => {
                     const adminControls = window.isUserAdmin ? `
                         <div class="mt-4 pt-4 border-t border-slate-100 flex justify-end space-x-3">
@@ -1300,9 +1233,11 @@
             document.getElementById('pdf-file').value = ''; 
             document.getElementById('pdf-order').value = '';
             document.getElementById('pdf-modal-title').innerText = 'Adicionar Novo PDF';
+            
             const modal = document.getElementById('pdf-form-modal');
-            modal.classList.remove('hidden'); setTimeout(() => modal.classList.remove('opacity-0'), 10);
-        };
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        }
 
         window.editPDF = (id) => {
             if(!window.isUserAdmin) return;
@@ -1315,14 +1250,17 @@
             document.getElementById('pdf-file').value = ''; 
             document.getElementById('pdf-order').value = pdf.order || 0;
             document.getElementById('pdf-modal-title').innerText = 'Editar Configuração de PDF';
+            
             const modal = document.getElementById('pdf-form-modal');
-            modal.classList.remove('hidden'); setTimeout(() => modal.classList.remove('opacity-0'), 10);
-        };
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        }
 
         window.closePDFModal = () => {
             const modal = document.getElementById('pdf-form-modal');
-            modal.classList.add('opacity-0'); setTimeout(() => modal.classList.add('hidden'), 300);
-        };
+            modal.classList.add('opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
 
         window.savePDF = async () => {
             if(!window.isUserAdmin) return;
@@ -1335,114 +1273,206 @@
             const fileInput = document.getElementById('pdf-file');
             const file = fileInput.files[0];
 
-            if(!title) { alert('O Título do Documento é obrigatório!'); return; }
-            if(!url && !file) { alert('Faça o upload do arquivo PDF ou forneça uma URL externa!'); return; }
+            if(!title) {
+                alert('O Título do Documento é obrigatório!');
+                return;
+            }
+
+            if(!url && !file) {
+                alert('Faça o upload do arquivo PDF ou forneça uma URL externa!');
+                return;
+            }
 
             if (window.isPlaceholderKey) {
-                window.showModal('info', 'Modo Offline', 'Não é possível salvar. As chaves da API do Firebase não estão configuradas no código.'); return;
+                window.showModal('info', 'Modo Offline', 'Não é possível salvar. As chaves da API do Firebase não estão configuradas no código.');
+                return;
             }
 
             try {
+                // Upload via Firebase Storage
                 if(file) {
                     window.showModal('info', 'Fazendo Upload...', 'A enviar o arquivo PDF para a nuvem. Por favor, aguarde...');
-                    const storageRef = ref(window.storage, `artifacts/${window.appId}/public/data/pdfs/${Date.now()}_${file.name}`);
-                    const snapshot = await uploadBytes(storageRef, file);
-                    url = await getDownloadURL(snapshot.ref);
+                    
+                    const storageRef = window.firebaseStorageRef(window.storage, `artifacts/${window.appId}/public/data/pdfs/${Date.now()}_${file.name}`);
+                    const snapshot = await window.firebaseUploadBytes(storageRef, file);
+                    url = await window.firebaseGetDownloadURL(snapshot.ref);
                 }
 
+                // Salvar dados no Firestore
                 if(id) {
-                    const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'pdf_tools', id);
-                    await updateDoc(docRef, { title, description: desc, url, order });
+                    const docRef = window.firebaseDoc(window.db, 'artifacts', window.appId, 'public', 'data', 'pdf_tools', id);
+                    await window.firebaseUpdateDoc(docRef, { title, description: desc, url, order });
                     window.logAction(`Editou as configurações do PDF: ${title}`);
                 } else {
-                    const colRef = collection(window.db, 'artifacts', window.appId, 'public', 'data', 'pdf_tools');
-                    await addDoc(colRef, { title, description: desc, url, order, createdAt: serverTimestamp() });
+                    const colRef = window.firebaseCollection(window.db, 'artifacts', window.appId, 'public', 'data', 'pdf_tools');
+                    await window.firebaseAddDoc(colRef, { title, description: desc, url, order, createdAt: window.firebaseServerTimestamp() });
                     window.logAction(`Adicionou um novo PDF: ${title}`);
                 }
                 
                 window.closePDFModal();
-                setTimeout(() => window.showModal('success', 'Documento Salvo', 'O PDF foi configurado e salvo com sucesso.'), 350);
-            } catch(e) { window.showModal('error', 'Erro ao Salvar', e.message); }
-        };
+                
+                setTimeout(() => {
+                    window.showModal('success', 'Documento Salvo', 'O PDF foi configurado e salvo com sucesso no sistema.');
+                }, 350);
+
+            } catch(e) {
+                window.showModal('error', 'Erro ao Salvar', e.message);
+            }
+        }
 
         window.deletePDF = async (id) => {
             if(!window.isUserAdmin) return;
             const pdf = window.pdfList.find(p => p.id === id);
             
             if (window.isPlaceholderKey) {
-                window.showModal('info', 'Modo Offline', 'Ação indisponível sem as chaves do Firebase.'); return;
+                window.showModal('info', 'Modo Offline', 'Ação indisponível sem as chaves do Firebase.');
+                return;
             }
+
             if(confirm(`ATENÇÃO: Confirma a exclusão definitiva do documento "${pdf?.title}" da plataforma?`)) {
                 try {
-                    const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'pdf_tools', id);
-                    await deleteDoc(docRef);
+                    const docRef = window.firebaseDoc(window.db, 'artifacts', window.appId, 'public', 'data', 'pdf_tools', id);
+                    await window.firebaseDeleteDoc(docRef);
                     window.logAction(`Excluiu definitivamente o PDF: ${pdf?.title}`);
                     window.showModal('success', 'Removido!', 'Documento retirado da plataforma com sucesso.');
-                } catch(e) { window.showModal('error', 'Erro', e.message); }
+                } catch(e) {
+                    window.showModal('error', 'Erro', e.message);
+                }
             }
-        };
+        }
 
         window.openPDFViewer = (url, title) => {
             document.getElementById('viewer-title').innerText = title;
             document.getElementById('pdf-iframe').src = url;
             const modal = document.getElementById('pdf-viewer-modal');
-            modal.classList.remove('hidden'); setTimeout(() => modal.classList.remove('opacity-0'), 10);
-        };
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        }
 
         window.closePDFViewer = () => {
             const modal = document.getElementById('pdf-viewer-modal');
             modal.classList.add('opacity-0');
-            setTimeout(() => { modal.classList.add('hidden'); document.getElementById('pdf-iframe').src = ''; }, 300);
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                document.getElementById('pdf-iframe').src = ''; // Clear iframe src for performance
+            }, 300);
+        }
+
+        window.doAdminLogin = async () => {
+            if (window.isPlaceholderKey) {
+                window.showModal('info', 'Atenção', 'Você precisa configurar as Chaves da API no código antes de realizar login.'); return;
+            }
+            const email = document.getElementById('admin-email').value;
+            const pass = document.getElementById('admin-password').value;
+            const feedback = document.getElementById('login-feedback');
+            if(!email || !pass) return;
+            feedback.innerText = "Autenticando...";
+            try {
+                await signInWithEmailAndPassword(window.auth, email, pass);
+                window.closeAdminLogin();
+            } catch(error) {
+                feedback.innerText = "Erro: " + error.message;
+            }
         };
 
+        window.doAdminRegister = async () => {
+            if (window.isPlaceholderKey) {
+                window.showModal('info', 'Atenção', 'Você precisa configurar as Chaves da API no código antes de registrar a conta.'); return;
+            }
+            const email = document.getElementById('admin-email').value;
+            const pass = document.getElementById('admin-password').value;
+            const feedback = document.getElementById('login-feedback');
+            if(!email || !pass) return;
+            feedback.innerText = "Criando conta...";
+            try {
+                await createUserWithEmailAndPassword(window.auth, email, pass);
+                window.closeAdminLogin();
+                window.showModal('success', 'Conta Criada!', 'Acesso administrativo criado com sucesso.');
+            } catch(error) {
+                feedback.innerText = "Erro: " + error.message;
+            }
+        };
 
-        // ==========================================
-        // 5. SISTEMA DE EDIÇÃO SIMPLES
-        // ==========================================
+        window.logoutAdmin = async () => {
+            if(window.editorActive) window.toggleGrapesJS();
+            if(document.body.classList.contains('edit-active')) window.toggleEditMode();
+            try {
+                await signOut(window.auth);
+                await signInAnonymously(window.auth);
+            } catch(e) { console.error(e); }
+        };
+
+        window.logAction = async (actionDesc) => {
+            if(!window.auth.currentUser || window.isPlaceholderKey) return;
+            const logRef = collection(window.db, 'artifacts', window.appId, 'public', 'data', 'change_logs');
+            await addDoc(logRef, {
+                userEmail: window.auth.currentUser.email,
+                timestamp: serverTimestamp(),
+                action: actionDesc
+            });
+        }
+
+        // --- SISTEMA DE EDIÇÃO SIMPLES ---
         window.toggleEditMode = () => {
-            if(window.editorActive) return; 
+            if(window.editorActive) return; // Não permitir edição simples junto com GrapesJS
+            
             const isEditing = document.body.classList.toggle('edit-active');
             const btn = document.getElementById('btn-toggle-simple-edit');
             const simpleControls = document.getElementById('simple-edit-controls');
             const btnSave = document.getElementById('btn-save-simple');
             const grapesBtn = document.getElementById('btn-toggle-grapes-edit');
             
-            document.querySelectorAll('.editable-element, .nav-title').forEach(el => el.contentEditable = isEditing);
+            const elements = document.querySelectorAll('.editable-element, .nav-title');
+            elements.forEach(el => el.contentEditable = isEditing);
 
             if(isEditing) {
                 btn.innerHTML = '<i class="fas fa-lock mr-2"></i> Fechar Edição';
                 btn.classList.replace('bg-teal-600', 'bg-rose-600');
                 btn.classList.replace('hover:bg-teal-500', 'hover:bg-rose-500');
+                
                 simpleControls.style.display = 'grid';
-                btnSave.classList.remove('hidden'); btnSave.classList.add('flex');
+                btnSave.classList.remove('hidden');
+                btnSave.classList.add('flex');
                 grapesBtn.classList.add('hidden'); 
+                
                 document.querySelectorAll('[id^="faq-ans-"]').forEach(el => el.classList.remove('hidden'));
                 document.querySelectorAll('[id^="faq-icon-"]').forEach(el => el.classList.add('rotate-180'));
+                
                 window.injectBlockToolbars();
             } else {
                 btn.innerHTML = '<i class="fas fa-pen mr-2"></i> Edição Simples';
                 btn.classList.replace('bg-rose-600', 'bg-teal-600');
                 btn.classList.replace('hover:bg-rose-500', 'hover:bg-teal-500');
+                
                 simpleControls.style.display = 'none';
-                btnSave.classList.add('hidden'); btnSave.classList.remove('flex');
+                btnSave.classList.add('hidden');
+                btnSave.classList.remove('flex');
                 grapesBtn.classList.remove('hidden');
+                
                 document.querySelectorAll('[id^="faq-ans-"]').forEach(el => el.classList.add('hidden'));
                 document.querySelectorAll('[id^="faq-icon-"]').forEach(el => el.classList.remove('rotate-180'));
+
                 window.removeBlockToolbars();
             }
         };
 
-        window.formatText = (command, value = null) => { document.execCommand(command, false, value); };
+        window.formatText = (command, value = null) => {
+            document.execCommand(command, false, value);
+        };
 
         window.addPage = () => {
             const title = prompt("Digite o nome da Nova Página:");
             if (!title) return;
+            
             const uniqueId = 'page-' + Date.now();
+            
             const navHTML = `
                 <a href="#" onclick="window.navigateTo('${uniqueId}')" id="nav-${uniqueId}" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
                     <i class="fas fa-file-alt w-6 text-center mr-2" contenteditable="false"></i> <span class="editable-element nav-title">${title}</span>
-                </a>`;
+                </a>
+            `;
             document.getElementById('nav-theory').insertAdjacentHTML('beforeend', navHTML);
+
             const secHTML = `
                 <section id="view-${uniqueId}" class="view-section hidden fade-in max-w-4xl mx-auto pb-10">
                     <span class="text-blue-600 font-semibold tracking-wider text-sm uppercase editable-element">NOVO MÓDULO</span>
@@ -1452,27 +1482,42 @@
                             <p class="editable-element text-slate-600">O seu novo conteúdo começa aqui. Pode editar este texto e redimensionar a caixa no canto inferior direito.</p>
                         </div>
                     </div>
-                </section>`;
+                </section>
+            `;
             document.getElementById('content-container').insertAdjacentHTML('beforeend', secHTML);
-            if(document.body.classList.contains('edit-active')) { window.toggleEditMode(); window.toggleEditMode(); }
+            
+            if(document.body.classList.contains('edit-active')) {
+                window.toggleEditMode();
+                window.toggleEditMode();
+            }
             window.navigateTo(uniqueId);
         };
 
         window.addTextBox = () => {
             const currentView = document.querySelector('.view-section:not(.hidden)');
             if (!currentView) return;
+            
             let wrapper = currentView.querySelector('.content-wrapper') || currentView;
+            
             const boxHTML = `
                 <div class="editable-block w-full bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                     <h3 class="text-xl font-bold text-slate-800 mb-2 editable-element">Novo Título</h3>
                     <p class="text-slate-600 editable-element">Escreva aqui o seu novo parágrafo. Utilize a aba inferior direita para redimensionar (esticar) a caixa livremente.</p>
-                </div>`;
+                </div>
+            `;
+            
             const navButtons = currentView.querySelector('.nav-buttons-area');
-            if(navButtons && wrapper === currentView) { navButtons.insertAdjacentHTML('beforebegin', boxHTML); } 
-            else { wrapper.insertAdjacentHTML('beforeend', boxHTML); }
+            if(navButtons && wrapper === currentView) {
+                navButtons.insertAdjacentHTML('beforebegin', boxHTML);
+            } else {
+                wrapper.insertAdjacentHTML('beforeend', boxHTML);
+            }
+
             if(document.body.classList.contains('edit-active')) {
-                window.removeBlockToolbars(); window.injectBlockToolbars();
-                currentView.querySelectorAll('.editable-block:last-of-type .editable-element').forEach(el => el.contentEditable = "true");
+                window.removeBlockToolbars();
+                window.injectBlockToolbars();
+                const novosEls = currentView.querySelectorAll('.editable-block:last-of-type .editable-element');
+                novosEls.forEach(el => el.contentEditable = "true");
             }
         };
 
@@ -1495,14 +1540,18 @@
             });
         };
 
-        window.removeBlockToolbars = () => { document.querySelectorAll('.block-toolbar').forEach(tb => tb.remove()); };
+        window.removeBlockToolbars = () => {
+            document.querySelectorAll('.block-toolbar').forEach(tb => tb.remove());
+        };
 
         window.toggleBlockWidth = (btn) => {
             const block = btn.closest('.editable-block');
             if(block.classList.contains('w-full')) {
-                block.classList.remove('w-full'); block.classList.add('w-[calc(50%-0.75rem)]', 'flex-grow'); 
+                block.classList.remove('w-full');
+                block.classList.add('w-[calc(50%-0.75rem)]', 'flex-grow'); 
             } else {
-                block.classList.add('w-full'); block.classList.remove('w-[calc(50%-0.75rem)]', 'flex-grow');
+                block.classList.add('w-full');
+                block.classList.remove('w-[calc(50%-0.75rem)]', 'flex-grow');
             }
         };
 
@@ -1510,111 +1559,180 @@
             const block = btn.closest('.editable-block');
             let currentColorIndex = -1;
             for (let i = 0; i < window.bgColors.length; i++) {
-                if (block.classList.contains(window.bgColors[i])) { currentColorIndex = i; break; }
+                if (block.classList.contains(window.bgColors[i])) {
+                    currentColorIndex = i; break;
+                }
             }
             if (currentColorIndex !== -1) block.classList.remove(window.bgColors[currentColorIndex]);
-            block.classList.add(window.bgColors[(currentColorIndex + 1) % window.bgColors.length]);
+            let nextColorIndex = (currentColorIndex + 1) % window.bgColors.length;
+            block.classList.add(window.bgColors[nextColorIndex]);
         };
 
-        window.deleteBlock = (btn) => { if(confirm("Pretende eliminar este bloco?")) btn.closest('.editable-block').remove(); };
+        window.deleteBlock = (btn) => {
+            if(confirm("Pretende eliminar este bloco?")) {
+                btn.closest('.editable-block').remove();
+            }
+        };
 
         window.moveBlock = (btn, direction) => {
             const block = btn.closest('.editable-block');
             const wrapper = block.parentNode;
-            if (direction === -1 && block.previousElementSibling) wrapper.insertBefore(block, block.previousElementSibling);
-            else if (direction === 1 && block.nextElementSibling) wrapper.insertBefore(block.nextElementSibling, block);
+            if (direction === -1 && block.previousElementSibling) { 
+                wrapper.insertBefore(block, block.previousElementSibling);
+            } else if (direction === 1 && block.nextElementSibling) { 
+                wrapper.insertBefore(block.nextElementSibling, block);
+            }
         };
 
         window.saveSimpleChanges = async () => {
             if(!window.isUserAdmin) return;
             if(document.body.classList.contains('edit-active')) window.toggleEditMode();
+            
             const contentHTML = document.getElementById('content-container').innerHTML;
             const navHTML = document.getElementById('nav-theory').innerHTML;
+            
             if (window.isPlaceholderKey) {
                 window.showModal('info', 'Modo Offline', 'As alterações não serão salvas na nuvem pois a API Key do Firebase não está configurada no código.');
                 return;
             }
+
             window.showModal('info', 'Salvando...', 'A gravar alterações na nuvem...');
+            
             try {
                 const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'site_content', 'latest');
-                await setDoc(docRef, { content: contentHTML, nav: navHTML, updatedAt: serverTimestamp() });
+                await setDoc(docRef, {
+                    content: contentHTML,
+                    nav: navHTML,
+                    updatedAt: serverTimestamp()
+                });
+                
                 await window.logAction("Publicou atualizações via Modo de Edição Simples.");
                 window.showModal('success', 'Salvo na Nuvem!', 'As alterações de texto e blocos foram guardadas com sucesso.');
-            } catch (err) { window.showModal('error', 'Falha', 'Erro ao salvar: ' + err.message); }
+            } catch (err) {
+                window.showModal('error', 'Falha', 'Erro ao salvar: ' + err.message);
+            }
         };
 
-        // ==========================================
-        // 6. SISTEMA GRAPESJS (EDITOR VISUAL PROFUNDO)
-        // ==========================================
+        // --- SISTEMA GRAPESJS (EDITOR VISUAL PROFUNDO) ---
         window.toggleGrapesJS = () => {
             if(document.body.classList.contains('edit-active')) return;
+
             const liveSite = document.getElementById('live-site');
             const gjsContainer = document.getElementById('gjs-container');
             const btn = document.getElementById('btn-toggle-grapes-edit');
 
             if (!window.editorActive) {
                 window.editorActive = true;
+                
                 const tempSite = liveSite.cloneNode(true);
                 tempSite.querySelectorAll('.view-section').forEach(sec => {
-                    sec.classList.remove('hidden', 'fade-in'); sec.style.display = 'block';
-                    sec.style.borderBottom = '4px dashed #e2e8f0'; sec.style.paddingBottom = '3rem'; sec.style.marginBottom = '3rem';
+                    sec.classList.remove('hidden', 'fade-in');
+                    sec.style.display = 'block';
+                    sec.style.borderBottom = '4px dashed #e2e8f0';
+                    sec.style.paddingBottom = '3rem';
+                    sec.style.marginBottom = '3rem';
                 });
                 tempSite.querySelectorAll('[id^="faq-ans-"]').forEach(faq => faq.classList.remove('hidden'));
                 
-                liveSite.style.display = 'none'; gjsContainer.style.display = 'block';
+                liveSite.style.display = 'none';
+                gjsContainer.style.display = 'block';
 
                 window.editor = grapesjs.init({
-                    container: '#gjs', height: '100vh', width: '100%', fromElement: false, storageManager: false, 
+                    container: '#gjs',
+                    height: '100vh',
+                    width: '100%',
+                    fromElement: false,
+                    storageManager: false, 
                     plugins: ['gjs-preset-webpage', 'gjs-blocks-basic'],
-                    pageManager: { pages: [ { id: 'page-1', name: 'Layout Completo', component: tempSite.innerHTML } ] },
+                    pageManager: {
+                        pages: [ { id: 'page-1', name: 'Layout Completo', component: tempSite.innerHTML } ]
+                    },
                     canvas: {
-                        styles: ['https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'],
+                        styles: [
+                            'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap',
+                            'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
+                        ],
                         scripts: ['https://cdn.tailwindcss.com']
                     }
                 });
 
-                window.editor.Panels.addButton('options', { id: 'add-page', className: 'fa fa-plus-square text-blue-400', command: 'add-new-page', attributes: { title: 'Adicionar Nova Página em Branco' } });
+                window.editor.Panels.addButton('options', {
+                    id: 'add-page',
+                    className: 'fa fa-plus-square text-blue-400',
+                    command: 'add-new-page',
+                    attributes: { title: 'Adicionar Nova Página em Branco' }
+                });
+
                 window.editor.Commands.add('add-new-page', {
                     run: function(ed) {
                         const pageName = prompt('Nome da nova página:');
                         if (pageName) {
-                            ed.Pages.add({ name: pageName, component: '<div class="p-10 text-center"><h1 class="text-3xl font-bold text-blue-600">' + pageName + '</h1></div>' });
+                            ed.Pages.add({
+                                name: pageName,
+                                component: '<div class="p-10 text-center"><h1 class="text-3xl font-bold text-blue-600">' + pageName + '</h1></div>'
+                            });
                             alert('Página "' + pageName + '" criada!');
                         }
                     }
                 });
 
                 window.editor.BlockManager.add('fa-icon', {
-                    label: '<i class="fas fa-icons text-xl mb-1"></i><br>Ícone FA', category: 'Básico',
+                    label: '<i class="fas fa-icons text-xl mb-1"></i><br>Ícone FA',
+                    category: 'Básico',
                     content: { type: 'text', content: '<i class="fas fa-star text-4xl text-blue-500 m-2"></i>', activeOnRender: 1 }
                 });
 
-                window.editor.Panels.addButton('options', { id: 'save-layout', className: 'fa fa-save text-green-400', command: 'save-layout', attributes: { title: 'Salvar Alterações de Layout (Nuvem)' } });
+                window.editor.Panels.addButton('options', {
+                    id: 'save-layout',
+                    className: 'fa fa-save text-green-400',
+                    command: 'save-layout',
+                    attributes: { title: 'Salvar Alterações de Layout (Nuvem)' }
+                });
+
                 window.editor.Commands.add('save-layout', {
                     run: async function(ed, sender) {
                         sender && sender.set('active', 0);
+                        
                         const generatedHtml = ed.getHtml();
-                        if (window.isPlaceholderKey) { window.showModal('info', 'Modo Offline', 'As alterações não serão salvas. API Key do Firebase ausente.'); return; }
+
+                        if (window.isPlaceholderKey) {
+                            window.showModal('info', 'Modo Offline', 'As alterações não serão salvas na nuvem pois a API Key do Firebase não está configurada no código.');
+                            return;
+                        }
+                        
                         window.showModal('info', 'Salvando...', 'A gravar layout modificado na nuvem...');
+                        
                         try {
                             if (window.isUserAdmin) {
                                 const canvasDoc = ed.Canvas.getDocument();
                                 const newNav = canvasDoc.getElementById('nav-theory');
                                 const navHTMLToSave = newNav ? newNav.innerHTML : document.getElementById('nav-theory').innerHTML;
-                                let cleanHtml = generatedHtml.replace(/borderBottom="4px dashed #e2e8f0"/g, "").replace(/marginBottom="3rem"/g, "").replace(/paddingBottom="3rem"/g, "");
+
+                                let cleanHtml = generatedHtml.replace(/borderBottom="4px dashed #e2e8f0"/g, "")
+                                                             .replace(/marginBottom="3rem"/g, "")
+                                                             .replace(/paddingBottom="3rem"/g, "");
 
                                 const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'site_content', 'latest');
-                                await setDoc(docRef, { content: cleanHtml, nav: navHTMLToSave, updatedAt: serverTimestamp() });
+                                await setDoc(docRef, {
+                                    content: cleanHtml,
+                                    nav: navHTMLToSave,
+                                    updatedAt: serverTimestamp()
+                                });
+                                
                                 await window.logAction("Publicou atualizações via Editor GrapesJS Avançado.");
                             }
+
                             window.showModal('success', 'Layout Salvo!', 'As alterações estruturais foram guardadas com sucesso.');
-                        } catch (err) { window.showModal('error', 'Falha', 'Erro: ' + err.message); }
+                        } catch (err) {
+                            window.showModal('error', 'Falha', 'Erro: ' + err.message);
+                        }
                     }
                 });
 
                 btn.innerHTML = '<i class="fas fa-times mr-2"></i> Fechar Editor e Recarregar';
                 btn.classList.replace('bg-blue-600', 'bg-rose-600');
                 btn.classList.replace('hover:bg-blue-500', 'hover:bg-rose-500');
+
             } else {
                 window.editorActive = false;
                 window.showModal('info', 'Fechando...', 'Recarregando ambiente...');
@@ -1622,76 +1740,43 @@
             }
         };
 
-        // ==========================================
-        // 7. INICIALIZADORES DOM UI (Arrastar Painel, Barras Formatação)
-        // ==========================================
-        document.addEventListener('DOMContentLoaded', async () => {
-            const initLoad = async () => {
-                if (window.isPlaceholderKey) return;
-                const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'site_content', 'latest');
-                try {
-                    const docSnap = await getDoc(docRef);
-                    if (docSnap.exists() && !window.isPlaceholderKey) {
-                        const data = docSnap.data();
-                        document.getElementById('content-container').innerHTML = data.content;
-                        document.getElementById('nav-theory').innerHTML = data.nav;
-                    } else {
-                        document.getElementById('content-container').innerHTML = document.getElementById('factory-content').innerHTML;
-                    }
-                    injectToolsTabIfMissing();
-                    window.initPDFListener();
-                } catch(e) {
-                    document.getElementById('content-container').innerHTML = document.getElementById('factory-content').innerHTML;
-                    injectToolsTabIfMissing();
-                    if(window.initPDFListener) window.initPDFListener();
-                } finally {
-                    setTimeout(() => {
-                        document.getElementById('loader').classList.add('opacity-0');
-                        setTimeout(() => document.getElementById('loader').classList.add('hidden'), 500);
-                        window.navigateTo('home');
-                    }, 800);
-                }
-            };
-
-            if (window.isPlaceholderKey) {
-                document.getElementById('content-container').innerHTML = document.getElementById('factory-content').innerHTML;
-                injectToolsTabIfMissing();
-                window.renderPDFs();
-                setTimeout(() => {
-                    document.getElementById('loader').classList.add('opacity-0');
-                    setTimeout(() => document.getElementById('loader').classList.add('hidden'), 500);
-                    window.navigateTo('home');
-                }, 800);
-            } else {
-                initLoad();
-            }
-
-            // Ativa o arraste do painel
+        // UI HELPERS (Modais e Utilidades de Tela)
+        function setupAdminPanelDrag() {
             const panel = document.getElementById('admin-panel');
             const header = document.getElementById('admin-panel-header');
             let isDragging = false, startX, startY, initialX, initialY;
 
             header.addEventListener('mousedown', (e) => {
-                isDragging = true; startX = e.clientX; startY = e.clientY;
+                isDragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
                 const rect = panel.getBoundingClientRect();
-                initialX = rect.left; initialY = rect.top;
-                panel.style.right = 'auto'; panel.style.bottom = 'auto';
-                panel.style.left = initialX + 'px'; panel.style.top = initialY + 'px';
+                initialX = rect.left;
+                initialY = rect.top;
+                
+                panel.style.right = 'auto'; 
+                panel.style.bottom = 'auto';
+                panel.style.left = initialX + 'px';
+                panel.style.top = initialY + 'px';
+
                 document.addEventListener('mousemove', onDrag);
                 document.addEventListener('mouseup', stopDrag);
             });
+
             function onDrag(e) {
                 if(!isDragging) return;
                 panel.style.left = (initialX + (e.clientX - startX)) + 'px';
                 panel.style.top = (initialY + (e.clientY - startY)) + 'px';
             }
+
             function stopDrag() {
                 isDragging = false;
                 document.removeEventListener('mousemove', onDrag);
                 document.removeEventListener('mouseup', stopDrag);
             }
+        }
 
-            // Ativa toolbar de formatação flutuante
+        function setupFormatToolbar() {
             const formatBar = document.getElementById('format-toolbar');
             document.addEventListener('selectionchange', () => {
                 if (!document.body.classList.contains('edit-active')) { formatBar.style.display = 'none'; return; }
@@ -1706,7 +1791,7 @@
                     }
                 } else { formatBar.style.display = 'none'; }
             });
-        });
+        }
     </script>
 </body>
 </html>
