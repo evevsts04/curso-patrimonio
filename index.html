@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Capacitação: Patrimônio Público - Praia Grande</title>
     
-    <!-- Tailwind CSS (Aviso no console é padrão do CDN e não interfere no funcionamento) -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Google Fonts (Inter) -->
@@ -42,6 +42,7 @@
         #admin-panel {
             position: fixed;
             transition: opacity 0.3s ease;
+            z-index: 900;
         }
         #admin-panel-header {
             cursor: grab;
@@ -85,7 +86,7 @@
         .block-toolbar button { color: #cbd5e1; font-size: 13px; cursor: pointer; transition: color 0.2s; }
         .block-toolbar button:hover { color: #ffffff; }
 
-        /* Barra de Formatação Flutuante (Textos e Alinhamentos) */
+        /* Barra de Formatação Flutuante */
         #format-toolbar {
             display: none;
             position: absolute;
@@ -105,20 +106,429 @@
         #format-toolbar .divider { width: 1px; height: 20px; background: #475569; margin: 0 4px; }
         .editable-block { transition: width 0.3s ease, background-color 0.3s ease; }
     </style>
-</head>
-<body class="overflow-hidden relative text-slate-800">
 
-    <!-- Loading Inicial -->
-    <div id="loader" class="fixed inset-0 bg-white z-[9999] flex flex-col items-center justify-center transition-opacity duration-500">
-        <i class="fas fa-circle-notch fa-spin text-4xl text-blue-600 mb-4"></i>
-        <p class="text-slate-600 font-medium">Carregando Plataforma...</p>
-    </div>
+    <!-- SCRIPT 1: FUNÇÕES GLOBAIS DE INTERFACE (Carregamento Imediato e Seguro) -->
+    <script>
+        // Variáveis Essenciais Globais Garantidas
+        window.appId = (typeof __app_id !== 'undefined' && __app_id) ? String(__app_id) : 'patrimonio-app';
+        window.bgColors = ['bg-white', 'bg-slate-50', 'bg-blue-50', 'bg-yellow-50', 'bg-green-50', 'bg-red-50', 'bg-blue-600'];
+        window.pdfList = [];
+        window.operationalPDFs = {};
+        window.isUserAdmin = false;
+        window.currentModalAction = null;
 
-    <!-- WRAPPER DO SITE ORIGINAL -->
+        // Navegação
+        window.navigateTo = function(viewId) {
+            if(document.body.classList.contains('edit-active')) {
+                if(window.event && window.event.target && window.event.target.tagName === 'SPAN') return;
+            }
+            document.querySelectorAll('.view-section').forEach(sec => {
+                sec.classList.add('hidden');
+                sec.classList.remove('fade-in');
+            });
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+
+            const target = document.getElementById('view-' + viewId);
+            if(target) {
+                target.classList.remove('hidden');
+                void target.offsetWidth; 
+                target.classList.add('fade-in');
+            }
+            document.querySelectorAll(`a[onclick*="'${viewId}'"]`).forEach(l => l.classList.add('active'));
+
+            if(window.innerWidth < 768) {
+                const sidebar = document.getElementById('sidebar');
+                if(sidebar && !sidebar.classList.contains('-translate-x-full')) window.toggleSidebar();
+            }
+            const container = document.getElementById('content-container');
+            if(container) container.scrollTop = 0;
+        };
+
+        window.toggleSidebar = function() {
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+            document.getElementById('mobile-overlay').classList.toggle('hidden');
+        };
+
+        window.toggleFAQ = function(id) {
+            if(document.body.classList.contains('edit-active')) return;
+            const content = document.getElementById('faq-ans-' + id);
+            const icon = document.getElementById('faq-icon-' + id);
+            if(content && icon) {
+                content.classList.toggle('hidden');
+                icon.classList.toggle('rotate-180');
+            }
+        };
+
+        // Modais Gerais
+        window.showModal = function(type, title, message, actionCallback = null) {
+            const modal = document.getElementById('custom-modal');
+            const iconContainer = document.getElementById('modal-icon');
+            const titleEl = document.getElementById('modal-title');
+            const messageEl = document.getElementById('modal-message');
+            const btnEl = document.getElementById('modal-btn');
+            window.currentModalAction = actionCallback;
+
+            if(type === 'success') {
+                iconContainer.className = "w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 text-3xl bg-green-100 text-green-500";
+                iconContainer.innerHTML = '<i class="fas fa-check"></i>';
+                btnEl.className = "w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition";
+                btnEl.innerText = "Continuar";
+            } else if(type === 'error') {
+                iconContainer.className = "w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 text-3xl bg-red-100 text-red-500";
+                iconContainer.innerHTML = '<i class="fas fa-times"></i>';
+                btnEl.className = "w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 px-4 rounded-lg transition";
+                btnEl.innerText = "Tentar Novamente";
+            } else {
+                iconContainer.className = "w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 text-3xl bg-blue-100 text-blue-500";
+                iconContainer.innerHTML = '<i class="fas fa-info"></i>';
+                btnEl.className = "w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition";
+                btnEl.innerText = "Entendi";
+            }
+            titleEl.innerText = title; 
+            messageEl.innerHTML = message;
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                document.getElementById('modal-content-box').classList.remove('scale-95');
+            }, 10);
+        };
+
+        window.closeModal = function() {
+            const modal = document.getElementById('custom-modal');
+            modal.classList.add('opacity-0');
+            document.getElementById('modal-content-box').classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                if(window.currentModalAction) {
+                    window.currentModalAction(); window.currentModalAction = null;
+                }
+            }, 300);
+        };
+
+        window.finishCourse = function() {
+            window.showModal('success', 'Parabéns! Curso Concluído', 'Você finalizou a trilha de capacitação sobre Patrimônio Público!<br><br>Consulte o Departamento pelos ramais <strong>5624</strong> ou <strong>5644</strong>.', () => window.navigateTo('home'));
+        };
+
+        // Login UI
+        window.openAdminLogin = function() {
+            document.getElementById('admin-login-modal').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('admin-login-modal').classList.remove('opacity-0');
+                document.getElementById('admin-login-box').classList.remove('scale-95');
+                document.getElementById('admin-email').focus();
+            }, 10);
+        };
+
+        window.closeAdminLogin = function() {
+            document.getElementById('admin-login-modal').classList.add('opacity-0');
+            document.getElementById('admin-login-box').classList.add('scale-95');
+            setTimeout(() => { document.getElementById('admin-login-modal').classList.add('hidden'); }, 300);
+        };
+
+        // UI de PDFs (Ferramentas)
+        window.openPDFModal = function() {
+            if(!window.isUserAdmin) return;
+            document.getElementById('pdf-id').value = '';
+            document.getElementById('pdf-title').value = '';
+            document.getElementById('pdf-desc').value = '';
+            document.getElementById('pdf-url').value = '';
+            document.getElementById('pdf-file').value = ''; 
+            document.getElementById('pdf-order').value = '';
+            document.getElementById('pdf-modal-title').innerText = 'Adicionar Novo PDF';
+            const modal = document.getElementById('pdf-form-modal');
+            modal.classList.remove('hidden'); 
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        };
+
+        window.editPDF = function(id) {
+            if(!window.isUserAdmin) return;
+            const pdf = window.pdfList.find(p => p.id === id);
+            if(!pdf) return;
+            document.getElementById('pdf-id').value = pdf.id;
+            document.getElementById('pdf-title').value = pdf.title || '';
+            document.getElementById('pdf-desc').value = pdf.description || '';
+            document.getElementById('pdf-url').value = pdf.url || '';
+            document.getElementById('pdf-file').value = ''; 
+            document.getElementById('pdf-order').value = pdf.order || 0;
+            document.getElementById('pdf-modal-title').innerText = 'Editar Configuração de PDF';
+            const modal = document.getElementById('pdf-form-modal');
+            modal.classList.remove('hidden'); 
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        };
+
+        window.closePDFModal = function() {
+            const modal = document.getElementById('pdf-form-modal');
+            modal.classList.add('opacity-0'); 
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        };
+
+        // UI de PDFs Operacionais (Dia a Dia)
+        window.openOpPdfUpload = function(docId, title) {
+            if(!window.isUserAdmin) return;
+            document.getElementById('op-pdf-id').value = docId;
+            document.getElementById('op-pdf-title-display').innerText = title;
+            document.getElementById('op-pdf-file').value = '';
+            const modal = document.getElementById('op-pdf-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        };
+
+        window.closeOpPdfUpload = function() {
+            const modal = document.getElementById('op-pdf-modal');
+            modal.classList.add('opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        };
+
+        // Visualizador Iframe Nativo
+        window.openPDFViewer = function(url, title) {
+            document.getElementById('viewer-title').innerText = title;
+            document.getElementById('pdf-iframe').src = url;
+            const modal = document.getElementById('pdf-viewer-modal');
+            modal.classList.remove('hidden'); 
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        };
+
+        window.closePDFViewer = function() {
+            const modal = document.getElementById('pdf-viewer-modal');
+            modal.classList.add('opacity-0');
+            setTimeout(() => { 
+                modal.classList.add('hidden'); 
+                document.getElementById('pdf-iframe').src = ''; 
+            }, 300);
+        };
+
+        // --- SISTEMA DE EDIÇÃO SIMPLES ---
+        window.toggleEditMode = function() {
+            const isEditing = document.body.classList.toggle('edit-active');
+            const btn = document.getElementById('btn-toggle-simple-edit');
+            const simpleControls = document.getElementById('simple-edit-controls');
+            const btnSave = document.getElementById('btn-save-simple');
+            
+            document.querySelectorAll('.editable-element, .nav-title').forEach(el => el.contentEditable = isEditing);
+
+            if(isEditing) {
+                btn.innerHTML = '<i class="fas fa-lock mr-2"></i> Fechar Edição';
+                btn.classList.replace('bg-teal-600', 'bg-rose-600');
+                btn.classList.replace('hover:bg-teal-500', 'hover:bg-rose-500');
+                simpleControls.style.display = 'grid';
+                btnSave.classList.remove('hidden'); 
+                btnSave.classList.add('flex');
+                document.querySelectorAll('[id^="faq-ans-"]').forEach(el => el.classList.remove('hidden'));
+                document.querySelectorAll('[id^="faq-icon-"]').forEach(el => el.classList.add('rotate-180'));
+                window.injectBlockToolbars();
+            } else {
+                btn.innerHTML = '<i class="fas fa-pen mr-2"></i> Habilitar Edição';
+                btn.classList.replace('bg-rose-600', 'bg-teal-600');
+                btn.classList.replace('hover:bg-rose-500', 'hover:bg-teal-500');
+                simpleControls.style.display = 'none';
+                btnSave.classList.add('hidden'); 
+                btnSave.classList.remove('flex');
+                document.querySelectorAll('[id^="faq-ans-"]').forEach(el => el.classList.add('hidden'));
+                document.querySelectorAll('[id^="faq-icon-"]').forEach(el => el.classList.remove('rotate-180'));
+                window.removeBlockToolbars();
+            }
+        };
+
+        window.formatText = function(command, value = null) { 
+            document.execCommand(command, false, value); 
+        };
+
+        window.injectBlockToolbars = function() {
+            document.querySelectorAll('.editable-block').forEach(block => {
+                if(!block.querySelector('.block-toolbar')) {
+                    const toolbar = document.createElement('div');
+                    toolbar.className = 'block-toolbar';
+                    toolbar.contentEditable = "false";
+                    toolbar.innerHTML = `
+                        <button onmousedown="event.preventDefault(); window.toggleBlockWidth(this)" title="Lado a Lado / Linha Inteira"><i class="fas fa-columns"></i></button>
+                        <button onmousedown="event.preventDefault(); window.cycleBackgroundColor(this)" title="Alterar Cor de Fundo"><i class="fas fa-palette"></i></button>
+                        <div class="w-px h-4 bg-slate-600 mx-1"></div>
+                        <button onmousedown="event.preventDefault(); window.moveBlock(this, -1)" title="Subir"><i class="fas fa-arrow-up"></i></button>
+                        <button onmousedown="event.preventDefault(); window.moveBlock(this, 1)" title="Descer"><i class="fas fa-arrow-down"></i></button>
+                        <button onmousedown="event.preventDefault(); window.deleteBlock(this)" title="Eliminar Bloco" class="ml-1 !text-red-400 hover:!text-red-300"><i class="fas fa-trash"></i></button>
+                    `;
+                    block.appendChild(toolbar);
+                }
+            });
+        };
+
+        window.removeBlockToolbars = function() { 
+            document.querySelectorAll('.block-toolbar').forEach(tb => tb.remove()); 
+        };
+
+        window.toggleBlockWidth = function(btn) {
+            const block = btn.closest('.editable-block');
+            if(block.classList.contains('w-full')) {
+                block.classList.remove('w-full'); 
+                block.classList.add('w-[calc(50%-0.75rem)]', 'flex-grow'); 
+            } else {
+                block.classList.add('w-full'); 
+                block.classList.remove('w-[calc(50%-0.75rem)]', 'flex-grow');
+            }
+        };
+
+        window.cycleBackgroundColor = function(btn) {
+            const block = btn.closest('.editable-block');
+            let currentColorIndex = -1;
+            for (let i = 0; i < window.bgColors.length; i++) {
+                if (block.classList.contains(window.bgColors[i])) { currentColorIndex = i; break; }
+            }
+            if (currentColorIndex !== -1) block.classList.remove(window.bgColors[currentColorIndex]);
+            block.classList.add(window.bgColors[(currentColorIndex + 1) % window.bgColors.length]);
+        };
+
+        window.deleteBlock = function(btn) { 
+            if(confirm("Pretende eliminar este bloco?")) btn.closest('.editable-block').remove(); 
+        };
+
+        window.moveBlock = function(btn, direction) {
+            const block = btn.closest('.editable-block');
+            const wrapper = block.parentNode;
+            if (direction === -1 && block.previousElementSibling) wrapper.insertBefore(block, block.previousElementSibling);
+            else if (direction === 1 && block.nextElementSibling) wrapper.insertBefore(block.nextElementSibling, block);
+        };
+
+        window.addPage = function() {
+            const title = prompt("Digite o nome da Nova Página:");
+            if (!title) return;
+            const uniqueId = 'page-' + Date.now();
+            const navHTML = `
+                <a href="#" onclick="window.navigateTo('${uniqueId}')" id="nav-${uniqueId}" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
+                    <i class="fas fa-file-alt w-6 text-center mr-2" contenteditable="false"></i> <span class="editable-element nav-title">${title}</span>
+                </a>`;
+            document.getElementById('nav-theory').insertAdjacentHTML('beforeend', navHTML);
+            const secHTML = `
+                <section id="view-${uniqueId}" class="view-section hidden fade-in max-w-4xl mx-auto pb-10">
+                    <span class="text-blue-600 font-semibold tracking-wider text-sm uppercase editable-element">NOVO MÓDULO</span>
+                    <h2 class="text-3xl font-bold text-slate-800 mt-2 mb-6 editable-element">${title}</h2>
+                    <div class="content-wrapper flex flex-wrap gap-6 w-full items-start">
+                        <div class="editable-block w-full bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                            <p class="editable-element text-slate-600">O seu novo conteúdo começa aqui. Pode editar este texto e redimensionar a caixa no canto inferior direito.</p>
+                        </div>
+                    </div>
+                </section>`;
+            document.getElementById('content-container').insertAdjacentHTML('beforeend', secHTML);
+            if(document.body.classList.contains('edit-active')) { 
+                window.toggleEditMode(); window.toggleEditMode(); 
+            }
+            window.navigateTo(uniqueId);
+        };
+
+        window.addTextBox = function() {
+            const currentView = document.querySelector('.view-section:not(.hidden)');
+            if (!currentView) return;
+            let wrapper = currentView.querySelector('.content-wrapper') || currentView;
+            const boxHTML = `
+                <div class="editable-block w-full bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-xl font-bold text-slate-800 mb-2 editable-element">Novo Título</h3>
+                    <p class="text-slate-600 editable-element">Escreva aqui o seu novo parágrafo. Utilize a aba inferior direita para redimensionar (esticar) a caixa livremente.</p>
+                </div>`;
+            const navButtons = currentView.querySelector('.nav-buttons-area');
+            if(navButtons && wrapper === currentView) { navButtons.insertAdjacentHTML('beforebegin', boxHTML); } 
+            else { wrapper.insertAdjacentHTML('beforeend', boxHTML); }
+            
+            if(document.body.classList.contains('edit-active')) {
+                window.removeBlockToolbars(); window.injectBlockToolbars();
+                currentView.querySelectorAll('.editable-block:last-of-type .editable-element').forEach(el => el.contentEditable = "true");
+            }
+        };
+
+        window.addFAQ = function() {
+            const container = document.getElementById('faq-container');
+            const currentView = document.querySelector('.view-section:not(.hidden)');
+            if(!container || currentView.id !== 'view-faq') {
+                window.showModal('error', 'Ação Inválida', 'Navegue até a página de FAQ para adicionar uma nova pergunta.');
+                return;
+            }
+            const uniqueId = Date.now();
+            const faqHTML = `
+                <div class="editable-block w-full bg-white p-6 rounded-xl shadow-sm border border-slate-200 transition-all duration-200">
+                    <div class="flex items-center justify-between cursor-pointer select-none" onclick="window.toggleFAQ(${uniqueId})">
+                        <h4 class="font-bold text-lg text-slate-800 flex items-start">
+                            <i class="fas fa-question-circle text-blue-500 mt-1 mr-3 text-xl"></i> 
+                            <span class="editable-element">Nova Pergunta?</span>
+                        </h4>
+                        <i id="faq-icon-${uniqueId}" class="fas fa-chevron-down text-slate-400 text-xl transition-transform duration-300 ml-4 rotate-180"></i>
+                    </div>
+                    <div id="faq-ans-${uniqueId}" class="mt-4 text-slate-600 text-sm space-y-4 ml-8 border-t border-slate-100 pt-4">
+                        <p class="editable-element">Resposta para a nova pergunta...</p>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', faqHTML);
+            if(document.body.classList.contains('edit-active')) {
+                window.removeBlockToolbars(); window.injectBlockToolbars();
+                document.querySelectorAll('#faq-container .editable-block:last-of-type .editable-element').forEach(el => el.contentEditable = "true");
+            }
+        };
+
+        window.removeCurrentPage = function() {
+            const currentView = document.querySelector('.view-section:not(.hidden)');
+            if (!currentView || currentView.id === 'view-home') {
+                window.showModal('error', 'Ação Inválida', 'Não é possível remover a página inicial.'); return;
+            }
+            if (confirm("ATENÇÃO: Deseja realmente APAGAR a página atual e todo o seu conteúdo?")) {
+                const viewId = currentView.id.replace('view-', '');
+                currentView.remove(); 
+                const navLink = document.getElementById('nav-' + viewId);
+                if(navLink) navLink.remove(); 
+                window.navigateTo('home');
+            }
+        };
+
+        // Arrastar Menu Admin e Barra de Formatação
+        document.addEventListener('DOMContentLoaded', () => {
+            const panel = document.getElementById('admin-panel');
+            const header = document.getElementById('admin-panel-header');
+            let isDragging = false, startX, startY, initialX, initialY;
+
+            if (header && panel) {
+                header.addEventListener('mousedown', (e) => {
+                    isDragging = true; startX = e.clientX; startY = e.clientY;
+                    const rect = panel.getBoundingClientRect();
+                    initialX = rect.left; initialY = rect.top;
+                    panel.style.right = 'auto'; panel.style.bottom = 'auto';
+                    panel.style.left = initialX + 'px'; panel.style.top = initialY + 'px';
+                    document.addEventListener('mousemove', onDrag);
+                    document.addEventListener('mouseup', stopDrag);
+                });
+            }
+
+            function onDrag(e) {
+                if(!isDragging) return;
+                panel.style.left = (initialX + (e.clientX - startX)) + 'px';
+                panel.style.top = (initialY + (e.clientY - startY)) + 'px';
+            }
+
+            function stopDrag() {
+                isDragging = false;
+                document.removeEventListener('mousemove', onDrag);
+                document.removeEventListener('mouseup', stopDrag);
+            }
+
+            const formatBar = document.getElementById('format-toolbar');
+            document.addEventListener('selectionchange', () => {
+                if (!document.body.classList.contains('edit-active')) { formatBar.style.display = 'none'; return; }
+                const selection = window.getSelection();
+                if (selection.rangeCount > 0 && !selection.isCollapsed) {
+                    const range = selection.getRangeAt(0);
+                    const rect = range.getBoundingClientRect();
+                    if(selection.anchorNode.parentElement && selection.anchorNode.parentElement.isContentEditable) {
+                        formatBar.style.display = 'flex';
+                        formatBar.style.top = `${rect.top + window.scrollY - 45}px`;
+                        formatBar.style.left = `${rect.left + (rect.width / 2) - (formatBar.offsetWidth / 2)}px`;
+                    }
+                } else { formatBar.style.display = 'none'; }
+            });
+        });
+    </script>
+
+    <!-- WRAPPER DO SITE -->
     <div id="live-site" class="flex h-screen w-full relative">
         <div id="mobile-overlay" class="fixed inset-0 bg-slate-900/50 z-20 hidden md:hidden" onclick="window.toggleSidebar()"></div>
 
-        <!-- Menu Lateral -->
+        <!-- Menu Lateral: Ordem Exata -->
         <aside id="sidebar" class="bg-white w-72 h-full border-r border-slate-200 flex flex-col absolute md:relative z-30 transform -translate-x-full md:translate-x-0 transition-transform duration-300">
             <div class="p-6 border-b border-slate-200 flex justify-between items-center">
                 <div>
@@ -146,13 +556,13 @@
                         <i class="fas fa-user-shield w-6 text-center mr-2"></i> <span class="nav-title editable-element">Módulo 3: Responsabilidade</span>
                     </a>
                     <a href="#" onclick="window.navigateTo('mod4')" id="nav-mod4" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
-                        <i class="fas fa-trash-alt w-6 text-center mr-2"></i> <span class="nav-title editable-element">Módulo 4: Baixa</span>
+                        <i class="fas fa-calendar-day w-6 text-center mr-2"></i> <span class="nav-title editable-element">Módulo 4: Dia a Dia</span>
                     </a>
                     <a href="#" onclick="window.navigateTo('mod5')" id="nav-mod5" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
-                        <i class="fas fa-calendar-day w-6 text-center mr-2"></i> <span class="nav-title editable-element">Módulo 5: Dia a Dia</span>
+                        <i class="fas fa-folder-open w-6 text-center mr-2"></i> <span class="nav-title editable-element">Módulo 5: Processo</span>
                     </a>
                     <a href="#" onclick="window.navigateTo('mod6')" id="nav-mod6" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
-                        <i class="fas fa-folder-open w-6 text-center mr-2"></i> <span class="nav-title editable-element">Módulo 6: Processo</span>
+                        <i class="fas fa-trash-alt w-6 text-center mr-2"></i> <span class="nav-title editable-element">Módulo 6: Baixa</span>
                     </a>
                     <a href="#" onclick="window.navigateTo('faq')" id="nav-faq" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
                         <i class="fas fa-question-circle w-6 text-center mr-2"></i> <span class="nav-title editable-element">FAQ</span>
@@ -209,7 +619,7 @@
         </main>
     </div>
 
-    <!-- Modais Base -->
+    <!-- Modais Base UI -->
     <div id="custom-modal" class="fixed inset-0 bg-slate-900/60 z-[1000] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 transform scale-95 transition-transform duration-300" id="modal-content-box">
             <div class="p-6 text-center">
@@ -270,7 +680,7 @@
         </div>
     </div>
 
-    <!-- Modal Anexar PDF Operacional (Módulo 5) -->
+    <!-- Modal Anexar PDF Operacional (Dia a Dia) -->
     <div id="op-pdf-modal" class="fixed inset-0 bg-slate-900/80 z-[1050] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
         <div class="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 transform scale-95 transition-transform duration-300">
             <h3 class="text-lg font-bold text-slate-800 mb-2">Anexar Documento</h3>
@@ -310,7 +720,7 @@
         <div class="p-4 flex flex-col gap-3">
             <div class="grid grid-cols-2 gap-2">
                 <button onclick="window.toggleEditMode()" id="btn-toggle-simple-edit" class="bg-teal-600 hover:bg-teal-500 px-2 py-2 rounded text-xs font-medium transition flex items-center justify-center shadow">
-                    <i class="fas fa-pen mr-2"></i> Edição Simples
+                    <i class="fas fa-pen mr-2"></i> Ativar Edição
                 </button>
                 <button onclick="window.navigateTo('tools')" class="bg-orange-600 hover:bg-orange-500 px-2 py-2 rounded text-xs font-medium transition flex items-center justify-center shadow">
                     <i class="fas fa-file-pdf mr-2"></i> Gerir PDFs
@@ -339,7 +749,7 @@
         </div>
     </div>
 
-    <!-- CONTEÚDO DE FÁBRICA ORIGINAL (Oculto em local seguro, intocável pelo editor) -->
+    <!-- CONTEÚDO DE FÁBRICA ORIGINAL (Oculto em local seguro, intocável pelo editor e reordenado conforme solicitado) -->
     <div id="factory-content" class="hidden">
         <!-- VIEW: HOME -->
         <section id="view-home" class="view-section fade-in max-w-4xl mx-auto">
@@ -534,44 +944,10 @@
             </div>
         </section>
 
-        <!-- VIEW: MODULE 4 -->
+        <!-- VIEW: MODULE 4 (Antigo Dia a Dia) -->
         <section id="view-mod4" class="view-section hidden fade-in max-w-4xl mx-auto">
             <span class="text-blue-600 font-semibold tracking-wider text-sm uppercase editable-element">Módulo 4</span>
-            <h2 class="text-3xl font-bold text-slate-800 mt-2 mb-6 editable-element">Desincorporação (Baixa)</h2>
-            
-            <div class="content-wrapper flex flex-wrap gap-6 w-full items-start">
-                <div class="editable-block w-full">
-                    <p class="text-slate-600 text-lg editable-element">Consiste no cancelamento do registro de uso do bem e em sua imediata transferência para a relação de bens excluídos. O motivo mais comum para a baixa é a <strong>inservibilidade</strong>.</p>
-                </div>
-                
-                <div class="editable-block w-full bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                    <h3 class="text-xl font-bold text-slate-800 mb-4 editable-element">Critérios de Inservibilidade:</h3>
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-                        <div class="bg-slate-50 p-3 rounded border text-center text-sm shadow-sm editable-element">Desgaste pelo uso intenso</div>
-                        <div class="bg-slate-50 p-3 rounded border text-center text-sm shadow-sm editable-element">Tecnologia ultrapassada</div>
-                        <div class="bg-slate-50 p-3 rounded border text-center text-sm shadow-sm editable-element">Falta de peças no mercado</div>
-                        <div class="bg-slate-50 p-3 rounded border text-center text-sm shadow-sm editable-element">Manutenção superior ao valor do bem</div>
-                        <div class="bg-slate-50 p-3 rounded border text-center text-sm shadow-sm editable-element">Uso incompatível</div>
-                        <div class="bg-slate-50 p-3 rounded border text-center text-sm shadow-sm editable-element">Sucata (inaproveitável)</div>
-                    </div>
-                </div>
-
-                <div class="editable-block w-full bg-blue-50 p-6 rounded-xl border border-blue-100 text-blue-900">
-                    <h4 class="font-bold flex items-center mb-2"><i class="fas fa-info-circle mr-2"></i> <span class="editable-element">Destinação Final</span></h4>
-                    <p class="text-sm editable-element">Os bens inservíveis e inaproveitáveis são recolhidos e guardados pelo Departamento de Patrimônio. Permanecem no local até que o Prefeito decida por sua <strong>doação</strong> a uma entidade ou por <strong>leilão público</strong>. Até o final do processo de desincorporação, os bens não podem ser extraviados e devem aguardar a decisão final.</p>
-                </div>
-            </div>
-
-            <div class="mt-10 flex justify-between w-full nav-buttons-area">
-                <button onclick="window.navigateTo('mod3')" class="px-5 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium transition"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
-                <button onclick="window.navigateTo('mod5')" class="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium transition">Próximo <i class="fas fa-arrow-right ml-2"></i></button>
-            </div>
-        </section>
-
-        <!-- VIEW: MODULE 5 -->
-        <section id="view-mod5" class="view-section hidden fade-in max-w-4xl mx-auto">
-            <span class="text-blue-600 font-semibold tracking-wider text-sm uppercase editable-element">Módulo 5</span>
-            <h2 class="text-3xl font-bold text-slate-800 mt-2 mb-6 editable-element">Patrimônio no Dia a Dia</h2>
+            <h2 class="text-3xl font-bold text-slate-800 mt-2 mb-6 editable-element">Dia a Dia: Termos e Guias</h2>
             
             <div class="content-wrapper flex flex-wrap gap-6 w-full items-start">
                 
@@ -584,7 +960,6 @@
                             </div>
                             <h3 class="text-2xl font-bold text-slate-800 editable-element">Termo de Aquisição</h3>
                         </div>
-                        <!-- Botões Operacionais PDF -->
                         <div id="op-btn-termo_aquisicao" contenteditable="false" class="flex gap-2"></div>
                     </div>
                     
@@ -617,7 +992,6 @@
                             </div>
                             <h3 class="text-2xl font-bold text-slate-800 editable-element">Guia de Movimentação</h3>
                         </div>
-                        <!-- Botões Operacionais PDF -->
                         <div id="op-btn-guia_movimentacao" contenteditable="false" class="flex gap-2"></div>
                     </div>
                     
@@ -667,14 +1041,14 @@
             </div>
 
             <div class="mt-10 flex justify-between w-full nav-buttons-area">
-                <button onclick="window.navigateTo('mod4')" class="px-5 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium transition"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
-                <button onclick="window.navigateTo('mod6')" class="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium transition">Próximo <i class="fas fa-arrow-right ml-2"></i></button>
+                <button onclick="window.navigateTo('mod3')" class="px-5 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium transition"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
+                <button onclick="window.navigateTo('mod5')" class="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium transition">Próximo <i class="fas fa-arrow-right ml-2"></i></button>
             </div>
         </section>
 
-        <!-- VIEW: MODULE 6 - Processo Digital -->
-        <section id="view-mod6" class="view-section hidden fade-in max-w-4xl mx-auto pb-10">
-            <span class="text-blue-600 font-semibold tracking-wider text-sm uppercase editable-element">Módulo 6</span>
+        <!-- VIEW: MODULE 5 - Processo Digital -->
+        <section id="view-mod5" class="view-section hidden fade-in max-w-4xl mx-auto pb-10">
+            <span class="text-blue-600 font-semibold tracking-wider text-sm uppercase editable-element">Módulo 5</span>
             <h2 class="text-3xl font-bold text-slate-800 mt-2 mb-6 editable-element">Juntada no Processo Digital</h2>
             
             <div class="content-wrapper flex flex-wrap gap-6 w-full items-start">
@@ -757,6 +1131,40 @@
 
                 <div class="editable-block w-full bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-lg">
                     <p class="text-blue-900 text-lg italic editable-element">"A participação de cada um gera a utilização responsável dos bens e o seu efetivo controle, que é uma das obrigações da Administração Pública."</p>
+                </div>
+            </div>
+
+            <div class="mt-10 flex justify-between w-full nav-buttons-area">
+                <button onclick="window.navigateTo('mod4')" class="px-5 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium transition"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
+                <button onclick="window.navigateTo('mod6')" class="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium transition">Próximo <i class="fas fa-arrow-right ml-2"></i></button>
+            </div>
+        </section>
+
+        <!-- VIEW: MODULE 6 (Antigo Baixa) -->
+        <section id="view-mod6" class="view-section hidden fade-in max-w-4xl mx-auto">
+            <span class="text-blue-600 font-semibold tracking-wider text-sm uppercase editable-element">Módulo 6</span>
+            <h2 class="text-3xl font-bold text-slate-800 mt-2 mb-6 editable-element">Desincorporação (Baixa)</h2>
+            
+            <div class="content-wrapper flex flex-wrap gap-6 w-full items-start">
+                <div class="editable-block w-full">
+                    <p class="text-slate-600 text-lg editable-element">Consiste no cancelamento do registro de uso do bem e em sua imediata transferência para a relação de bens excluídos. O motivo mais comum para a baixa é a <strong>inservibilidade</strong>.</p>
+                </div>
+                
+                <div class="editable-block w-full bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 class="text-xl font-bold text-slate-800 mb-4 editable-element">Critérios de Inservibilidade:</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        <div class="bg-slate-50 p-3 rounded border text-center text-sm shadow-sm editable-element">Desgaste pelo uso intenso</div>
+                        <div class="bg-slate-50 p-3 rounded border text-center text-sm shadow-sm editable-element">Tecnologia ultrapassada</div>
+                        <div class="bg-slate-50 p-3 rounded border text-center text-sm shadow-sm editable-element">Falta de peças no mercado</div>
+                        <div class="bg-slate-50 p-3 rounded border text-center text-sm shadow-sm editable-element">Manutenção superior ao valor do bem</div>
+                        <div class="bg-slate-50 p-3 rounded border text-center text-sm shadow-sm editable-element">Uso incompatível</div>
+                        <div class="bg-slate-50 p-3 rounded border text-center text-sm shadow-sm editable-element">Sucata (inaproveitável)</div>
+                    </div>
+                </div>
+
+                <div class="editable-block w-full bg-blue-50 p-6 rounded-xl border border-blue-100 text-blue-900">
+                    <h4 class="font-bold flex items-center mb-2"><i class="fas fa-info-circle mr-2"></i> <span class="editable-element">Destinação Final</span></h4>
+                    <p class="text-sm editable-element">Os bens inservíveis e inaproveitáveis são recolhidos e guardados pelo Departamento de Patrimônio. Permanecem no local até que o Prefeito decida por sua <strong>doação</strong> a uma entidade ou por <strong>leilão público</strong>. Até o final do processo de desincorporação, os bens não podem ser extraviados e devem aguardar a decisão final.</p>
                 </div>
             </div>
 
@@ -894,13 +1302,19 @@
         </section>
     </div>
 
-    <!-- Scripts do Firebase e do Sistema -->
+    <!-- =========================================================
+         SCRIPT 2: FIREBASE BACKEND E PERSISTÊNCIA 
+         ========================================================= -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, addDoc, serverTimestamp, onSnapshot, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
+        // =========================================================================
+        // ATENÇÃO EQUIPE DE TI: 
+        // Substitua os dados abaixo pelas suas credenciais reais do projeto Firebase
+        // =========================================================================
         const manualFirebaseConfig = {
             apiKey: "AIzaSyCYIHNbK5Hnx6K-qEQSrsCFDYZQ3QKj7vc",
             authDomain: "capacitapatrimonio.firebaseapp.com",
@@ -920,6 +1334,7 @@
                 window.db = getFirestore(app);
                 window.storage = getStorage(app);
                 
+                // Expondo métodos globais seguros
                 window.firebaseDoc = doc; window.firebaseSetDoc = setDoc; window.firebaseCollection = collection;
                 window.firebaseAddDoc = addDoc; window.firebaseServerTimestamp = serverTimestamp;
                 window.firebaseOnSnapshot = onSnapshot; window.firebaseDeleteDoc = deleteDoc;
@@ -927,7 +1342,7 @@
                 window.firebaseUploadBytes = uploadBytes; window.firebaseGetDownloadURL = getDownloadURL;
             }
         } catch (err) {
-            console.error("Erro na inicialização do Firebase. Modo Offline Ativado.", err);
+            console.error("Erro na inicialização do Firebase.", err);
             window.isPlaceholderKey = true;
         }
 
@@ -938,13 +1353,13 @@
                     if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                         await signInWithCustomToken(window.auth, __initial_auth_token);
                     } else {
-                        try { await signInAnonymously(window.auth); } catch(e) {}
+                        try { await signInAnonymously(window.auth); } catch(e) { console.warn("Anon Auth Error", e); }
                     }
                 } catch(e) { console.error("Auth init error:", e); }
             };
             await initAuth();
 
-            if (!window.isPlaceholderKey) {
+            if (!window.isPlaceholderKey && window.auth) {
                 onAuthStateChanged(window.auth, (user) => {
                     if (user && !user.isAnonymous) {
                         window.isUserAdmin = true;
@@ -963,8 +1378,7 @@
             }
 
             const loadContentFromCloud = async () => {
-                if (window.isPlaceholderKey) {
-                    document.getElementById('content-container').innerHTML = document.getElementById('factory-content').innerHTML;
+                const finishLoad = () => {
                     if(window.renderPDFs) window.renderPDFs();
                     if(window.renderOpPDFs) window.renderOpPDFs();
                     setTimeout(() => {
@@ -972,15 +1386,19 @@
                         setTimeout(() => document.getElementById('loader').classList.add('hidden'), 500);
                         window.navigateTo('home');
                     }, 800);
+                };
+
+                if (window.isPlaceholderKey || !window.db) {
+                    document.getElementById('content-container').innerHTML = document.getElementById('factory-content').innerHTML;
+                    finishLoad();
                     return;
                 }
 
                 try {
-                    const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'site_content', 'latest');
+                    const docRef = doc(window.db, 'artifacts', String(window.appId), 'public', 'data', 'site_content', 'latest');
                     const docSnap = await getDoc(docRef);
                     if (docSnap.exists()) {
                         const data = docSnap.data();
-                        // Proteção: Força o reset se o menu da nuvem não tiver a nova estrutura
                         if(!data.nav.includes('nav-tools')) {
                             document.getElementById('content-container').innerHTML = document.getElementById('factory-content').innerHTML;
                             if(window.isUserAdmin) await setDoc(docRef, { content: document.getElementById('content-container').innerHTML, nav: document.getElementById('nav-theory').innerHTML, updatedAt: serverTimestamp() });
@@ -992,8 +1410,7 @@
                         document.getElementById('content-container').innerHTML = document.getElementById('factory-content').innerHTML;
                     }
 
-                    // Ativar o Listener dos PDFs de Ferramentas
-                    const qTools = collection(window.db, 'artifacts', window.appId, 'public', 'data', 'pdf_tools');
+                    const qTools = collection(window.db, 'artifacts', String(window.appId), 'public', 'data', 'pdf_tools');
                     onSnapshot(qTools, (snapshot) => {
                         window.pdfList = [];
                         snapshot.forEach((doc) => { window.pdfList.push({ id: doc.id, ...doc.data() }); });
@@ -1001,8 +1418,7 @@
                         if(window.renderPDFs) window.renderPDFs();
                     });
 
-                    // Ativar o Listener dos PDFs Operacionais (Modulo 5)
-                    const qOps = collection(window.db, 'artifacts', window.appId, 'public', 'data', 'operational_pdfs');
+                    const qOps = collection(window.db, 'artifacts', String(window.appId), 'public', 'data', 'operational_pdfs');
                     onSnapshot(qOps, (snapshot) => {
                         window.operationalPDFs = {};
                         snapshot.forEach((doc) => { window.operationalPDFs[doc.id] = doc.data().url; });
@@ -1013,11 +1429,7 @@
                     console.error("Cloud load error:", e);
                     document.getElementById('content-container').innerHTML = document.getElementById('factory-content').innerHTML;
                 } finally {
-                    setTimeout(() => {
-                        document.getElementById('loader').classList.add('opacity-0');
-                        setTimeout(() => document.getElementById('loader').classList.add('hidden'), 500);
-                        window.navigateTo('home');
-                    }, 800);
+                    finishLoad();
                 }
             };
 
@@ -1037,12 +1449,12 @@
             }
             window.showModal('info', 'Salvando...', 'A gravar alterações na nuvem...');
             try {
-                const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'site_content', 'latest');
+                const docRef = doc(window.db, 'artifacts', String(window.appId), 'public', 'data', 'site_content', 'latest');
                 await setDoc(docRef, { content: contentHTML, nav: navHTML, updatedAt: serverTimestamp() });
                 
                 // Logging
-                if(window.auth.currentUser) {
-                    const logRef = collection(window.db, 'artifacts', window.appId, 'public', 'data', 'change_logs');
+                if(window.auth && window.auth.currentUser) {
+                    const logRef = collection(window.db, 'artifacts', String(window.appId), 'public', 'data', 'change_logs');
                     await addDoc(logRef, { userEmail: window.auth.currentUser.email, timestamp: serverTimestamp(), action: "Publicou atualizações via Modo de Edição Simples." });
                 }
 
@@ -1095,7 +1507,6 @@
             } catch(e) { console.error(e); }
         };
 
-        // Renderização dos Botões de PDF Operacional no Módulo 5
         window.renderOpPDFs = () => {
             const docs = [
                 { id: 'termo_aquisicao', title: 'Termo de Aquisição' },
