@@ -13,12 +13,6 @@
     
     <!-- FontAwesome para Ícones -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- GrapesJS Core & Plugins -->
-    <link rel="stylesheet" href="https://unpkg.com/grapesjs/dist/css/grapes.min.css">
-    <script src="https://unpkg.com/grapesjs"></script>
-    <script src="https://unpkg.com/grapesjs-preset-webpage@1.0.2"></script>
-    <script src="https://unpkg.com/grapesjs-blocks-basic@1.0.1"></script>
     
     <style>
         body {
@@ -43,12 +37,9 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-        #admin-panel { position: fixed; transition: opacity 0.3s ease; }
+        #admin-panel { position: fixed; transition: opacity 0.3s ease; z-index: 900; }
         #admin-panel-header { cursor: grab; }
         #admin-panel-header:active { cursor: grabbing; }
-
-        #gjs-container { display: none; width: 100%; height: 100vh; }
-        .gjs-cv-canvas { top: 0; width: 100%; height: 100%; }
 
         /* --- ESTILOS DO MODO EDIÇÃO SIMPLES --- */
         .edit-active .editable-element, 
@@ -112,11 +103,6 @@
         <p class="text-slate-600 font-medium">Carregando Plataforma...</p>
     </div>
 
-    <!-- Container GrapesJS (Substitui o site durante a edição Visual Profunda) -->
-    <div id="gjs-container">
-        <div id="gjs"></div>
-    </div>
-
     <!-- WRAPPER DO SITE ORIGINAL -->
     <div id="live-site" class="flex h-screen w-full relative">
         <div id="mobile-overlay" class="fixed inset-0 bg-slate-900/50 z-20 hidden md:hidden" onclick="window.toggleSidebar()"></div>
@@ -149,19 +135,19 @@
                         <i class="fas fa-user-shield w-6 text-center mr-2"></i> <span class="nav-title editable-element">Módulo 3: Responsabilidade</span>
                     </a>
                     <a href="#" onclick="window.navigateTo('mod4')" id="nav-mod4" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
-                        <i class="fas fa-trash-alt w-6 text-center mr-2"></i> <span class="nav-title editable-element">Módulo 4: Baixa</span>
+                        <i class="fas fa-calendar-day w-6 text-center mr-2"></i> <span class="nav-title editable-element">Módulo 4: Dia a Dia</span>
                     </a>
                     <a href="#" onclick="window.navigateTo('mod5')" id="nav-mod5" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
-                        <i class="fas fa-calendar-day w-6 text-center mr-2"></i> <span class="nav-title editable-element">Módulo 5: Dia a Dia</span>
+                        <i class="fas fa-toolbox w-6 text-center mr-2"></i> <span class="nav-title editable-element">Módulo 5: Ferramentas</span>
                     </a>
                     <a href="#" onclick="window.navigateTo('mod6')" id="nav-mod6" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
-                        <i class="fas fa-folder-open w-6 text-center mr-2"></i> <span class="nav-title editable-element">Módulo 6: Processo</span>
+                        <i class="fas fa-folder-open w-6 text-center mr-2"></i> <span class="nav-title editable-element">Módulo 6: Processo Digital</span>
+                    </a>
+                    <a href="#" onclick="window.navigateTo('mod7')" id="nav-mod7" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
+                        <i class="fas fa-trash-alt w-6 text-center mr-2"></i> <span class="nav-title editable-element">Módulo 7: Baixa</span>
                     </a>
                     <a href="#" onclick="window.navigateTo('faq')" id="nav-faq" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
                         <i class="fas fa-question-circle w-6 text-center mr-2"></i> <span class="nav-title editable-element">FAQ</span>
-                    </a>
-                    <a href="#" onclick="window.navigateTo('tools')" id="nav-tools" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
-                        <i class="fas fa-toolbox w-6 text-center mr-2"></i> <span class="nav-title editable-element">FERRAMENTAS</span>
                     </a>
                 </nav>
             </div>
@@ -273,7 +259,7 @@
         </div>
     </div>
 
-    <!-- Modal Visualizador de PDF -->
+    <!-- Modal Visualizador de PDF (Iframe Nativo) -->
     <div id="pdf-viewer-modal" class="fixed inset-0 bg-slate-900/90 z-[1100] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
         <div class="bg-white rounded-xl shadow-2xl flex flex-col w-11/12 h-[90vh] mx-4 transform scale-95 transition-transform duration-300">
             <div class="flex justify-between items-center p-4 border-b border-slate-200">
@@ -286,7 +272,7 @@
         </div>
     </div>
 
-    <!-- Painel de Administrador Flutuante -->
+    <!-- Painel de Administrador Flutuante (Arrastável) -->
     <div id="admin-panel" class="fixed bottom-6 right-6 bg-slate-800 text-white rounded-xl shadow-2xl z-[900] hidden flex-col border border-slate-700 w-80">
         <div id="admin-panel-header" class="text-sm font-bold flex items-center justify-between border-b border-slate-600 p-3 bg-slate-900 rounded-t-xl select-none">
             <span class="flex items-center"><i class="fas fa-grip-lines text-slate-500 mr-3"></i> Painel de Administração</span>
@@ -294,15 +280,17 @@
         </div>
         
         <div class="p-4 flex flex-col gap-3">
+            <!-- Botões de Acesso Rápido -->
             <div class="grid grid-cols-2 gap-2">
                 <button onclick="window.toggleEditMode()" id="btn-toggle-simple-edit" class="bg-teal-600 hover:bg-teal-500 px-2 py-2 rounded text-xs font-medium transition flex items-center justify-center shadow">
-                    <i class="fas fa-pen mr-2"></i> Edição Simples
+                    <i class="fas fa-pen mr-2"></i> Habilitar Edição
                 </button>
-                <button onclick="window.navigateTo('tools')" class="bg-orange-600 hover:bg-orange-500 px-2 py-2 rounded text-xs font-medium transition flex items-center justify-center shadow">
+                <button onclick="window.navigateTo('mod5')" class="bg-orange-600 hover:bg-orange-500 px-2 py-2 rounded text-xs font-medium transition flex items-center justify-center shadow">
                     <i class="fas fa-file-pdf mr-2"></i> Gerir PDFs
                 </button>
             </div>
 
+            <!-- Controles extras (só aparecem durante a EDIÇÃO SIMPLES) -->
             <div class="grid grid-cols-2 gap-2" id="simple-edit-controls" style="display: none;">
                 <button onclick="window.addPage()" class="bg-indigo-600 hover:bg-indigo-500 px-2 py-2 rounded text-xs font-medium transition flex items-center justify-center shadow">
                     <i class="fas fa-file-medical mr-2"></i> Nova Página
@@ -310,21 +298,672 @@
                 <button onclick="window.addTextBox()" class="bg-emerald-600 hover:bg-emerald-500 px-2 py-2 rounded text-xs font-medium transition flex items-center justify-center shadow">
                     <i class="fas fa-plus-square mr-2"></i> Novo Bloco
                 </button>
+                <button onclick="window.addFAQ()" class="col-span-2 bg-amber-600 hover:bg-amber-500 px-2 py-2 rounded text-xs font-medium transition flex items-center justify-center shadow">
+                    <i class="fas fa-question-circle mr-2"></i> Adicionar Nova FAQ
+                </button>
             </div>
 
-            <button onclick="window.toggleGrapesJS()" id="btn-toggle-grapes-edit" class="bg-blue-600 hover:bg-blue-500 px-4 py-3 rounded text-sm font-medium transition flex items-center justify-center shadow">
-                <i class="fas fa-magic mr-2"></i> Editor Visual Profundo
-            </button>
-
+            <!-- Botão de Salvar -->
             <button onclick="window.saveSimpleChanges()" id="btn-save-simple" class="bg-green-600 hover:bg-green-500 px-4 py-2 rounded text-sm font-medium transition items-center justify-center shadow-lg shadow-green-900/50 hidden">
                 <i class="fas fa-cloud-upload-alt mr-2"></i> Salvar na Nuvem
             </button>
-            <p class="text-xs text-slate-400 text-center leading-tight">Use a <b>Edição Simples</b> para textos/text boxes e o <b>Editor Profundo</b> para desenhar novos componentes.</p>
+
+            <button onclick="window.resetToFactory()" class="text-xs text-red-400 hover:text-red-300 mt-2 text-center underline transition-colors">
+                Restaurar Original de Fábrica
+            </button>
         </div>
     </div>
 
-    <!-- CONTEÚDO DE FÁBRICA ORIGINAL (Oculto em local seguro, intocável pelo editor) -->
-    <div id="factory-content" class="hidden">
+
+    <!-- =========================================================
+         SCRIPT 1: FUNÇÕES DE UI NATIVAS E DE NAVEGAÇÃO 
+         (Carrega de imediato para garantir botões funcionais)
+         ========================================================= -->
+    <script>
+        window.bgColors = ['bg-white', 'bg-slate-50', 'bg-blue-50', 'bg-yellow-50', 'bg-green-50', 'bg-red-50', 'bg-blue-600'];
+        window.pdfList = [];
+        window.isUserAdmin = false;
+        window.editorActive = false;
+        window.currentModalAction = null;
+        window.appId = typeof __app_id !== 'undefined' ? __app_id : 'patrimonio-app';
+
+        window.navigateTo = function(viewId) {
+            if(document.body.classList.contains('edit-active')) {
+                if(window.event && window.event.target && window.event.target.tagName === 'SPAN') return;
+            }
+            document.querySelectorAll('.view-section').forEach(sec => {
+                sec.classList.add('hidden');
+                sec.classList.remove('fade-in');
+            });
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+
+            const target = document.getElementById('view-' + viewId);
+            if(target) {
+                target.classList.remove('hidden');
+                void target.offsetWidth; 
+                target.classList.add('fade-in');
+            }
+            document.querySelectorAll(`a[onclick*="'${viewId}'"]`).forEach(l => l.classList.add('active'));
+
+            if(window.innerWidth < 768) {
+                const sidebar = document.getElementById('sidebar');
+                if(sidebar && !sidebar.classList.contains('-translate-x-full')) window.toggleSidebar();
+            }
+            const container = document.getElementById('content-container');
+            if(container) container.scrollTop = 0;
+        };
+
+        window.toggleSidebar = function() {
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+            document.getElementById('mobile-overlay').classList.toggle('hidden');
+        };
+
+        window.toggleFAQ = function(id) {
+            if(document.body.classList.contains('edit-active')) return;
+            const content = document.getElementById('faq-ans-' + id);
+            const icon = document.getElementById('faq-icon-' + id);
+            if(content && icon) {
+                content.classList.toggle('hidden');
+                icon.classList.toggle('rotate-180');
+            }
+        };
+
+        window.showModal = function(type, title, message, actionCallback = null) {
+            const modal = document.getElementById('custom-modal');
+            const iconContainer = document.getElementById('modal-icon');
+            const titleEl = document.getElementById('modal-title');
+            const messageEl = document.getElementById('modal-message');
+            const btnEl = document.getElementById('modal-btn');
+            window.currentModalAction = actionCallback;
+
+            if(type === 'success') {
+                iconContainer.className = "w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 text-3xl bg-green-100 text-green-500";
+                iconContainer.innerHTML = '<i class="fas fa-check"></i>';
+                btnEl.className = "w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition";
+                btnEl.innerText = "Continuar";
+            } else if(type === 'error') {
+                iconContainer.className = "w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 text-3xl bg-red-100 text-red-500";
+                iconContainer.innerHTML = '<i class="fas fa-times"></i>';
+                btnEl.className = "w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 px-4 rounded-lg transition";
+                btnEl.innerText = "Tentar Novamente";
+            } else {
+                iconContainer.className = "w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 text-3xl bg-blue-100 text-blue-500";
+                iconContainer.innerHTML = '<i class="fas fa-info"></i>';
+                btnEl.className = "w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition";
+                btnEl.innerText = "Entendi";
+            }
+            titleEl.innerText = title; 
+            messageEl.innerHTML = message;
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                document.getElementById('modal-content-box').classList.remove('scale-95');
+            }, 10);
+        };
+
+        window.closeModal = function() {
+            const modal = document.getElementById('custom-modal');
+            modal.classList.add('opacity-0');
+            document.getElementById('modal-content-box').classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                if(window.currentModalAction) {
+                    window.currentModalAction(); 
+                    window.currentModalAction = null;
+                }
+            }, 300);
+        };
+
+        window.finishCourse = function() {
+            window.showModal('success', 'Parabéns! Curso Concluído', 'Você finalizou a trilha de capacitação sobre Patrimônio Público!<br><br>Consulte a Divisão de Patrimônio e Informática pelos ramais <strong>5624</strong> ou <strong>5644</strong>.', () => window.navigateTo('home'));
+        };
+
+        window.openAdminLogin = function() {
+            document.getElementById('admin-login-modal').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('admin-login-modal').classList.remove('opacity-0');
+                document.getElementById('admin-login-box').classList.remove('scale-95');
+                document.getElementById('admin-email').focus();
+            }, 10);
+        };
+
+        window.closeAdminLogin = function() {
+            document.getElementById('admin-login-modal').classList.add('opacity-0');
+            document.getElementById('admin-login-box').classList.add('scale-95');
+            setTimeout(() => { document.getElementById('admin-login-modal').classList.add('hidden'); }, 300);
+        };
+
+        window.openPDFModal = function() {
+            if(!window.isUserAdmin) return;
+            document.getElementById('pdf-id').value = '';
+            document.getElementById('pdf-title').value = '';
+            document.getElementById('pdf-desc').value = '';
+            document.getElementById('pdf-url').value = '';
+            document.getElementById('pdf-file').value = ''; 
+            document.getElementById('pdf-order').value = '';
+            document.getElementById('pdf-modal-title').innerText = 'Adicionar Novo PDF';
+            const modal = document.getElementById('pdf-form-modal');
+            modal.classList.remove('hidden'); 
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        };
+
+        window.editPDF = function(id) {
+            if(!window.isUserAdmin) return;
+            const pdf = window.pdfList.find(p => p.id === id);
+            if(!pdf) return;
+            document.getElementById('pdf-id').value = pdf.id;
+            document.getElementById('pdf-title').value = pdf.title || '';
+            document.getElementById('pdf-desc').value = pdf.description || '';
+            document.getElementById('pdf-url').value = pdf.url || '';
+            document.getElementById('pdf-file').value = ''; 
+            document.getElementById('pdf-order').value = pdf.order || 0;
+            document.getElementById('pdf-modal-title').innerText = 'Editar Configuração de PDF';
+            const modal = document.getElementById('pdf-form-modal');
+            modal.classList.remove('hidden'); 
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        };
+
+        window.closePDFModal = function() {
+            const modal = document.getElementById('pdf-form-modal');
+            modal.classList.add('opacity-0'); 
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        };
+
+        window.openPDFViewer = function(url, title) {
+            document.getElementById('viewer-title').innerText = title;
+            document.getElementById('pdf-iframe').src = url;
+            const modal = document.getElementById('pdf-viewer-modal');
+            modal.classList.remove('hidden'); 
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        };
+
+        window.closePDFViewer = function() {
+            const modal = document.getElementById('pdf-viewer-modal');
+            modal.classList.add('opacity-0');
+            setTimeout(() => { 
+                modal.classList.add('hidden'); 
+                document.getElementById('pdf-iframe').src = ''; 
+            }, 300);
+        };
+
+        window.formatText = function(command, value = null) { 
+            document.execCommand(command, false, value); 
+        };
+
+        window.injectBlockToolbars = function() {
+            document.querySelectorAll('.editable-block').forEach(block => {
+                if(!block.querySelector('.block-toolbar')) {
+                    const toolbar = document.createElement('div');
+                    toolbar.className = 'block-toolbar';
+                    toolbar.contentEditable = "false";
+                    toolbar.innerHTML = `
+                        <button onmousedown="event.preventDefault(); window.toggleBlockWidth(this)" title="Lado a Lado / Linha Inteira"><i class="fas fa-columns"></i></button>
+                        <button onmousedown="event.preventDefault(); window.cycleBackgroundColor(this)" title="Alterar Cor de Fundo"><i class="fas fa-palette"></i></button>
+                        <div class="w-px h-4 bg-slate-600 mx-1"></div>
+                        <button onmousedown="event.preventDefault(); window.moveBlock(this, -1)" title="Subir"><i class="fas fa-arrow-up"></i></button>
+                        <button onmousedown="event.preventDefault(); window.moveBlock(this, 1)" title="Descer"><i class="fas fa-arrow-down"></i></button>
+                        <button onmousedown="event.preventDefault(); window.deleteBlock(this)" title="Eliminar Bloco" class="ml-1 !text-red-400 hover:!text-red-300"><i class="fas fa-trash"></i></button>
+                    `;
+                    block.appendChild(toolbar);
+                }
+            });
+        };
+
+        window.removeBlockToolbars = function() { 
+            document.querySelectorAll('.block-toolbar').forEach(tb => tb.remove()); 
+        };
+
+        window.toggleBlockWidth = function(btn) {
+            const block = btn.closest('.editable-block');
+            if(block.classList.contains('w-full')) {
+                block.classList.remove('w-full'); 
+                block.classList.add('w-[calc(50%-0.75rem)]', 'flex-grow'); 
+            } else {
+                block.classList.add('w-full'); 
+                block.classList.remove('w-[calc(50%-0.75rem)]', 'flex-grow');
+            }
+        };
+
+        window.cycleBackgroundColor = function(btn) {
+            const block = btn.closest('.editable-block');
+            let currentColorIndex = -1;
+            for (let i = 0; i < window.bgColors.length; i++) {
+                if (block.classList.contains(window.bgColors[i])) { 
+                    currentColorIndex = i; break; 
+                }
+            }
+            if (currentColorIndex !== -1) block.classList.remove(window.bgColors[currentColorIndex]);
+            block.classList.add(window.bgColors[(currentColorIndex + 1) % window.bgColors.length]);
+        };
+
+        window.deleteBlock = function(btn) { 
+            if(confirm("Pretende eliminar este bloco?")) btn.closest('.editable-block').remove(); 
+        };
+
+        window.moveBlock = function(btn, direction) {
+            const block = btn.closest('.editable-block');
+            const wrapper = block.parentNode;
+            if (direction === -1 && block.previousElementSibling) wrapper.insertBefore(block, block.previousElementSibling);
+            else if (direction === 1 && block.nextElementSibling) wrapper.insertBefore(block.nextElementSibling, block);
+        };
+
+        window.addPage = function() {
+            const title = prompt("Digite o nome da Nova Página:");
+            if (!title) return;
+            const uniqueId = 'page-' + Date.now();
+            const navHTML = `
+                <a href="#" onclick="window.navigateTo('${uniqueId}')" id="nav-${uniqueId}" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
+                    <i class="fas fa-file-alt w-6 text-center mr-2" contenteditable="false"></i> <span class="editable-element nav-title">${title}</span>
+                </a>`;
+            document.getElementById('nav-theory').insertAdjacentHTML('beforeend', navHTML);
+            const secHTML = `
+                <section id="view-${uniqueId}" class="view-section hidden fade-in max-w-4xl mx-auto pb-10">
+                    <span class="text-blue-600 font-semibold tracking-wider text-sm uppercase editable-element">NOVO MÓDULO</span>
+                    <h2 class="text-3xl font-bold text-slate-800 mt-2 mb-6 editable-element">${title}</h2>
+                    <div class="content-wrapper flex flex-wrap gap-6 w-full items-start">
+                        <div class="editable-block w-full bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                            <p class="editable-element text-slate-600">O seu novo conteúdo começa aqui. Pode editar este texto e redimensionar a caixa no canto inferior direito.</p>
+                        </div>
+                    </div>
+                </section>`;
+            document.getElementById('content-container').insertAdjacentHTML('beforeend', secHTML);
+            if(document.body.classList.contains('edit-active')) { 
+                window.toggleEditMode(); 
+                window.toggleEditMode(); 
+            }
+            window.navigateTo(uniqueId);
+        };
+
+        window.addTextBox = function() {
+            const currentView = document.querySelector('.view-section:not(.hidden)');
+            if (!currentView) return;
+            let wrapper = currentView.querySelector('.content-wrapper') || currentView;
+            const boxHTML = `
+                <div class="editable-block w-full bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-xl font-bold text-slate-800 mb-2 editable-element">Novo Título</h3>
+                    <p class="text-slate-600 editable-element">Escreva aqui o seu novo parágrafo. Utilize a aba inferior direita para redimensionar (esticar) a caixa livremente.</p>
+                </div>`;
+            const navButtons = currentView.querySelector('.nav-buttons-area');
+            if(navButtons && wrapper === currentView) { 
+                navButtons.insertAdjacentHTML('beforebegin', boxHTML); 
+            } else { 
+                wrapper.insertAdjacentHTML('beforeend', boxHTML); 
+            }
+            if(document.body.classList.contains('edit-active')) {
+                window.removeBlockToolbars(); 
+                window.injectBlockToolbars();
+                currentView.querySelectorAll('.editable-block:last-of-type .editable-element').forEach(el => el.contentEditable = "true");
+            }
+        };
+
+        window.addFAQ = function() {
+            const container = document.getElementById('faq-container');
+            const currentView = document.querySelector('.view-section:not(.hidden)');
+            
+            if(!container || currentView.id !== 'view-faq') {
+                window.showModal('error', 'Ação Inválida', 'Navegue até a página de FAQ para adicionar uma nova pergunta.');
+                return;
+            }
+            
+            const uniqueId = Date.now();
+            const faqHTML = `
+                <div class="editable-block w-full bg-white p-6 rounded-xl shadow-sm border border-slate-200 transition-all duration-200">
+                    <div class="flex items-center justify-between cursor-pointer select-none" onclick="window.toggleFAQ(${uniqueId})">
+                        <h4 class="font-bold text-lg text-slate-800 flex items-start">
+                            <i class="fas fa-question-circle text-blue-500 mt-1 mr-3 text-xl"></i> 
+                            <span class="editable-element">Nova Pergunta?</span>
+                        </h4>
+                        <i id="faq-icon-${uniqueId}" class="fas fa-chevron-down text-slate-400 text-xl transition-transform duration-300 ml-4 rotate-180"></i>
+                    </div>
+                    <div id="faq-ans-${uniqueId}" class="mt-4 text-slate-600 text-sm space-y-4 ml-8 border-t border-slate-100 pt-4">
+                        <p class="editable-element">Resposta para a nova pergunta...</p>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', faqHTML);
+            
+            if(document.body.classList.contains('edit-active')) {
+                window.removeBlockToolbars();
+                window.injectBlockToolbars();
+                document.querySelectorAll('#faq-container .editable-block:last-of-type .editable-element').forEach(el => el.contentEditable = "true");
+            }
+        };
+
+        window.removeCurrentPage = function() {
+            const currentView = document.querySelector('.view-section:not(.hidden)');
+            if (!currentView || currentView.id === 'view-home') {
+                window.showModal('error', 'Ação Inválida', 'Não é possível remover a página inicial.'); return;
+            }
+            if (confirm("ATENÇÃO: Deseja realmente APAGAR a página atual e todo o seu conteúdo?")) {
+                const viewId = currentView.id.replace('view-', '');
+                currentView.remove(); 
+                const navLink = document.getElementById('nav-' + viewId);
+                if(navLink) navLink.remove(); 
+                window.navigateTo('home');
+            }
+        };
+
+        window.toggleEditMode = function() {
+            const isEditing = document.body.classList.toggle('edit-active');
+            const btn = document.getElementById('btn-toggle-simple-edit');
+            const simpleControls = document.getElementById('simple-edit-controls');
+            const btnSave = document.getElementById('btn-save-simple');
+            
+            document.querySelectorAll('.editable-element, .nav-title').forEach(el => el.contentEditable = isEditing);
+
+            if(isEditing) {
+                btn.innerHTML = '<i class="fas fa-lock mr-2"></i> Fechar Edição';
+                btn.classList.replace('bg-teal-600', 'bg-rose-600');
+                btn.classList.replace('hover:bg-teal-500', 'hover:bg-rose-500');
+                simpleControls.style.display = 'grid';
+                btnSave.classList.remove('hidden'); 
+                btnSave.classList.add('flex');
+                
+                document.querySelectorAll('[id^="faq-ans-"]').forEach(el => el.classList.remove('hidden'));
+                document.querySelectorAll('[id^="faq-icon-"]').forEach(el => el.classList.add('rotate-180'));
+                window.injectBlockToolbars();
+            } else {
+                btn.innerHTML = '<i class="fas fa-pen mr-2"></i> Habilitar Edição';
+                btn.classList.replace('bg-rose-600', 'bg-teal-600');
+                btn.classList.replace('hover:bg-rose-500', 'hover:bg-teal-500');
+                simpleControls.style.display = 'none';
+                btnSave.classList.add('hidden'); 
+                btnSave.classList.remove('flex');
+                
+                document.querySelectorAll('[id^="faq-ans-"]').forEach(el => el.classList.add('hidden'));
+                document.querySelectorAll('[id^="faq-icon-"]').forEach(el => el.classList.remove('rotate-180'));
+                window.removeBlockToolbars();
+            }
+        };
+
+        window.resetToFactory = async () => {
+            if(confirm("Tem certeza absoluta? Isso apagará todas as edições na nuvem e restaurará o conteúdo e a estrutura para o original de fábrica!")) {
+                document.getElementById('content-container').innerHTML = document.getElementById('factory-content').innerHTML;
+                if(window.isPlaceholderKey) {
+                    window.location.reload();
+                    return;
+                }
+                window.showModal('info', 'Restaurando...', 'Restaurando original na nuvem...');
+                try {
+                    const docRef = window.firebaseDoc(window.db, 'artifacts', window.appId, 'public', 'data', 'site_content', 'latest');
+                    await window.firebaseDeleteDoc(docRef);
+                    window.showModal('success', 'Restaurado!', 'Conteúdo de fábrica restabelecido.', () => window.location.reload());
+                } catch(e) {
+                    window.showModal('error', 'Erro', 'Falha ao restaurar: ' + e.message);
+                }
+            }
+        };
+
+        // Preparação do UI Inicial (Draggable Panel & Format Toolbar)
+        document.addEventListener('DOMContentLoaded', () => {
+            const panel = document.getElementById('admin-panel');
+            const header = document.getElementById('admin-panel-header');
+            let isDragging = false, startX, startY, initialX, initialY;
+
+            header.addEventListener('mousedown', (e) => {
+                isDragging = true; 
+                startX = e.clientX; 
+                startY = e.clientY;
+                const rect = panel.getBoundingClientRect();
+                initialX = rect.left; 
+                initialY = rect.top;
+                
+                panel.style.right = 'auto'; 
+                panel.style.bottom = 'auto';
+                panel.style.left = initialX + 'px'; 
+                panel.style.top = initialY + 'px';
+
+                document.addEventListener('mousemove', onDrag);
+                document.addEventListener('mouseup', stopDrag);
+            });
+
+            function onDrag(e) {
+                if(!isDragging) return;
+                panel.style.left = (initialX + (e.clientX - startX)) + 'px';
+                panel.style.top = (initialY + (e.clientY - startY)) + 'px';
+            }
+
+            function stopDrag() {
+                isDragging = false;
+                document.removeEventListener('mousemove', onDrag);
+                document.removeEventListener('mouseup', stopDrag);
+            }
+
+            const formatBar = document.getElementById('format-toolbar');
+            document.addEventListener('selectionchange', () => {
+                if (!document.body.classList.contains('edit-active')) { 
+                    formatBar.style.display = 'none'; 
+                    return; 
+                }
+                const selection = window.getSelection();
+                if (selection.rangeCount > 0 && !selection.isCollapsed) {
+                    const range = selection.getRangeAt(0);
+                    const rect = range.getBoundingClientRect();
+                    if(selection.anchorNode.parentElement && selection.anchorNode.parentElement.isContentEditable) {
+                        formatBar.style.display = 'flex';
+                        formatBar.style.top = `${rect.top + window.scrollY - 45}px`;
+                        formatBar.style.left = `${rect.left + (rect.width / 2) - (formatBar.offsetWidth / 2)}px`;
+                    }
+                } else { 
+                    formatBar.style.display = 'none'; 
+                }
+            });
+        });
+    </script>
+
+    <!-- =========================================================
+         SCRIPT 2: FIREBASE BACKEND E PERSISTÊNCIA 
+         ========================================================= -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, addDoc, serverTimestamp, onSnapshot, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+        // =========================================================================
+        // ATENÇÃO EQUIPE DE TI: 
+        // Substitua os dados abaixo pelas suas credenciais reais do projeto Firebase
+        // =========================================================================
+        const manualFirebaseConfig = {
+            apiKey: "AIzaSyCYIHNbK5Hnx6K-qEQSrsCFDYZQ3QKj7vc",
+            authDomain: "capacitapatrimonio.firebaseapp.com",
+            projectId: "capacitapatrimonio",
+            storageBucket: "capacitapatrimonio.firebasestorage.app",
+            messagingSenderId: "394627190126",
+            appId: "1:394627190126:web:c3d656b216336abefe857f"
+        };
+
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : manualFirebaseConfig;
+        
+        window.isPlaceholderKey = firebaseConfig.apiKey === "COLE_SUA_API_KEY_AQUI";
+        
+        try {
+            if (!window.isPlaceholderKey) {
+                const app = initializeApp(firebaseConfig);
+                window.auth = getAuth(app);
+                window.db = getFirestore(app);
+                window.storage = getStorage(app);
+                
+                // Expondo métodos
+                window.firebaseDoc = doc; 
+                window.firebaseSetDoc = setDoc; 
+                window.firebaseCollection = collection;
+                window.firebaseAddDoc = addDoc; 
+                window.firebaseServerTimestamp = serverTimestamp;
+                window.firebaseOnSnapshot = onSnapshot; 
+                window.firebaseDeleteDoc = deleteDoc;
+                window.firebaseUpdateDoc = updateDoc; 
+                window.firebaseStorageRef = ref;
+                window.firebaseUploadBytes = uploadBytes; 
+                window.firebaseGetDownloadURL = getDownloadURL;
+            }
+        } catch (err) {
+            console.error("Erro na inicialização do Firebase. Modo Offline Ativado.", err);
+            window.isPlaceholderKey = true;
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const initAuth = async () => {
+                if (window.isPlaceholderKey) return; 
+                try {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(window.auth, __initial_auth_token);
+                    } else {
+                        try {
+                            await signInAnonymously(window.auth);
+                        } catch(anonErr) {
+                            console.warn("Aviso: Autenticação Anónima falhou. Prosseguindo em read-only.");
+                        }
+                    }
+                } catch(e) { console.error("Auth init error:", e); }
+            };
+            await initAuth();
+
+            if (!window.isPlaceholderKey) {
+                onAuthStateChanged(window.auth, (user) => {
+                    if (user && !user.isAnonymous) {
+                        window.isUserAdmin = true;
+                        document.getElementById('admin-panel').classList.remove('hidden');
+                        document.getElementById('admin-panel').classList.add('flex');
+                        document.getElementById('admin-auth-area').classList.add('hidden'); 
+                    } else {
+                        window.isUserAdmin = false;
+                        document.getElementById('admin-panel').classList.add('hidden');
+                        document.getElementById('admin-panel').classList.remove('flex');
+                        document.getElementById('admin-auth-area').classList.remove('hidden');
+                    }
+                    if(window.renderPDFs) window.renderPDFs();
+                });
+            }
+
+            const loadContentFromCloud = async () => {
+                if (window.isPlaceholderKey) {
+                    document.getElementById('content-container').innerHTML = document.getElementById('factory-content').innerHTML;
+                    if(window.renderPDFs) window.renderPDFs();
+                    setTimeout(() => {
+                        document.getElementById('loader').classList.add('opacity-0');
+                        setTimeout(() => document.getElementById('loader').classList.add('hidden'), 500);
+                        window.navigateTo('home');
+                    }, 800);
+                    return;
+                }
+
+                try {
+                    const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'site_content', 'latest');
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        // Proteção: Se for layout antigo que não tem o novo Módulo 7 (Baixa), força o reset visual.
+                        if(!data.nav.includes('nav-mod7')) {
+                            document.getElementById('content-container').innerHTML = document.getElementById('factory-content').innerHTML;
+                            // Salva a nova versão atualizada silenciosamente
+                            if(window.isUserAdmin) await setDoc(docRef, { content: document.getElementById('content-container').innerHTML, nav: document.getElementById('nav-theory').innerHTML, updatedAt: serverTimestamp() });
+                        } else {
+                            document.getElementById('content-container').innerHTML = data.content;
+                            document.getElementById('nav-theory').innerHTML = data.nav;
+                        }
+                    } else {
+                        document.getElementById('content-container').innerHTML = document.getElementById('factory-content').innerHTML;
+                    }
+
+                    // Ativar o Listener dos PDFs em tempo real
+                    const q = collection(window.db, 'artifacts', window.appId, 'public', 'data', 'pdf_tools');
+                    onSnapshot(q, (snapshot) => {
+                        window.pdfList = [];
+                        snapshot.forEach((doc) => { window.pdfList.push({ id: doc.id, ...doc.data() }); });
+                        window.pdfList.sort((a, b) => (a.order || 0) - (b.order || 0));
+                        if(window.renderPDFs) window.renderPDFs();
+                    });
+
+                } catch(e) {
+                    console.error("Cloud load error:", e);
+                    document.getElementById('content-container').innerHTML = document.getElementById('factory-content').innerHTML;
+                } finally {
+                    setTimeout(() => {
+                        document.getElementById('loader').classList.add('opacity-0');
+                        setTimeout(() => document.getElementById('loader').classList.add('hidden'), 500);
+                        window.navigateTo('home');
+                    }, 800);
+                }
+            };
+
+            await loadContentFromCloud();
+        });
+
+        // Configuração segura das funções de Guardar Administrativas
+        window.saveSimpleChanges = async () => {
+            if(!window.isUserAdmin) return;
+            if(document.body.classList.contains('edit-active')) window.toggleEditMode();
+            const contentHTML = document.getElementById('content-container').innerHTML;
+            const navHTML = document.getElementById('nav-theory').innerHTML;
+            
+            if (window.isPlaceholderKey) {
+                window.showModal('info', 'Modo Offline', 'As alterações não serão salvas na nuvem pois a API Key do Firebase não está configurada.');
+                return;
+            }
+            window.showModal('info', 'Salvando...', 'A gravar alterações na nuvem...');
+            try {
+                const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'site_content', 'latest');
+                await setDoc(docRef, { content: contentHTML, nav: navHTML, updatedAt: serverTimestamp() });
+                
+                if(window.auth.currentUser) {
+                    const logRef = collection(window.db, 'artifacts', window.appId, 'public', 'data', 'change_logs');
+                    await addDoc(logRef, { userEmail: window.auth.currentUser.email, timestamp: serverTimestamp(), action: "Publicou atualizações via Modo de Edição Simples." });
+                }
+
+                window.showModal('success', 'Salvo na Nuvem!', 'As alterações de texto e blocos foram guardadas com sucesso.');
+            } catch (err) { window.showModal('error', 'Falha', 'Erro ao salvar: ' + err.message); }
+        };
+
+        window.doAdminLogin = async () => {
+            const email = document.getElementById('admin-email').value;
+            const pass = document.getElementById('admin-password').value;
+            const feedback = document.getElementById('login-feedback');
+            if(!email || !pass) return;
+            
+            if (window.isPlaceholderKey) {
+                feedback.innerText = "Modo Offline Ativo. Função indisponível.";
+                feedback.classList.add('text-red-500'); return;
+            }
+
+            feedback.innerText = "Autenticando...";
+            try {
+                await signInWithEmailAndPassword(window.auth, email, pass);
+                window.closeAdminLogin();
+            } catch(error) { feedback.innerText = "Erro: " + error.message; }
+        };
+
+        window.doAdminRegister = async () => {
+            const email = document.getElementById('admin-email').value;
+            const pass = document.getElementById('admin-password').value;
+            const feedback = document.getElementById('login-feedback');
+            if(!email || !pass) return;
+
+            if (window.isPlaceholderKey) {
+                feedback.innerText = "Modo Offline Ativo. Função indisponível.";
+                feedback.classList.add('text-red-500'); return;
+            }
+
+            feedback.innerText = "Criando conta...";
+            try {
+                await createUserWithEmailAndPassword(window.auth, email, pass);
+                window.closeAdminLogin();
+                window.showModal('success', 'Conta Criada!', 'Acesso administrativo criado com sucesso.');
+            } catch(error) { feedback.innerText = "Erro: " + error.message; }
+        };
+
+        window.logoutAdmin = async () => {
+            if(document.body.classList.contains('edit-active')) window.toggleEditMode();
+            try {
+                await signOut(window.auth);
+                await signInAnonymously(window.auth);
+            } catch(e) { console.error(e); }
+        };
+    </script>
+
+    <!-- CONTEÚDO DE FÁBRICA ORIGINAL (Oculto de forma Segura e Intocável no Fim da Página) -->
+    <div id="factory-content" style="display: none;">
         <!-- VIEW: HOME -->
         <section id="view-home" class="view-section fade-in max-w-4xl mx-auto">
             <div class="content-wrapper flex flex-wrap gap-6 w-full items-start">
@@ -518,44 +1157,10 @@
             </div>
         </section>
 
-        <!-- VIEW: MODULE 4 -->
+        <!-- VIEW: MODULE 4 (Antigo 5: Dia a Dia) -->
         <section id="view-mod4" class="view-section hidden fade-in max-w-4xl mx-auto">
             <span class="text-blue-600 font-semibold tracking-wider text-sm uppercase editable-element">Módulo 4</span>
-            <h2 class="text-3xl font-bold text-slate-800 mt-2 mb-6 editable-element">Desincorporação (Baixa)</h2>
-            
-            <div class="content-wrapper flex flex-wrap gap-6 w-full items-start">
-                <div class="editable-block w-full">
-                    <p class="text-slate-600 text-lg editable-element">Consiste no cancelamento do registro de uso do bem e em sua imediata transferência para a relação de bens excluídos. O motivo mais comum para a baixa é a <strong>inservibilidade</strong>.</p>
-                </div>
-                
-                <div class="editable-block w-full bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                    <h3 class="text-xl font-bold text-slate-800 mb-4 editable-element">Critérios de Inservibilidade:</h3>
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-                        <div class="bg-slate-50 p-3 rounded border text-center text-sm shadow-sm editable-element">Desgaste pelo uso intenso</div>
-                        <div class="bg-slate-50 p-3 rounded border text-center text-sm shadow-sm editable-element">Tecnologia ultrapassada</div>
-                        <div class="bg-slate-50 p-3 rounded border text-center text-sm shadow-sm editable-element">Falta de peças no mercado</div>
-                        <div class="bg-slate-50 p-3 rounded border text-center text-sm shadow-sm editable-element">Manutenção superior ao valor do bem</div>
-                        <div class="bg-slate-50 p-3 rounded border text-center text-sm shadow-sm editable-element">Uso incompatível</div>
-                        <div class="bg-slate-50 p-3 rounded border text-center text-sm shadow-sm editable-element">Sucata (inaproveitável)</div>
-                    </div>
-                </div>
-
-                <div class="editable-block w-full bg-blue-50 p-6 rounded-xl border border-blue-100 text-blue-900">
-                    <h4 class="font-bold flex items-center mb-2"><i class="fas fa-info-circle mr-2"></i> <span class="editable-element">Destinação Final</span></h4>
-                    <p class="text-sm editable-element">Os bens inservíveis e inaproveitáveis são recolhidos e guardados pelo Departamento de Patrimônio. Permanecem no local até que o Prefeito decida por sua <strong>doação</strong> a uma entidade ou por <strong>leilão público</strong>. Até o final do processo de desincorporação, os bens não podem ser extraviados e devem aguardar a decisão final.</p>
-                </div>
-            </div>
-
-            <div class="mt-10 flex justify-between w-full nav-buttons-area">
-                <button onclick="window.navigateTo('mod3')" class="px-5 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium transition"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
-                <button onclick="window.navigateTo('mod5')" class="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium transition">Próximo <i class="fas fa-arrow-right ml-2"></i></button>
-            </div>
-        </section>
-
-        <!-- VIEW: MODULE 5 -->
-        <section id="view-mod5" class="view-section hidden fade-in max-w-4xl mx-auto">
-            <span class="text-blue-600 font-semibold tracking-wider text-sm uppercase editable-element">Módulo 5</span>
-            <h2 class="text-3xl font-bold text-slate-800 mt-2 mb-6 editable-element">Patrimônio no Dia a Dia</h2>
+            <h2 class="text-3xl font-bold text-slate-800 mt-2 mb-6 editable-element">Dia a Dia: Termos e Guias</h2>
             
             <div class="content-wrapper flex flex-wrap gap-6 w-full items-start">
                 
@@ -723,6 +1328,34 @@
                 </div>
 
                 <div class="mt-10 flex justify-between w-full nav-buttons-area">
+                    <button onclick="window.navigateTo('mod3')" class="px-5 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium transition"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
+                    <button onclick="window.navigateTo('tools')" class="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium transition">Próximo <i class="fas fa-arrow-right ml-2"></i></button>
+                </div>
+            </section>
+
+            <!-- VIEW: FERRAMENTAS (Antigo módulo solto) -->
+            <section id="view-tools" class="view-section hidden fade-in max-w-4xl mx-auto pb-10">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <span class="text-blue-600 font-semibold tracking-wider text-sm uppercase editable-element">Módulo 5</span>
+                        <h2 class="text-3xl font-bold text-slate-800 mt-2 editable-element">Ferramentas (Visualizador de PDFs)</h2>
+                    </div>
+                    <button id="btn-add-pdf" onclick="window.openPDFModal()" class="hidden bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium shadow transition-colors">
+                        <i class="fas fa-plus mr-2"></i> Novo PDF
+                    </button>
+                </div>
+                
+                <div class="content-wrapper w-full">
+                    <div class="editable-block w-full">
+                        <p class="text-slate-600 mb-8 text-lg editable-element">Acesse abaixo os documentos, manuais e ferramentas disponibilizados pela administração.</p>
+                    </div>
+                    
+                    <div id="pdf-dynamic-list" class="grid md:grid-cols-2 gap-6 w-full">
+                        <!-- Lista renderizada via JS (Firebase) -->
+                    </div>
+                </div>
+
+                <div class="mt-10 flex justify-between w-full nav-buttons-area">
                     <button onclick="window.navigateTo('mod4')" class="px-5 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium transition"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
                     <button onclick="window.navigateTo('mod6')" class="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium transition">Próximo <i class="fas fa-arrow-right ml-2"></i></button>
                 </div>
@@ -817,7 +1450,41 @@
                 </div>
 
                 <div class="mt-10 flex justify-between w-full nav-buttons-area">
-                    <button onclick="window.navigateTo('mod5')" class="px-5 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium transition"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
+                    <button onclick="window.navigateTo('tools')" class="px-5 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium transition"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
+                    <button onclick="window.navigateTo('mod7')" class="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium transition">Próximo <i class="fas fa-arrow-right ml-2"></i></button>
+                </div>
+            </section>
+
+            <!-- VIEW: MODULE 7 (Antigo Modulo 4: Baixa) -->
+            <section id="view-mod7" class="view-section hidden fade-in max-w-4xl mx-auto">
+                <span class="text-blue-600 font-semibold tracking-wider text-sm uppercase editable-element">Módulo 7</span>
+                <h2 class="text-3xl font-bold text-slate-800 mt-2 mb-6 editable-element">Desincorporação (Baixa)</h2>
+                
+                <div class="content-wrapper flex flex-wrap gap-6 w-full items-start">
+                    <div class="editable-block w-full">
+                        <p class="text-slate-600 text-lg editable-element">Consiste no cancelamento do registro de uso do bem e em sua imediata transferência para a relação de bens excluídos. O motivo mais comum para a baixa é a <strong>inservibilidade</strong>.</p>
+                    </div>
+                    
+                    <div class="editable-block w-full bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                        <h3 class="text-xl font-bold text-slate-800 mb-4 editable-element">Critérios de Inservibilidade:</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            <div class="bg-slate-50 p-3 rounded border text-center text-sm shadow-sm editable-element">Desgaste pelo uso intenso</div>
+                            <div class="bg-slate-50 p-3 rounded border text-center text-sm shadow-sm editable-element">Tecnologia ultrapassada</div>
+                            <div class="bg-slate-50 p-3 rounded border text-center text-sm shadow-sm editable-element">Falta de peças no mercado</div>
+                            <div class="bg-slate-50 p-3 rounded border text-center text-sm shadow-sm editable-element">Manutenção superior ao valor do bem</div>
+                            <div class="bg-slate-50 p-3 rounded border text-center text-sm shadow-sm editable-element">Uso incompatível</div>
+                            <div class="bg-slate-50 p-3 rounded border text-center text-sm shadow-sm editable-element">Sucata (inaproveitável)</div>
+                        </div>
+                    </div>
+
+                    <div class="editable-block w-full bg-blue-50 p-6 rounded-xl border border-blue-100 text-blue-900">
+                        <h4 class="font-bold flex items-center mb-2"><i class="fas fa-info-circle mr-2"></i> <span class="editable-element">Destinação Final</span></h4>
+                        <p class="text-sm editable-element">Os bens inservíveis e inaproveitáveis são recolhidos e guardados pelo Departamento de Patrimônio. Permanecem no local até que o Prefeito decida por sua <strong>doação</strong> a uma entidade ou por <strong>leilão público</strong>. Até o final do processo de desincorporação, os bens não podem ser extraviados e devem aguardar a decisão final.</p>
+                    </div>
+                </div>
+
+                <div class="mt-10 flex justify-between w-full nav-buttons-area">
+                    <button onclick="window.navigateTo('mod6')" class="px-5 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium transition"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
                     <button onclick="window.navigateTo('faq')" class="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium transition">Próximo <i class="fas fa-arrow-right ml-2"></i></button>
                 </div>
             </section>
@@ -916,52 +1583,36 @@
                 </div>
 
                 <div class="mt-10 flex justify-between w-full nav-buttons-area">
-                    <button onclick="window.navigateTo('mod6')" class="px-5 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium transition"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
-                    <button onclick="window.navigateTo('tools')" class="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium transition">Próximo <i class="fas fa-arrow-right ml-2"></i></button>
-                </div>
-            </section>
-
-            <!-- VIEW: FERRAMENTAS -->
-            <section id="view-tools" class="view-section hidden fade-in max-w-4xl mx-auto pb-10">
-                <div class="flex justify-between items-center mb-6">
-                    <div>
-                        <span class="text-blue-600 font-semibold tracking-wider text-sm uppercase editable-element">Ferramentas Extras</span>
-                        <h2 class="text-3xl font-bold text-slate-800 mt-2 editable-element">Visualizador de Documentos (PDF)</h2>
-                    </div>
-                    <button id="btn-add-pdf" onclick="window.openPDFModal()" class="hidden bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium shadow transition-colors">
-                        <i class="fas fa-plus mr-2"></i> Novo PDF
-                    </button>
-                </div>
-                
-                <div class="content-wrapper w-full">
-                    <div class="editable-block w-full">
-                        <p class="text-slate-600 mb-8 text-lg editable-element">Acesse abaixo os documentos, manuais e ferramentas disponibilizados pela administração.</p>
-                    </div>
-                    
-                    <div id="pdf-dynamic-list" class="grid md:grid-cols-2 gap-6 w-full">
-                        <!-- Lista renderizada via JS (Firebase) -->
-                    </div>
-                </div>
-
-                <div class="mt-10 flex justify-between w-full nav-buttons-area">
-                    <button onclick="window.navigateTo('faq')" class="px-5 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium transition"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
+                    <button onclick="window.navigateTo('mod7')" class="px-5 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium transition"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
                     <button onclick="window.finishCourse()" class="px-8 py-3 bg-green-600 text-white hover:bg-green-700 rounded-lg font-bold shadow-lg shadow-green-200 transition transform hover:-translate-y-1"><i class="fas fa-check-circle mr-2"></i> Finalizar Curso</button>
                 </div>
             </section>
         </div>
     </div>
 
-    <script type="module">
-        // ==========================================
-        // 1. DEFINIÇÃO IMEDIATA DAS FUNÇÕES WINDOW (Impede o erro de "not a function" durante carregamento)
-        // ==========================================
-        window.navigateTo = window.navigate = (viewId) => {
-            if(document.body.classList.contains('edit-active') && event && event.target.tagName === 'SPAN') return;
+
+    <!-- =========================================================
+         SCRIPT 1: FUNÇÕES DE UI NATIVAS E DE NAVEGAÇÃO 
+         (Carrega de imediato para garantir botões funcionais)
+         ========================================================= -->
+    <script>
+        window.bgColors = ['bg-white', 'bg-slate-50', 'bg-blue-50', 'bg-yellow-50', 'bg-green-50', 'bg-red-50', 'bg-blue-600'];
+        window.pdfList = [];
+        window.isUserAdmin = false;
+        window.editorActive = false;
+        window.currentModalAction = null;
+        window.appId = typeof __app_id !== 'undefined' ? __app_id : 'patrimonio-app';
+
+        window.navigateTo = function(viewId) {
+            if(document.body.classList.contains('edit-active')) {
+                if(window.event && window.event.target && window.event.target.tagName === 'SPAN') return;
+            }
             document.querySelectorAll('.view-section').forEach(sec => {
                 sec.classList.add('hidden');
                 sec.classList.remove('fade-in');
             });
             document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+
             const target = document.getElementById('view-' + viewId);
             if(target) {
                 target.classList.remove('hidden');
@@ -969,19 +1620,21 @@
                 target.classList.add('fade-in');
             }
             document.querySelectorAll(`a[onclick*="'${viewId}'"]`).forEach(l => l.classList.add('active'));
+
             if(window.innerWidth < 768) {
                 const sidebar = document.getElementById('sidebar');
-                if(!sidebar.classList.contains('-translate-x-full')) window.toggleSidebar();
+                if(sidebar && !sidebar.classList.contains('-translate-x-full')) window.toggleSidebar();
             }
-            document.getElementById('content-container').scrollTop = 0;
+            const container = document.getElementById('content-container');
+            if(container) container.scrollTop = 0;
         };
 
-        window.toggleSidebar = () => {
+        window.toggleSidebar = function() {
             document.getElementById('sidebar').classList.toggle('-translate-x-full');
             document.getElementById('mobile-overlay').classList.toggle('hidden');
         };
 
-        window.toggleFAQ = (id) => {
+        window.toggleFAQ = function(id) {
             if(document.body.classList.contains('edit-active')) return;
             const content = document.getElementById('faq-ans-' + id);
             const icon = document.getElementById('faq-icon-' + id);
@@ -991,7 +1644,7 @@
             }
         };
 
-        window.showModal = (type, title, message, actionCallback = null) => {
+        window.showModal = function(type, title, message, actionCallback = null) {
             const modal = document.getElementById('custom-modal');
             const iconContainer = document.getElementById('modal-icon');
             const titleEl = document.getElementById('modal-title');
@@ -1003,6 +1656,7 @@
                 iconContainer.className = "w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 text-3xl bg-green-100 text-green-500";
                 iconContainer.innerHTML = '<i class="fas fa-check"></i>';
                 btnEl.className = "w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition";
+                btnEl.innerText = "Continuar";
             } else if(type === 'error') {
                 iconContainer.className = "w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 text-3xl bg-red-100 text-red-500";
                 iconContainer.innerHTML = '<i class="fas fa-times"></i>';
@@ -1014,7 +1668,9 @@
                 btnEl.className = "w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition";
                 btnEl.innerText = "Entendi";
             }
-            titleEl.innerText = title; messageEl.innerHTML = message;
+            titleEl.innerText = title; 
+            messageEl.innerHTML = message;
+            
             modal.classList.remove('hidden');
             setTimeout(() => {
                 modal.classList.remove('opacity-0');
@@ -1022,45 +1678,39 @@
             }, 10);
         };
 
-        window.closeModal = () => {
+        window.closeModal = function() {
             const modal = document.getElementById('custom-modal');
             modal.classList.add('opacity-0');
             document.getElementById('modal-content-box').classList.add('scale-95');
             setTimeout(() => {
                 modal.classList.add('hidden');
                 if(window.currentModalAction) {
-                    window.currentModalAction(); window.currentModalAction = null;
+                    window.currentModalAction(); 
+                    window.currentModalAction = null;
                 }
             }, 300);
         };
 
-        window.finishCourse = () => {
-            window.showModal('success', 'Parabéns! Curso Concluído', 'Você finalizou a trilha de capacitação sobre Patrimônio Público!<br><br>Consulte o Departamento pelos ramais <strong>5624</strong> ou <strong>5644</strong>.', () => window.navigateTo('home'));
+        window.finishCourse = function() {
+            window.showModal('success', 'Parabéns! Curso Concluído', 'Você finalizou a trilha de capacitação sobre Patrimônio Público!<br><br>Consulte a Divisão de Patrimônio e Informática pelos ramais <strong>5624</strong> ou <strong>5644</strong>.', () => window.navigateTo('home'));
         };
 
-        window.openAdminLogin = () => {
+        window.openAdminLogin = function() {
             document.getElementById('admin-login-modal').classList.remove('hidden');
             setTimeout(() => {
                 document.getElementById('admin-login-modal').classList.remove('opacity-0');
                 document.getElementById('admin-login-box').classList.remove('scale-95');
                 document.getElementById('admin-email').focus();
-                const feedback = document.getElementById('login-feedback');
-                if (window.isPlaceholderKey || window.firebaseInitError) {
-                    feedback.innerHTML = `<div class="bg-amber-50 border border-amber-200 text-amber-700 p-3 rounded mb-3 text-xs"><i class="fas fa-exclamation-triangle mr-1"></i> <b>Modo Offline Ativo.</b><br>As chaves do Firebase não foram detetadas no código. Solicite à equipa de TI a substituição de "COLE_SUA_API_KEY_AQUI".</div>`;
-                } else {
-                    feedback.innerText = "Entre para gerenciar o conteúdo.";
-                    feedback.className = "text-sm text-slate-600 mb-4";
-                }
             }, 10);
         };
 
-        window.closeAdminLogin = () => {
+        window.closeAdminLogin = function() {
             document.getElementById('admin-login-modal').classList.add('opacity-0');
             document.getElementById('admin-login-box').classList.add('scale-95');
             setTimeout(() => { document.getElementById('admin-login-modal').classList.add('hidden'); }, 300);
         };
 
-        window.openPDFModal = () => {
+        window.openPDFModal = function() {
             if(!window.isUserAdmin) return;
             document.getElementById('pdf-id').value = '';
             document.getElementById('pdf-title').value = '';
@@ -1070,10 +1720,11 @@
             document.getElementById('pdf-order').value = '';
             document.getElementById('pdf-modal-title').innerText = 'Adicionar Novo PDF';
             const modal = document.getElementById('pdf-form-modal');
-            modal.classList.remove('hidden'); setTimeout(() => modal.classList.remove('opacity-0'), 10);
+            modal.classList.remove('hidden'); 
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
         };
 
-        window.editPDF = (id) => {
+        window.editPDF = function(id) {
             if(!window.isUserAdmin) return;
             const pdf = window.pdfList.find(p => p.id === id);
             if(!pdf) return;
@@ -1085,30 +1736,38 @@
             document.getElementById('pdf-order').value = pdf.order || 0;
             document.getElementById('pdf-modal-title').innerText = 'Editar Configuração de PDF';
             const modal = document.getElementById('pdf-form-modal');
-            modal.classList.remove('hidden'); setTimeout(() => modal.classList.remove('opacity-0'), 10);
+            modal.classList.remove('hidden'); 
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
         };
 
-        window.closePDFModal = () => {
+        window.closePDFModal = function() {
             const modal = document.getElementById('pdf-form-modal');
-            modal.classList.add('opacity-0'); setTimeout(() => modal.classList.add('hidden'), 300);
+            modal.classList.add('opacity-0'); 
+            setTimeout(() => modal.classList.add('hidden'), 300);
         };
 
-        window.openPDFViewer = (url, title) => {
+        window.openPDFViewer = function(url, title) {
             document.getElementById('viewer-title').innerText = title;
             document.getElementById('pdf-iframe').src = url;
             const modal = document.getElementById('pdf-viewer-modal');
-            modal.classList.remove('hidden'); setTimeout(() => modal.classList.remove('opacity-0'), 10);
+            modal.classList.remove('hidden'); 
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
         };
 
-        window.closePDFViewer = () => {
+        window.closePDFViewer = function() {
             const modal = document.getElementById('pdf-viewer-modal');
             modal.classList.add('opacity-0');
-            setTimeout(() => { modal.classList.add('hidden'); document.getElementById('pdf-iframe').src = ''; }, 300);
+            setTimeout(() => { 
+                modal.classList.add('hidden'); 
+                document.getElementById('pdf-iframe').src = ''; 
+            }, 300);
         };
 
-        window.formatText = (command, value = null) => { document.execCommand(command, false, value); };
+        window.formatText = function(command, value = null) { 
+            document.execCommand(command, false, value); 
+        };
 
-        window.injectBlockToolbars = () => {
+        window.injectBlockToolbars = function() {
             document.querySelectorAll('.editable-block').forEach(block => {
                 if(!block.querySelector('.block-toolbar')) {
                     const toolbar = document.createElement('div');
@@ -1127,37 +1786,45 @@
             });
         };
 
-        window.removeBlockToolbars = () => { document.querySelectorAll('.block-toolbar').forEach(tb => tb.remove()); };
+        window.removeBlockToolbars = function() { 
+            document.querySelectorAll('.block-toolbar').forEach(tb => tb.remove()); 
+        };
 
-        window.toggleBlockWidth = (btn) => {
+        window.toggleBlockWidth = function(btn) {
             const block = btn.closest('.editable-block');
             if(block.classList.contains('w-full')) {
-                block.classList.remove('w-full'); block.classList.add('w-[calc(50%-0.75rem)]', 'flex-grow'); 
+                block.classList.remove('w-full'); 
+                block.classList.add('w-[calc(50%-0.75rem)]', 'flex-grow'); 
             } else {
-                block.classList.add('w-full'); block.classList.remove('w-[calc(50%-0.75rem)]', 'flex-grow');
+                block.classList.add('w-full'); 
+                block.classList.remove('w-[calc(50%-0.75rem)]', 'flex-grow');
             }
         };
 
-        window.cycleBackgroundColor = (btn) => {
+        window.cycleBackgroundColor = function(btn) {
             const block = btn.closest('.editable-block');
             let currentColorIndex = -1;
             for (let i = 0; i < window.bgColors.length; i++) {
-                if (block.classList.contains(window.bgColors[i])) { currentColorIndex = i; break; }
+                if (block.classList.contains(window.bgColors[i])) { 
+                    currentColorIndex = i; break; 
+                }
             }
             if (currentColorIndex !== -1) block.classList.remove(window.bgColors[currentColorIndex]);
             block.classList.add(window.bgColors[(currentColorIndex + 1) % window.bgColors.length]);
         };
 
-        window.deleteBlock = (btn) => { if(confirm("Pretende eliminar este bloco?")) btn.closest('.editable-block').remove(); };
+        window.deleteBlock = function(btn) { 
+            if(confirm("Pretende eliminar este bloco?")) btn.closest('.editable-block').remove(); 
+        };
 
-        window.moveBlock = (btn, direction) => {
+        window.moveBlock = function(btn, direction) {
             const block = btn.closest('.editable-block');
             const wrapper = block.parentNode;
             if (direction === -1 && block.previousElementSibling) wrapper.insertBefore(block, block.previousElementSibling);
             else if (direction === 1 && block.nextElementSibling) wrapper.insertBefore(block.nextElementSibling, block);
         };
 
-        window.addPage = () => {
+        window.addPage = function() {
             const title = prompt("Digite o nome da Nova Página:");
             if (!title) return;
             const uniqueId = 'page-' + Date.now();
@@ -1177,11 +1844,14 @@
                     </div>
                 </section>`;
             document.getElementById('content-container').insertAdjacentHTML('beforeend', secHTML);
-            if(document.body.classList.contains('edit-active')) { window.toggleEditMode(); window.toggleEditMode(); }
+            if(document.body.classList.contains('edit-active')) { 
+                window.toggleEditMode(); 
+                window.toggleEditMode(); 
+            }
             window.navigateTo(uniqueId);
         };
 
-        window.addTextBox = () => {
+        window.addTextBox = function() {
             const currentView = document.querySelector('.view-section:not(.hidden)');
             if (!currentView) return;
             let wrapper = currentView.querySelector('.content-wrapper') || currentView;
@@ -1191,15 +1861,52 @@
                     <p class="text-slate-600 editable-element">Escreva aqui o seu novo parágrafo. Utilize a aba inferior direita para redimensionar (esticar) a caixa livremente.</p>
                 </div>`;
             const navButtons = currentView.querySelector('.nav-buttons-area');
-            if(navButtons && wrapper === currentView) { navButtons.insertAdjacentHTML('beforebegin', boxHTML); } 
-            else { wrapper.insertAdjacentHTML('beforeend', boxHTML); }
+            if(navButtons && wrapper === currentView) { 
+                navButtons.insertAdjacentHTML('beforebegin', boxHTML); 
+            } else { 
+                wrapper.insertAdjacentHTML('beforeend', boxHTML); 
+            }
             if(document.body.classList.contains('edit-active')) {
-                window.removeBlockToolbars(); window.injectBlockToolbars();
+                window.removeBlockToolbars(); 
+                window.injectBlockToolbars();
                 currentView.querySelectorAll('.editable-block:last-of-type .editable-element').forEach(el => el.contentEditable = "true");
             }
         };
 
-        window.removeCurrentPage = () => {
+        window.addFAQ = function() {
+            const container = document.getElementById('faq-container');
+            const currentView = document.querySelector('.view-section:not(.hidden)');
+            
+            if(!container || currentView.id !== 'view-faq') {
+                window.showModal('error', 'Ação Inválida', 'Navegue até a página de FAQ para adicionar uma nova pergunta.');
+                return;
+            }
+            
+            const uniqueId = Date.now();
+            const faqHTML = `
+                <div class="editable-block w-full bg-white p-6 rounded-xl shadow-sm border border-slate-200 transition-all duration-200">
+                    <div class="flex items-center justify-between cursor-pointer select-none" onclick="window.toggleFAQ(${uniqueId})">
+                        <h4 class="font-bold text-lg text-slate-800 flex items-start">
+                            <i class="fas fa-question-circle text-blue-500 mt-1 mr-3 text-xl"></i> 
+                            <span class="editable-element">Nova Pergunta?</span>
+                        </h4>
+                        <i id="faq-icon-${uniqueId}" class="fas fa-chevron-down text-slate-400 text-xl transition-transform duration-300 ml-4 rotate-180"></i>
+                    </div>
+                    <div id="faq-ans-${uniqueId}" class="mt-4 text-slate-600 text-sm space-y-4 ml-8 border-t border-slate-100 pt-4">
+                        <p class="editable-element">Resposta para a nova pergunta...</p>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', faqHTML);
+            
+            if(document.body.classList.contains('edit-active')) {
+                window.removeBlockToolbars();
+                window.injectBlockToolbars();
+                document.querySelectorAll('#faq-container .editable-block:last-of-type .editable-element').forEach(el => el.contentEditable = "true");
+            }
+        };
+
+        window.removeCurrentPage = function() {
             const currentView = document.querySelector('.view-section:not(.hidden)');
             if (!currentView || currentView.id === 'view-home') {
                 window.showModal('error', 'Ação Inválida', 'Não é possível remover a página inicial.'); return;
@@ -1213,13 +1920,11 @@
             }
         };
 
-        window.toggleEditMode = () => {
-            if(window.editorActive) return; 
+        window.toggleEditMode = function() {
             const isEditing = document.body.classList.toggle('edit-active');
             const btn = document.getElementById('btn-toggle-simple-edit');
             const simpleControls = document.getElementById('simple-edit-controls');
             const btnSave = document.getElementById('btn-save-simple');
-            const grapesBtn = document.getElementById('btn-toggle-grapes-edit');
             
             document.querySelectorAll('.editable-element, .nav-title').forEach(el => el.contentEditable = isEditing);
 
@@ -1228,28 +1933,105 @@
                 btn.classList.replace('bg-teal-600', 'bg-rose-600');
                 btn.classList.replace('hover:bg-teal-500', 'hover:bg-rose-500');
                 simpleControls.style.display = 'grid';
-                btnSave.classList.remove('hidden'); btnSave.classList.add('flex');
-                grapesBtn.classList.add('hidden'); 
+                btnSave.classList.remove('hidden'); 
+                btnSave.classList.add('flex');
+                
                 document.querySelectorAll('[id^="faq-ans-"]').forEach(el => el.classList.remove('hidden'));
                 document.querySelectorAll('[id^="faq-icon-"]').forEach(el => el.classList.add('rotate-180'));
                 window.injectBlockToolbars();
             } else {
-                btn.innerHTML = '<i class="fas fa-pen mr-2"></i> Edição Simples';
+                btn.innerHTML = '<i class="fas fa-pen mr-2"></i> Habilitar Edição';
                 btn.classList.replace('bg-rose-600', 'bg-teal-600');
                 btn.classList.replace('hover:bg-rose-500', 'hover:bg-teal-500');
                 simpleControls.style.display = 'none';
-                btnSave.classList.add('hidden'); btnSave.classList.remove('flex');
-                grapesBtn.classList.remove('hidden');
+                btnSave.classList.add('hidden'); 
+                btnSave.classList.remove('flex');
+                
                 document.querySelectorAll('[id^="faq-ans-"]').forEach(el => el.classList.add('hidden'));
                 document.querySelectorAll('[id^="faq-icon-"]').forEach(el => el.classList.remove('rotate-180'));
                 window.removeBlockToolbars();
             }
         };
 
+        window.resetToFactory = async () => {
+            if(confirm("Tem certeza absoluta? Isso apagará todas as edições na nuvem e restaurará o conteúdo e a estrutura original (de fábrica).")) {
+                document.getElementById('content-container').innerHTML = document.getElementById('factory-content').innerHTML;
+                if(window.isPlaceholderKey) {
+                    window.location.reload();
+                    return;
+                }
+                window.showModal('info', 'Restaurando...', 'Restaurando layout e menu originais na nuvem...');
+                try {
+                    const docRef = window.firebaseDoc(window.db, 'artifacts', window.appId, 'public', 'data', 'site_content', 'latest');
+                    await window.firebaseDeleteDoc(docRef);
+                    window.showModal('success', 'Restaurado!', 'Conteúdo de fábrica restabelecido.', () => window.location.reload());
+                } catch(e) {
+                    window.showModal('error', 'Erro', 'Falha ao restaurar: ' + e.message);
+                }
+            }
+        };
 
-        // ==========================================
-        // 2. IMPORTS DO FIREBASE (V10)
-        // ==========================================
+        // Preparação do UI Inicial (Draggable Panel & Format Toolbar)
+        document.addEventListener('DOMContentLoaded', () => {
+            const panel = document.getElementById('admin-panel');
+            const header = document.getElementById('admin-panel-header');
+            let isDragging = false, startX, startY, initialX, initialY;
+
+            header.addEventListener('mousedown', (e) => {
+                isDragging = true; 
+                startX = e.clientX; 
+                startY = e.clientY;
+                const rect = panel.getBoundingClientRect();
+                initialX = rect.left; 
+                initialY = rect.top;
+                
+                panel.style.right = 'auto'; 
+                panel.style.bottom = 'auto';
+                panel.style.left = initialX + 'px'; 
+                panel.style.top = initialY + 'px';
+
+                document.addEventListener('mousemove', onDrag);
+                document.addEventListener('mouseup', stopDrag);
+            });
+
+            function onDrag(e) {
+                if(!isDragging) return;
+                panel.style.left = (initialX + (e.clientX - startX)) + 'px';
+                panel.style.top = (initialY + (e.clientY - startY)) + 'px';
+            }
+
+            function stopDrag() {
+                isDragging = false;
+                document.removeEventListener('mousemove', onDrag);
+                document.removeEventListener('mouseup', stopDrag);
+            }
+
+            const formatBar = document.getElementById('format-toolbar');
+            document.addEventListener('selectionchange', () => {
+                if (!document.body.classList.contains('edit-active')) { 
+                    formatBar.style.display = 'none'; 
+                    return; 
+                }
+                const selection = window.getSelection();
+                if (selection.rangeCount > 0 && !selection.isCollapsed) {
+                    const range = selection.getRangeAt(0);
+                    const rect = range.getBoundingClientRect();
+                    if(selection.anchorNode.parentElement && selection.anchorNode.parentElement.isContentEditable) {
+                        formatBar.style.display = 'flex';
+                        formatBar.style.top = `${rect.top + window.scrollY - 45}px`;
+                        formatBar.style.left = `${rect.left + (rect.width / 2) - (formatBar.offsetWidth / 2)}px`;
+                    }
+                } else { 
+                    formatBar.style.display = 'none'; 
+                }
+            });
+        });
+    </script>
+
+    <!-- =========================================================
+         SCRIPT 2: FIREBASE BACKEND E PERSISTÊNCIA 
+         ========================================================= -->
+    <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, addDoc, serverTimestamp, onSnapshot, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -1271,70 +2053,35 @@
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : manualFirebaseConfig;
         
         window.isPlaceholderKey = firebaseConfig.apiKey === "COLE_SUA_API_KEY_AQUI";
-        window.firebaseInitError = false;
-
+        
         try {
             if (!window.isPlaceholderKey) {
                 const app = initializeApp(firebaseConfig);
                 window.auth = getAuth(app);
                 window.db = getFirestore(app);
                 window.storage = getStorage(app);
+                
+                // Expondo métodos
+                window.firebaseDoc = doc; 
+                window.firebaseSetDoc = setDoc; 
+                window.firebaseCollection = collection;
+                window.firebaseAddDoc = addDoc; 
+                window.firebaseServerTimestamp = serverTimestamp;
+                window.firebaseOnSnapshot = onSnapshot; 
+                window.firebaseDeleteDoc = deleteDoc;
+                window.firebaseUpdateDoc = updateDoc; 
+                window.firebaseStorageRef = ref;
+                window.firebaseUploadBytes = uploadBytes; 
+                window.firebaseGetDownloadURL = getDownloadURL;
             }
         } catch (err) {
             console.error("Erro na inicialização do Firebase. Modo Offline Ativado.", err);
             window.isPlaceholderKey = true;
-            window.firebaseInitError = true;
         }
 
-        // ==========================================
-        // 3. EXECUÇÃO PRINCIPAL (Carregamento / Firebase Logic)
-        // ==========================================
         document.addEventListener('DOMContentLoaded', async () => {
-            
-            // Arraste do painel
-            const panel = document.getElementById('admin-panel');
-            const header = document.getElementById('admin-panel-header');
-            let isDragging = false, startX, startY, initialX, initialY;
-
-            header.addEventListener('mousedown', (e) => {
-                isDragging = true; startX = e.clientX; startY = e.clientY;
-                const rect = panel.getBoundingClientRect();
-                initialX = rect.left; initialY = rect.top;
-                panel.style.right = 'auto'; panel.style.bottom = 'auto';
-                panel.style.left = initialX + 'px'; panel.style.top = initialY + 'px';
-                document.addEventListener('mousemove', onDrag);
-                document.addEventListener('mouseup', stopDrag);
-            });
-            function onDrag(e) {
-                if(!isDragging) return;
-                panel.style.left = (initialX + (e.clientX - startX)) + 'px';
-                panel.style.top = (initialY + (e.clientY - startY)) + 'px';
-            }
-            function stopDrag() {
-                isDragging = false;
-                document.removeEventListener('mousemove', onDrag);
-                document.removeEventListener('mouseup', stopDrag);
-            }
-
-            // Toolbar formatação
-            const formatBar = document.getElementById('format-toolbar');
-            document.addEventListener('selectionchange', () => {
-                if (!document.body.classList.contains('edit-active')) { formatBar.style.display = 'none'; return; }
-                const selection = window.getSelection();
-                if (selection.rangeCount > 0 && !selection.isCollapsed) {
-                    const range = selection.getRangeAt(0);
-                    const rect = range.getBoundingClientRect();
-                    if(selection.anchorNode.parentElement && selection.anchorNode.parentElement.isContentEditable) {
-                        formatBar.style.display = 'flex';
-                        formatBar.style.top = `${rect.top + window.scrollY - 45}px`;
-                        formatBar.style.left = `${rect.left + (rect.width / 2) - (formatBar.offsetWidth / 2)}px`;
-                    }
-                } else { formatBar.style.display = 'none'; }
-            });
-
-            // Firebase Auth
             const initAuth = async () => {
-                if (window.isPlaceholderKey) return;
+                if (window.isPlaceholderKey) return; 
                 try {
                     if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                         await signInWithCustomToken(window.auth, __initial_auth_token);
@@ -1342,7 +2089,7 @@
                         try {
                             await signInAnonymously(window.auth);
                         } catch(anonErr) {
-                            console.warn("Aviso: Autenticação Anónima falhou (possivelmente desativada na consola). Prosseguindo em read-only.");
+                            console.warn("Aviso: Autenticação Anónima falhou. Prosseguindo em read-only.");
                         }
                     }
                 } catch(e) { console.error("Auth init error:", e); }
@@ -1362,33 +2109,14 @@
                         document.getElementById('admin-panel').classList.remove('flex');
                         document.getElementById('admin-auth-area').classList.remove('hidden');
                     }
-                    window.renderPDFs();
+                    if(window.renderPDFs) window.renderPDFs();
                 });
             }
 
-            // Load Cloud Content
             const loadContentFromCloud = async () => {
-                const injectToolsTabIfMissing = () => {
-                    if(!document.getElementById('nav-tools')) {
-                        const navHTML = `
-                            <a href="#" onclick="window.navigateTo('tools')" id="nav-tools" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
-                                <i class="fas fa-toolbox w-6 text-center mr-2"></i> <span class="nav-title editable-element">FERRAMENTAS</span>
-                            </a>
-                        `;
-                        document.getElementById('nav-theory').insertAdjacentHTML('beforeend', navHTML);
-                    }
-                    if(!document.getElementById('view-tools')) {
-                        const factoryTools = document.querySelector('#factory-content #view-tools');
-                        if(factoryTools) {
-                            document.getElementById('content-container').insertAdjacentHTML('beforeend', factoryTools.outerHTML);
-                        }
-                    }
-                };
-
                 if (window.isPlaceholderKey) {
                     document.getElementById('content-container').innerHTML = document.getElementById('factory-content').innerHTML;
-                    injectToolsTabIfMissing();
-                    window.renderPDFs();
+                    if(window.renderPDFs) window.renderPDFs();
                     setTimeout(() => {
                         document.getElementById('loader').classList.add('opacity-0');
                         setTimeout(() => document.getElementById('loader').classList.add('hidden'), 500);
@@ -1402,18 +2130,30 @@
                     const docSnap = await getDoc(docRef);
                     if (docSnap.exists()) {
                         const data = docSnap.data();
-                        document.getElementById('content-container').innerHTML = data.content;
-                        document.getElementById('nav-theory').innerHTML = data.nav;
+                        // Proteção: Força o reset se o menu da nuvem não tiver a nova estrutura (Baixa no Mod 7)
+                        if(!data.nav.includes('nav-mod7')) {
+                            document.getElementById('content-container').innerHTML = document.getElementById('factory-content').innerHTML;
+                            if(window.isUserAdmin) await setDoc(docRef, { content: document.getElementById('content-container').innerHTML, nav: document.getElementById('nav-theory').innerHTML, updatedAt: serverTimestamp() });
+                        } else {
+                            document.getElementById('content-container').innerHTML = data.content;
+                            document.getElementById('nav-theory').innerHTML = data.nav;
+                        }
                     } else {
                         document.getElementById('content-container').innerHTML = document.getElementById('factory-content').innerHTML;
                     }
-                    injectToolsTabIfMissing();
-                    window.initPDFListener();
+
+                    // Ativar o Listener dos PDFs em tempo real
+                    const q = collection(window.db, 'artifacts', window.appId, 'public', 'data', 'pdf_tools');
+                    onSnapshot(q, (snapshot) => {
+                        window.pdfList = [];
+                        snapshot.forEach((doc) => { window.pdfList.push({ id: doc.id, ...doc.data() }); });
+                        window.pdfList.sort((a, b) => (a.order || 0) - (b.order || 0));
+                        if(window.renderPDFs) window.renderPDFs();
+                    });
+
                 } catch(e) {
                     console.error("Cloud load error:", e);
                     document.getElementById('content-container').innerHTML = document.getElementById('factory-content').innerHTML;
-                    injectToolsTabIfMissing();
-                    window.initPDFListener();
                 } finally {
                     setTimeout(() => {
                         document.getElementById('loader').classList.add('opacity-0');
@@ -1422,105 +2162,47 @@
                     }, 800);
                 }
             };
+
             await loadContentFromCloud();
         });
 
-        // ==========================================
-        // 4. LÓGICA RECORRENTE FIREBASE (SALVAR/DELETAR)
-        // ==========================================
+        // Configuração segura das funções de Guardar Administrativas
         window.saveSimpleChanges = async () => {
             if(!window.isUserAdmin) return;
             if(document.body.classList.contains('edit-active')) window.toggleEditMode();
             const contentHTML = document.getElementById('content-container').innerHTML;
             const navHTML = document.getElementById('nav-theory').innerHTML;
+            
             if (window.isPlaceholderKey) {
-                window.showModal('info', 'Modo Offline', 'As alterações não serão salvas na nuvem pois a API Key do Firebase não está configurada no código.'); return;
+                window.showModal('info', 'Modo Offline', 'As alterações não serão salvas na nuvem pois a API Key do Firebase não está configurada.');
+                return;
             }
             window.showModal('info', 'Salvando...', 'A gravar alterações na nuvem...');
             try {
                 const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'site_content', 'latest');
                 await setDoc(docRef, { content: contentHTML, nav: navHTML, updatedAt: serverTimestamp() });
-                await window.logAction("Publicou atualizações via Modo de Edição Simples.");
+                
+                // Logging
+                if(window.auth.currentUser) {
+                    const logRef = collection(window.db, 'artifacts', window.appId, 'public', 'data', 'change_logs');
+                    await addDoc(logRef, { userEmail: window.auth.currentUser.email, timestamp: serverTimestamp(), action: "Publicou atualizações via Modo de Edição Simples." });
+                }
+
                 window.showModal('success', 'Salvo na Nuvem!', 'As alterações de texto e blocos foram guardadas com sucesso.');
             } catch (err) { window.showModal('error', 'Falha', 'Erro ao salvar: ' + err.message); }
         };
 
-        window.initPDFListener = () => {
-            if (window.isPlaceholderKey) return;
-            const q = collection(window.db, 'artifacts', window.appId, 'public', 'data', 'pdf_tools');
-            onSnapshot(q, (snapshot) => {
-                window.pdfList = [];
-                snapshot.forEach((doc) => { window.pdfList.push({ id: doc.id, ...doc.data() }); });
-                window.pdfList.sort((a, b) => (a.order || 0) - (b.order || 0));
-                window.renderPDFs();
-            }, (error) => { console.error("Error listening to PDFs: ", error); });
-        };
-
-        window.savePDF = async () => {
-            if(!window.isUserAdmin) return;
-            const id = document.getElementById('pdf-id').value;
-            const title = document.getElementById('pdf-title').value;
-            const desc = document.getElementById('pdf-desc').value;
-            let url = document.getElementById('pdf-url').value;
-            const order = parseInt(document.getElementById('pdf-order').value) || 0;
-            const fileInput = document.getElementById('pdf-file');
-            const file = fileInput.files[0];
-
-            if(!title) { alert('O Título do Documento é obrigatório!'); return; }
-            if(!url && !file) { alert('Faça o upload do arquivo PDF ou forneça uma URL externa!'); return; }
-            if (window.isPlaceholderKey) { window.showModal('info', 'Modo Offline', 'Não é possível fazer upload de arquivos no momento.'); return; }
-
-            try {
-                if(file) {
-                    window.showModal('info', 'Fazendo Upload...', 'A enviar o arquivo PDF para a nuvem. Por favor, aguarde...');
-                    const storageRef = ref(window.storage, `artifacts/${window.appId}/public/data/pdfs/${Date.now()}_${file.name}`);
-                    const snapshot = await uploadBytes(storageRef, file);
-                    url = await getDownloadURL(snapshot.ref);
-                }
-                if(id) {
-                    const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'pdf_tools', id);
-                    await updateDoc(docRef, { title, description: desc, url, order });
-                    window.logAction(`Editou as configurações do PDF: ${title}`);
-                } else {
-                    const colRef = collection(window.db, 'artifacts', window.appId, 'public', 'data', 'pdf_tools');
-                    await addDoc(colRef, { title, description: desc, url, order, createdAt: serverTimestamp() });
-                    window.logAction(`Adicionou um novo PDF: ${title}`);
-                }
-                window.closePDFModal();
-                setTimeout(() => window.showModal('success', 'Documento Salvo', 'O PDF foi configurado e salvo com sucesso no sistema.'), 350);
-            } catch(e) { window.showModal('error', 'Erro ao Salvar', e.message); }
-        };
-
-        window.deletePDF = async (id) => {
-            if(!window.isUserAdmin) return;
-            const pdf = window.pdfList.find(p => p.id === id);
-            if (window.isPlaceholderKey) { window.showModal('info', 'Modo Offline', 'Ação indisponível sem as chaves do Firebase.'); return; }
-            if(confirm(`ATENÇÃO: Confirma a exclusão definitiva do documento "${pdf?.title}" da plataforma?`)) {
-                try {
-                    const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'pdf_tools', id);
-                    await deleteDoc(docRef);
-                    window.logAction(`Excluiu definitivamente o PDF: ${pdf?.title}`);
-                    window.showModal('success', 'Removido!', 'Documento retirado da plataforma com sucesso.');
-                } catch(e) { window.showModal('error', 'Erro', e.message); }
-            }
-        };
-
-        window.logAction = async (actionDesc) => {
-            if(!window.auth || !window.auth.currentUser || window.isPlaceholderKey) return;
-            try {
-                const logRef = collection(window.db, 'artifacts', window.appId, 'public', 'data', 'change_logs');
-                await addDoc(logRef, { userEmail: window.auth.currentUser.email, timestamp: serverTimestamp(), action: actionDesc });
-            } catch(e) {}
-        };
-
         window.doAdminLogin = async () => {
-            if (window.isPlaceholderKey) {
-                window.showModal('info', 'Atenção', 'Você precisa configurar as Chaves da API no código antes de realizar login.'); return;
-            }
             const email = document.getElementById('admin-email').value;
             const pass = document.getElementById('admin-password').value;
             const feedback = document.getElementById('login-feedback');
             if(!email || !pass) return;
+            
+            if (window.isPlaceholderKey) {
+                feedback.innerText = "Modo Offline Ativo. Função indisponível.";
+                feedback.classList.add('text-red-500'); return;
+            }
+
             feedback.innerText = "Autenticando...";
             try {
                 await signInWithEmailAndPassword(window.auth, email, pass);
@@ -1529,13 +2211,16 @@
         };
 
         window.doAdminRegister = async () => {
-            if (window.isPlaceholderKey) {
-                window.showModal('info', 'Atenção', 'Você precisa configurar as Chaves da API no código antes de registrar a conta.'); return;
-            }
             const email = document.getElementById('admin-email').value;
             const pass = document.getElementById('admin-password').value;
             const feedback = document.getElementById('login-feedback');
             if(!email || !pass) return;
+
+            if (window.isPlaceholderKey) {
+                feedback.innerText = "Modo Offline Ativo. Função indisponível.";
+                feedback.classList.add('text-red-500'); return;
+            }
+
             feedback.innerText = "Criando conta...";
             try {
                 await createUserWithEmailAndPassword(window.auth, email, pass);
@@ -1545,122 +2230,11 @@
         };
 
         window.logoutAdmin = async () => {
-            if(window.editorActive) window.toggleGrapesJS();
             if(document.body.classList.contains('edit-active')) window.toggleEditMode();
             try {
                 await signOut(window.auth);
                 await signInAnonymously(window.auth);
             } catch(e) { console.error(e); }
-        };
-
-        window.renderPDFs = () => {
-            document.querySelectorAll('#pdf-dynamic-list').forEach(container => {
-                container.innerHTML = '';
-                window.pdfList.forEach(pdf => {
-                    const adminControls = window.isUserAdmin ? `
-                        <div class="mt-4 pt-4 border-t border-slate-100 flex justify-end space-x-3">
-                            <button onclick="window.editPDF('${pdf.id}')" class="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors"><i class="fas fa-edit"></i> Editar</button>
-                            <button onclick="window.deletePDF('${pdf.id}')" class="text-xs text-red-600 hover:text-red-800 font-medium transition-colors"><i class="fas fa-trash"></i> Excluir</button>
-                        </div>
-                    ` : '';
-                    container.innerHTML += `
-                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col h-full hover:shadow-md transition-shadow">
-                            <div class="flex items-center mb-3">
-                                <div class="w-10 h-10 bg-red-100 text-red-600 rounded-lg flex items-center justify-center text-xl mr-3 flex-shrink-0"><i class="fas fa-file-pdf"></i></div>
-                                <h4 class="font-bold text-slate-800 leading-tight">${pdf.title}</h4>
-                            </div>
-                            <p class="text-sm text-slate-600 flex-grow mb-4">${pdf.description || ''}</p>
-                            <button onclick="window.openPDFViewer('${pdf.url}', '${pdf.title}')" class="w-full bg-slate-800 hover:bg-slate-900 text-white text-sm font-medium py-2.5 rounded-lg transition-colors shadow">
-                                <i class="fas fa-eye mr-1"></i> Visualizar Documento
-                            </button>
-                            ${adminControls}
-                        </div>
-                    `;
-                });
-                if(window.pdfList.length === 0) {
-                    container.innerHTML = '<div class="col-span-2 text-center p-8 bg-slate-50 rounded-lg border border-dashed border-slate-300"><i class="fas fa-folder-open text-3xl text-slate-300 mb-2"></i><p class="text-slate-500 italic">Nenhum documento PDF cadastrado no momento.</p></div>';
-                }
-            });
-            document.querySelectorAll('#btn-add-pdf').forEach(btn => {
-                if(window.isUserAdmin) btn.classList.remove('hidden'); else btn.classList.add('hidden');
-            });
-        };
-
-        // --- SISTEMA GRAPESJS ---
-        window.toggleGrapesJS = () => {
-            if(document.body.classList.contains('edit-active')) return;
-            const liveSite = document.getElementById('live-site');
-            const gjsContainer = document.getElementById('gjs-container');
-            const btn = document.getElementById('btn-toggle-grapes-edit');
-
-            if (!window.editorActive) {
-                window.editorActive = true;
-                const tempSite = liveSite.cloneNode(true);
-                tempSite.querySelectorAll('.view-section').forEach(sec => {
-                    sec.classList.remove('hidden', 'fade-in'); sec.style.display = 'block';
-                    sec.style.borderBottom = '4px dashed #e2e8f0'; sec.style.paddingBottom = '3rem'; sec.style.marginBottom = '3rem';
-                });
-                tempSite.querySelectorAll('[id^="faq-ans-"]').forEach(faq => faq.classList.remove('hidden'));
-                
-                liveSite.style.display = 'none'; gjsContainer.style.display = 'block';
-
-                window.editor = grapesjs.init({
-                    container: '#gjs', height: '100vh', width: '100%', fromElement: false, storageManager: false, 
-                    plugins: ['gjs-preset-webpage', 'gjs-blocks-basic'],
-                    pageManager: { pages: [ { id: 'page-1', name: 'Layout Completo', component: tempSite.innerHTML } ] },
-                    canvas: {
-                        styles: ['https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'],
-                        scripts: ['https://cdn.tailwindcss.com']
-                    }
-                });
-
-                window.editor.Panels.addButton('options', { id: 'add-page', className: 'fa fa-plus-square text-blue-400', command: 'add-new-page', attributes: { title: 'Adicionar Nova Página em Branco' } });
-                window.editor.Commands.add('add-new-page', {
-                    run: function(ed) {
-                        const pageName = prompt('Nome da nova página:');
-                        if (pageName) {
-                            ed.Pages.add({ name: pageName, component: '<div class="p-10 text-center"><h1 class="text-3xl font-bold text-blue-600">' + pageName + '</h1></div>' });
-                            alert('Página "' + pageName + '" criada!');
-                        }
-                    }
-                });
-
-                window.editor.BlockManager.add('fa-icon', {
-                    label: '<i class="fas fa-icons text-xl mb-1"></i><br>Ícone FA', category: 'Básico',
-                    content: { type: 'text', content: '<i class="fas fa-star text-4xl text-blue-500 m-2"></i>', activeOnRender: 1 }
-                });
-
-                window.editor.Panels.addButton('options', { id: 'save-layout', className: 'fa fa-save text-green-400', command: 'save-layout', attributes: { title: 'Salvar Alterações de Layout (Nuvem)' } });
-                window.editor.Commands.add('save-layout', {
-                    run: async function(ed, sender) {
-                        sender && sender.set('active', 0);
-                        const generatedHtml = ed.getHtml();
-                        if (window.isPlaceholderKey) { window.showModal('info', 'Modo Offline', 'As alterações não serão salvas. API Key do Firebase ausente.'); return; }
-                        window.showModal('info', 'Salvando...', 'A gravar layout modificado na nuvem...');
-                        try {
-                            if (window.isUserAdmin) {
-                                const canvasDoc = ed.Canvas.getDocument();
-                                const newNav = canvasDoc.getElementById('nav-theory');
-                                const navHTMLToSave = newNav ? newNav.innerHTML : document.getElementById('nav-theory').innerHTML;
-                                let cleanHtml = generatedHtml.replace(/borderBottom="4px dashed #e2e8f0"/g, "").replace(/marginBottom="3rem"/g, "").replace(/paddingBottom="3rem"/g, "");
-
-                                const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'site_content', 'latest');
-                                await setDoc(docRef, { content: cleanHtml, nav: navHTMLToSave, updatedAt: serverTimestamp() });
-                                await window.logAction("Publicou atualizações via Editor GrapesJS Avançado.");
-                            }
-                            window.showModal('success', 'Layout Salvo!', 'As alterações estruturais foram guardadas com sucesso.');
-                        } catch (err) { window.showModal('error', 'Falha', 'Erro: ' + err.message); }
-                    }
-                });
-
-                btn.innerHTML = '<i class="fas fa-times mr-2"></i> Fechar Editor e Recarregar';
-                btn.classList.replace('bg-blue-600', 'bg-rose-600');
-                btn.classList.replace('hover:bg-blue-500', 'hover:bg-rose-500');
-            } else {
-                window.editorActive = false;
-                window.showModal('info', 'Fechando...', 'Recarregando ambiente...');
-                setTimeout(() => window.location.reload(), 1000);
-            }
         };
     </script>
 </body>
