@@ -3,1757 +3,883 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Capacitação: Patrimônio Público - Praia Grande</title>
-    
-    <!-- Tailwind CSS -->
+    <title>Capacitação - Patrimônio Público</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Google Fonts (Inter) -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- FontAwesome para Ícones -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; }
         .fade-in { animation: fadeIn 0.4s ease-in-out; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Estilos do Modo Edição */
+        .edit-active .editable-text {
+            outline: 2px dashed #94a3b8;
+            outline-offset: 4px;
+            border-radius: 4px;
+            cursor: text;
+            transition: all 0.2s;
         }
-        .nav-item.active { background-color: #eff6ff; color: #2563eb; border-right: 4px solid #2563eb; font-weight: 600; }
+        .edit-active .editable-text:hover { background-color: #f1f5f9; }
+        .edit-active .editable-text:focus { outline: 2px solid #3b82f6; background-color: #ffffff; }
+        
+        /* Barra de formatação flutuante */
+        #format-toolbar {
+            display: none; position: absolute; background: #1e293b; padding: 6px;
+            border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 9999; gap: 6px;
+        }
+        #format-toolbar button {
+            color: white; width: 28px; height: 28px; border-radius: 4px;
+            display: flex; align-items: center; justify-content: center; transition: 0.2s;
+        }
+        #format-toolbar button:hover { background: #334155; }
+        
+        /* Scrollbar */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
-        #admin-panel { position: fixed; transition: opacity 0.3s ease; z-index: 900; }
-        #admin-panel-header { cursor: grab; }
-        #admin-panel-header:active { cursor: grabbing; }
-
-        /* MODO EDIÇÃO SIMPLES */
-        .edit-active .editable-element, .edit-active .editable-block {
-            outline: 2px dashed #94a3b8; outline-offset: 2px; border-radius: 4px; transition: all 0.2s; position: relative;
-        }
-        .edit-active .editable-block { resize: both; overflow: auto; min-height: 80px; min-width: 250px; padding-top: 2.5rem !important; }
-        .edit-active [contenteditable="true"]:hover { background-color: rgba(241, 245, 249, 0.6); }
-        .edit-active [contenteditable="true"]:focus { outline: 2px solid #3b82f6; background-color: #ffffff; }
-        .edit-active .nav-item { pointer-events: auto; }
-
-        /* Barras de Ferramentas */
-        .block-toolbar {
-            display: none; position: absolute; top: 0; right: 0; background: #1e293b; padding: 6px 10px;
-            border-bottom-left-radius: 8px; z-index: 10; gap: 12px;
-        }
-        .edit-active .editable-block:hover .block-toolbar { display: flex; align-items: center; }
-        .block-toolbar button { color: #cbd5e1; font-size: 13px; cursor: pointer; transition: color 0.2s; }
-        .block-toolbar button:hover { color: #ffffff; }
-
-        /* Barra de Formatação Flutuante */
-        #format-toolbar {
-            display: none; position: absolute; background: #1e293b; padding: 6px; border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 9999; gap: 4px; align-items: center;
-        }
-        #format-toolbar button {
-            color: white; width: 28px; height: 28px; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: 0.2s;
-        }
-        #format-toolbar button:hover { background: #334155; }
-        #format-toolbar .divider { width: 1px; height: 20px; background: #475569; margin: 0 4px; }
-        .editable-block { transition: width 0.3s ease, background-color 0.3s ease; }
     </style>
+</head>
+<body class="flex h-screen overflow-hidden text-slate-800">
 
-    <!-- SCRIPT 1: FUNÇÕES SÍNCRONAS DE UI E NAVEGAÇÃO -->
-    <script>
-        // Variáveis Globais Essenciais
-        window.appId = 'patrimonio-app';
-        if (typeof __app_id !== 'undefined' && __app_id) { window.appId = String(__app_id); }
+    <!-- Firebase SDKs (Apenas App, Auth e Firestore - SEM STORAGE) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // ==========================================
+        // EQUIPE DE TI: COLE AS CHAVES DO FIREBASE AQUI
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "", // Cole sua API Key aqui
+            authDomain: "seu-projeto.firebaseapp.com",
+            projectId: "seu-projeto",
+            storageBucket: "seu-projeto.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:abcdef"
+        };
+        // ==========================================
+
+        const APP_ID = 'capacitacao_patrimonio_pg';
         
-        window.bgColors = ['bg-white', 'bg-slate-50', 'bg-blue-50', 'bg-yellow-50', 'bg-green-50', 'bg-red-50', 'bg-blue-600'];
-        window.operationalPDFs = {};
-        window.pdfList = [];
-        window.isUserAdmin = false;
-        window.currentModalAction = null;
-        window.isPDFMaximized = false;
+        // Inicialização com Fallback (Modo Offline se não houver chave)
+        let app, auth, db;
+        let isOfflineMode = false;
+        let currentUser = null;
+        let isAdmin = false;
 
-        // Navegação Segura
+        if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "") {
+            console.warn("⚠️ MODO OFFLINE: Chaves do Firebase ausentes. Banco de dados e Login desativados.");
+            isOfflineMode = true;
+            document.getElementById('loading-screen').classList.add('hidden');
+        } else {
+            try {
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                
+                // Login anônimo automático para visitantes poderem ler do Firestore
+                signInAnonymously(auth).catch(err => console.warn("Modo visitante indisponível:", err));
+
+                onAuthStateChanged(auth, async (user) => {
+                    currentUser = user;
+                    if (user && !user.isAnonymous) {
+                        // Verifica se é admin logado por email/senha
+                        isAdmin = true;
+                        document.getElementById('admin-tools').classList.remove('hidden');
+                        document.getElementById('btn-login-header').classList.add('hidden');
+                        document.getElementById('btn-logout-header').classList.remove('hidden');
+                        showAdminButtons();
+                    } else {
+                        // Visitante ou Anônimo
+                        isAdmin = false;
+                        document.getElementById('admin-tools').classList.add('hidden');
+                        document.getElementById('btn-login-header').classList.remove('hidden');
+                        document.getElementById('btn-logout-header').classList.add('hidden');
+                        hideAdminButtons();
+                    }
+                    
+                    if(user) {
+                        await loadContentFromCloud();
+                        await loadPdfLinksFromCloud();
+                    }
+                    document.getElementById('loading-screen').classList.add('hidden');
+                });
+            } catch (error) {
+                console.error("Erro ao inicializar Firebase:", error);
+                isOfflineMode = true;
+                document.getElementById('loading-screen').classList.add('hidden');
+            }
+        }
+
+        // ==========================================
+        // FUNÇÕES GLOBAIS (Anexadas ao Window)
+        // ==========================================
+        
+        // Navegação de Módulos
         window.navigateTo = function(viewId) {
             if(document.body.classList.contains('edit-active')) {
-                if(window.event && window.event.target && window.event.target.tagName === 'SPAN') return;
+                showModal('info', 'Aviso', 'Desative o Modo Edição para navegar pelos módulos.');
+                return;
             }
-            document.querySelectorAll('.view-section').forEach(function(sec) {
-                sec.classList.add('hidden');
-                sec.classList.remove('fade-in');
-            });
-            document.querySelectorAll('.nav-item').forEach(function(nav) { nav.classList.remove('active'); });
-
-            var target = document.getElementById('view-' + viewId);
+            document.querySelectorAll('.view-section').forEach(sec => sec.classList.add('hidden'));
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('bg-blue-50', 'text-blue-700', 'border-r-4', 'border-blue-600'));
+            
+            const target = document.getElementById('view-' + viewId);
             if(target) {
                 target.classList.remove('hidden');
-                void target.offsetWidth; 
                 target.classList.add('fade-in');
             }
             
-            document.querySelectorAll("a[onclick*='" + viewId + "']").forEach(function(l) { l.classList.add('active'); });
-
-            if(window.innerWidth < 768) {
-                var sidebar = document.getElementById('sidebar');
-                if(sidebar && !sidebar.classList.contains('-translate-x-full')) window.toggleSidebar();
-            }
-            var container = document.getElementById('content-container');
-            if(container) container.scrollTop = 0;
-        };
-
-        // Fallbacks de Compatibilidade
-        window.navigate = window.navigateTo;
-
-        window.toggleSidebar = function() {
-            document.getElementById('sidebar').classList.toggle('-translate-x-full');
-            document.getElementById('mobile-overlay').classList.toggle('hidden');
-        };
-
-        window.toggleFAQ = function(id) {
-            if(document.body.classList.contains('edit-active')) return;
-            var content = document.getElementById('faq-ans-' + id);
-            var icon = document.getElementById('faq-icon-' + id);
-            if(content && icon) {
-                content.classList.toggle('hidden');
-                icon.classList.toggle('rotate-180');
-            }
-        };
-
-        // Modais Gerais
-        window.showModal = function(type, title, message, actionCallback) {
-            var modal = document.getElementById('custom-modal');
-            var iconContainer = document.getElementById('modal-icon');
-            var titleEl = document.getElementById('modal-title');
-            var messageEl = document.getElementById('modal-message');
-            var btnEl = document.getElementById('modal-btn');
-            window.currentModalAction = actionCallback || null;
-
-            if(type === 'success') {
-                iconContainer.className = "w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 text-3xl bg-green-100 text-green-500";
-                iconContainer.innerHTML = '<i class="fas fa-check"></i>';
-                btnEl.className = "w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition";
-                btnEl.innerText = "Continuar";
-            } else if(type === 'error') {
-                iconContainer.className = "w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 text-3xl bg-red-100 text-red-500";
-                iconContainer.innerHTML = '<i class="fas fa-times"></i>';
-                btnEl.className = "w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 px-4 rounded-lg transition";
-                btnEl.innerText = "Tentar Novamente";
-            } else {
-                iconContainer.className = "w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 text-3xl bg-blue-100 text-blue-500";
-                iconContainer.innerHTML = '<i class="fas fa-info"></i>';
-                btnEl.className = "w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition";
-                btnEl.innerText = "Entendi";
-            }
-            titleEl.innerText = title; 
-            messageEl.innerHTML = message;
+            const link = document.getElementById('nav-' + viewId);
+            if(link) link.classList.add('bg-blue-50', 'text-blue-700', 'border-r-4', 'border-blue-600');
             
-            modal.classList.remove('hidden');
-            setTimeout(function() {
-                modal.classList.remove('opacity-0');
-                document.getElementById('modal-content-box').classList.remove('scale-95');
-            }, 10);
+            document.getElementById('content-container').scrollTop = 0;
         };
 
-        window.closeModal = function() {
-            var modal = document.getElementById('custom-modal');
-            modal.classList.add('opacity-0');
-            document.getElementById('modal-content-box').classList.add('scale-95');
-            setTimeout(function() {
-                modal.classList.add('hidden');
-                if(window.currentModalAction) { window.currentModalAction(); window.currentModalAction = null; }
-            }, 300);
+        // --- SISTEMA DE PDFs (VIA LINK - SOLUÇÃO 2) ---
+        window.openPdfModal = function(docRefId) {
+            if(!isAdmin) return;
+            document.getElementById('pdf-ref-id').value = docRefId;
+            document.getElementById('pdf-link-input').value = '';
+            document.getElementById('modal-pdf-link').classList.remove('hidden');
         };
 
-        window.finishCourse = function() {
-            window.showModal('success', 'Parabéns! Curso Concluído', 'Você finalizou a trilha de capacitação sobre Patrimônio Público!<br><br>Consulte o Departamento pelos ramais <strong>5624</strong> ou <strong>5644</strong>.', function() { window.navigateTo('home'); });
+        window.closePdfModal = function() {
+            document.getElementById('modal-pdf-link').classList.add('hidden');
         };
 
-        // PDFs Gerais (Ferramentas)
-        window.openPDFModal = function() {
-            if(!window.isUserAdmin) return;
-            document.getElementById('pdf-id').value = '';
-            document.getElementById('pdf-title').value = '';
-            document.getElementById('pdf-desc').value = '';
-            document.getElementById('pdf-url').value = '';
-            document.getElementById('pdf-file').value = ''; 
-            document.getElementById('pdf-order').value = '';
-            document.getElementById('pdf-modal-title').innerText = 'Adicionar Novo PDF';
-            var modal = document.getElementById('pdf-form-modal');
-            modal.classList.remove('hidden'); 
-            setTimeout(function() { modal.classList.remove('opacity-0'); }, 10);
-        };
+        window.savePdfLink = async function() {
+            if(isOfflineMode || !isAdmin) {
+                showModal('error', 'Acesso Negado', 'Conecte o Firebase ou faça login para salvar links.');
+                return;
+            }
+            
+            const docRefId = document.getElementById('pdf-ref-id').value;
+            const linkUrl = document.getElementById('pdf-link-input').value.trim();
+            
+            if(!linkUrl || !linkUrl.startsWith('http')) {
+                showModal('error', 'Link Inválido', 'Por favor, insira um link válido começando com http:// ou https://');
+                return;
+            }
 
-        window.editPDF = function(id) {
-            if(!window.isUserAdmin) return;
-            var pdf = window.pdfList.find(function(p) { return p.id === id; });
-            if(!pdf) return;
-            document.getElementById('pdf-id').value = pdf.id;
-            document.getElementById('pdf-title').value = pdf.title || '';
-            document.getElementById('pdf-desc').value = pdf.description || '';
-            document.getElementById('pdf-url').value = pdf.url || '';
-            document.getElementById('pdf-file').value = ''; 
-            document.getElementById('pdf-order').value = pdf.order || 0;
-            document.getElementById('pdf-modal-title').innerText = 'Editar Configuração de PDF';
-            var modal = document.getElementById('pdf-form-modal');
-            modal.classList.remove('hidden'); 
-            setTimeout(function() { modal.classList.remove('opacity-0'); }, 10);
-        };
-
-        window.closePDFModal = function() {
-            var modal = document.getElementById('pdf-form-modal');
-            modal.classList.add('opacity-0'); 
-            setTimeout(function() { modal.classList.add('hidden'); }, 300);
-        };
-
-        // PDFs Operacionais (Dia a Dia)
-        window.openOpPdfUpload = function(docId, title) {
-            if(!window.isUserAdmin) return;
-            document.getElementById('op-pdf-id').value = docId;
-            document.getElementById('op-pdf-title-display').innerText = title;
-            document.getElementById('op-pdf-file').value = '';
-            var modal = document.getElementById('op-pdf-modal');
-            modal.classList.remove('hidden');
-            setTimeout(function() { modal.classList.remove('opacity-0'); }, 10);
-        };
-
-        window.closeOpPdfUpload = function() {
-            var modal = document.getElementById('op-pdf-modal');
-            modal.classList.add('opacity-0');
-            setTimeout(function() { modal.classList.add('hidden'); }, 300);
-        };
-
-        // Visualizador Iframe Nativo (Avançado)
-        window.openPDFViewer = function(url, title) {
-            document.getElementById('adv-viewer-title').innerText = title || "Visualizador de Documentos";
-            document.getElementById('adv-pdf-iframe').src = url;
-            document.getElementById('adv-pdf-link').href = url;
-            var modal = document.getElementById('adv-pdf-viewer-modal');
-            modal.classList.remove('hidden'); 
-            setTimeout(function() { modal.classList.remove('opacity-0'); }, 10);
-        };
-
-        window.closePDFViewer = function() {
-            var modal = document.getElementById('adv-pdf-viewer-modal');
-            modal.classList.add('opacity-0');
-            setTimeout(function() { 
-                modal.classList.add('hidden'); 
-                document.getElementById('adv-pdf-iframe').src = ''; 
-                if(window.isPDFMaximized) window.toggleMaximizePDF(); // Reseta estado
-            }, 300);
-        };
-
-        window.toggleMaximizePDF = function() {
-            var box = document.getElementById('adv-pdf-box');
-            var icon = document.getElementById('adv-maximize-icon');
-            window.isPDFMaximized = !window.isPDFMaximized;
-
-            if(window.isPDFMaximized) {
-                box.classList.remove('w-11/12', 'h-[90vh]', 'rounded-xl', 'my-4');
-                box.classList.add('w-full', 'h-full', 'rounded-none');
-                icon.classList.remove('fa-expand');
-                icon.classList.add('fa-compress');
-            } else {
-                box.classList.add('w-11/12', 'h-[90vh]', 'rounded-xl', 'my-4');
-                box.classList.remove('w-full', 'h-full', 'rounded-none');
-                icon.classList.add('fa-expand');
-                icon.classList.remove('fa-compress');
+            try {
+                // Salva apenas o link no Firestore
+                const docPath = doc(db, 'artifacts', APP_ID, 'public', 'data', 'pdfs', docRefId);
+                await setDoc(docPath, { url: linkUrl, updatedAt: new Date() });
+                
+                showModal('success', 'Link Salvo!', 'O link do documento foi vinculado com sucesso.');
+                closePdfModal();
+                
+                // Atualiza o botão visualmente em tempo real
+                const btnView = document.getElementById('btn-view-' + docRefId);
+                if(btnView) {
+                    btnView.onclick = () => window.open(linkUrl, '_blank');
+                    btnView.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            } catch(e) {
+                console.error(e);
+                showModal('error', 'Erro', 'Falha ao salvar o link na nuvem. Verifique permissões do Firestore.');
             }
         };
 
-        // --- SISTEMA DE EDIÇÃO SIMPLES ---
+        window.viewPdf = function(docRefId) {
+            // Esta função é substituída dinamicamente caso o link exista.
+            // Se foi ativada aqui, significa que o link ainda não foi cadastrado.
+            showModal('info', 'Documento Indisponível', 'Este documento ainda não possui um link cadastrado pelo administrador.');
+        };
+
+        async function loadPdfLinksFromCloud() {
+            if(isOfflineMode || !currentUser) return;
+            
+            const pdfIds = ['termo_aquisicao', 'termo_responsabilidade', 'guia_movimentacao', 'termo_doacao'];
+            
+            for(let id of pdfIds) {
+                try {
+                    const docPath = doc(db, 'artifacts', APP_ID, 'public', 'data', 'pdfs', id);
+                    const docSnap = await getDoc(docPath);
+                    if(docSnap.exists()) {
+                        const data = docSnap.data();
+                        const btnView = document.getElementById('btn-view-' + id);
+                        if(btnView && data.url) {
+                            btnView.onclick = () => window.open(data.url, '_blank');
+                            btnView.classList.remove('opacity-50', 'cursor-not-allowed');
+                        }
+                    }
+                } catch(e) { console.error("Erro ao carregar link do PDF " + id, e); }
+            }
+        }
+
+        function showAdminButtons() {
+            document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
+        }
+        function hideAdminButtons() {
+            document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
+            if(document.body.classList.contains('edit-active')) window.toggleEditMode();
+        }
+
+        // --- SISTEMA DE EDIÇÃO DE TEXTO ---
         window.toggleEditMode = function() {
-            var isEditing = document.body.classList.toggle('edit-active');
-            var btn = document.getElementById('btn-toggle-simple-edit');
-            var simpleControls = document.getElementById('simple-edit-controls');
-            var btnSave = document.getElementById('btn-save-simple');
+            const isEditing = document.body.classList.toggle('edit-active');
+            const btn = document.getElementById('btn-toggle-edit');
             
-            document.querySelectorAll('.editable-element, .nav-title').forEach(function(el) {
+            document.querySelectorAll('.editable-text').forEach(el => {
                 el.contentEditable = isEditing;
             });
 
             if(isEditing) {
-                btn.innerHTML = '<i class="fas fa-lock mr-2"></i> Fechar Edição';
-                btn.classList.replace('bg-teal-600', 'bg-rose-600');
-                btn.classList.replace('hover:bg-teal-500', 'hover:bg-rose-500');
-                simpleControls.style.display = 'grid';
-                btnSave.classList.remove('hidden'); 
-                btnSave.classList.add('flex');
-                
-                document.querySelectorAll('[id^="faq-ans-"]').forEach(function(el) { el.classList.remove('hidden'); });
-                document.querySelectorAll('[id^="faq-icon-"]').forEach(function(el) { el.classList.add('rotate-180'); });
-                window.injectBlockToolbars();
+                btn.innerHTML = '<i class="fa-solid fa-lock-open mr-2"></i> Desativar Edição';
+                btn.classList.replace('bg-slate-700', 'bg-blue-600');
+                // Força mostrar as FAQs para edição
+                document.querySelectorAll('[id^="faq-ans-"]').forEach(el => el.classList.remove('hidden'));
             } else {
-                btn.innerHTML = '<i class="fas fa-pen mr-2"></i> Ativar Edição';
-                btn.classList.replace('bg-rose-600', 'bg-teal-600');
-                btn.classList.replace('hover:bg-rose-500', 'hover:bg-teal-500');
-                simpleControls.style.display = 'none';
-                btnSave.classList.add('hidden'); 
-                btnSave.classList.remove('flex');
-                
-                document.querySelectorAll('[id^="faq-ans-"]').forEach(function(el) { el.classList.add('hidden'); });
-                document.querySelectorAll('[id^="faq-icon-"]').forEach(function(el) { el.classList.remove('rotate-180'); });
-                window.removeBlockToolbars();
+                btn.innerHTML = '<i class="fa-solid fa-pen mr-2"></i> Ativar Edição Simples';
+                btn.classList.replace('bg-blue-600', 'bg-slate-700');
+                // Esconde as FAQs novamente
+                document.querySelectorAll('[id^="faq-ans-"]').forEach(el => el.classList.add('hidden'));
             }
         };
 
-        window.formatText = function(command, value) { 
-            document.execCommand(command, false, value || null); 
-        };
-
-        window.injectBlockToolbars = function() {
-            document.querySelectorAll('.editable-block').forEach(function(block) {
-                if(!block.querySelector('.block-toolbar')) {
-                    var toolbar = document.createElement('div');
-                    toolbar.className = 'block-toolbar';
-                    toolbar.contentEditable = "false";
-                    toolbar.innerHTML = '<button onmousedown="event.preventDefault(); window.toggleBlockWidth(this)" title="Lado a Lado / Linha Inteira"><i class="fas fa-columns"></i></button>' +
-                        '<button onmousedown="event.preventDefault(); window.cycleBackgroundColor(this)" title="Alterar Cor de Fundo"><i class="fas fa-palette"></i></button>' +
-                        '<div class="w-px h-4 bg-slate-600 mx-1"></div>' +
-                        '<button onmousedown="event.preventDefault(); window.moveBlock(this, -1)" title="Subir"><i class="fas fa-arrow-up"></i></button>' +
-                        '<button onmousedown="event.preventDefault(); window.moveBlock(this, 1)" title="Descer"><i class="fas fa-arrow-down"></i></button>' +
-                        '<button onmousedown="event.preventDefault(); window.deleteBlock(this)" title="Eliminar Bloco" class="ml-1 !text-red-400 hover:!text-red-300"><i class="fas fa-trash"></i></button>';
-                    block.appendChild(toolbar);
-                }
-            });
-        };
-
-        window.removeBlockToolbars = function() { 
-            document.querySelectorAll('.block-toolbar').forEach(function(tb) { tb.remove(); }); 
-        };
-
-        window.toggleBlockWidth = function(btn) {
-            var block = btn.closest('.editable-block');
-            if(block.classList.contains('w-full')) {
-                block.classList.remove('w-full'); 
-                block.classList.add('w-[calc(50%-0.75rem)]', 'flex-grow'); 
-            } else {
-                block.classList.add('w-full'); 
-                block.classList.remove('w-[calc(50%-0.75rem)]', 'flex-grow');
-            }
-        };
-
-        window.cycleBackgroundColor = function(btn) {
-            var block = btn.closest('.editable-block');
-            var currentColorIndex = -1;
-            for (var i = 0; i < window.bgColors.length; i++) {
-                if (block.classList.contains(window.bgColors[i])) { 
-                    currentColorIndex = i; break; 
-                }
-            }
-            if (currentColorIndex !== -1) block.classList.remove(window.bgColors[currentColorIndex]);
-            block.classList.add(window.bgColors[(currentColorIndex + 1) % window.bgColors.length]);
-        };
-
-        window.deleteBlock = function(btn) { 
-            if(confirm("Pretende eliminar este bloco?")) btn.closest('.editable-block').remove(); 
-        };
-
-        window.moveBlock = function(btn, direction) {
-            var block = btn.closest('.editable-block');
-            var wrapper = block.parentNode;
-            if (direction === -1 && block.previousElementSibling) wrapper.insertBefore(block, block.previousElementSibling);
-            else if (direction === 1 && block.nextElementSibling) wrapper.insertBefore(block.nextElementSibling, block);
-        };
-
-        window.addPage = function() {
-            var title = prompt("Digite o nome da Nova Página:");
-            if (!title) return;
-            var uniqueId = 'page-' + Date.now();
-            
-            var navHTML = '<a href="#" onclick="window.navigateTo(\'' + uniqueId + '\')" id="nav-' + uniqueId + '" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">' +
-                    '<i class="fas fa-file-alt w-6 text-center mr-2" contenteditable="false"></i> <span class="editable-element nav-title">' + title + '</span>' +
-                '</a>';
-            document.getElementById('nav-theory').insertAdjacentHTML('beforeend', navHTML);
-            
-            var secHTML = '<section id="view-' + uniqueId + '" class="view-section hidden fade-in max-w-4xl mx-auto pb-10">' +
-                    '<span class="text-blue-600 font-semibold tracking-wider text-sm uppercase editable-element">NOVO MÓDULO</span>' +
-                    '<h2 class="text-3xl font-bold text-slate-800 mt-2 mb-6 editable-element">' + title + '</h2>' +
-                    '<div class="content-wrapper flex flex-wrap gap-6 w-full items-start">' +
-                        '<div class="editable-block w-full bg-white p-6 rounded-xl shadow-sm border border-slate-200">' +
-                            '<p class="editable-element text-slate-600">O seu novo conteúdo começa aqui. Pode editar este texto e redimensionar a caixa no canto inferior direito.</p>' +
-                        '</div>' +
-                    '</div>' +
-                '</section>';
-            document.getElementById('content-container').insertAdjacentHTML('beforeend', secHTML);
-            
-            if(document.body.classList.contains('edit-active')) { 
-                window.toggleEditMode(); window.toggleEditMode(); 
-            }
-            window.navigateTo(uniqueId);
-        };
-
-        window.addTextBox = function() {
-            var currentView = document.querySelector('.view-section:not(.hidden)');
-            if (!currentView) return;
-            var wrapper = currentView.querySelector('.content-wrapper') || currentView;
-            
-            var boxHTML = '<div class="editable-block w-full bg-white p-6 rounded-xl shadow-sm border border-slate-200">' +
-                    '<h3 class="text-xl font-bold text-slate-800 mb-2 editable-element">Novo Título</h3>' +
-                    '<p class="text-slate-600 editable-element">Escreva aqui o seu novo parágrafo. Utilize a aba inferior direita para redimensionar (esticar) a caixa livremente.</p>' +
-                '</div>';
-            
-            var navButtons = currentView.querySelector('.nav-buttons-area');
-            if(navButtons && wrapper === currentView) { 
-                navButtons.insertAdjacentHTML('beforebegin', boxHTML); 
-            } else { 
-                wrapper.insertAdjacentHTML('beforeend', boxHTML); 
-            }
-            
-            if(document.body.classList.contains('edit-active')) {
-                window.removeBlockToolbars(); 
-                window.injectBlockToolbars();
-                currentView.querySelectorAll('.editable-block:last-of-type .editable-element').forEach(function(el) { el.contentEditable = "true"; });
-            }
-        };
-
-        window.addFAQ = function() {
-            var container = document.getElementById('faq-container');
-            var currentView = document.querySelector('.view-section:not(.hidden)');
-            
-            if(!container || currentView.id !== 'view-faq') {
-                window.showModal('error', 'Ação Inválida', 'Navegue até a página de FAQ para adicionar uma nova pergunta.');
+        window.saveContentToCloud = async function() {
+            if(isOfflineMode || !isAdmin) {
+                showModal('error', 'Acesso Negado', 'Modo Offline ou sem permissões de administrador.');
                 return;
             }
+            if(document.body.classList.contains('edit-active')) window.toggleEditMode();
             
-            var uniqueId = Date.now();
-            var faqHTML = '<div class="editable-block w-full bg-white p-6 rounded-xl shadow-sm border border-slate-200 transition-all duration-200">' +
-                    '<div class="flex items-center justify-between cursor-pointer select-none" onclick="window.toggleFAQ(' + uniqueId + ')">' +
-                        '<h4 class="font-bold text-lg text-slate-800 flex items-start">' +
-                            '<i class="fas fa-question-circle text-blue-500 mt-1 mr-3 text-xl"></i>' +
-                            '<span class="editable-element">Nova Pergunta?</span>' +
-                        '</h4>' +
-                        '<i id="faq-icon-' + uniqueId + '" class="fas fa-chevron-down text-slate-400 text-xl transition-transform duration-300 ml-4 rotate-180"></i>' +
-                    '</div>' +
-                    '<div id="faq-ans-' + uniqueId + '" class="mt-4 text-slate-600 text-sm space-y-4 ml-8 border-t border-slate-100 pt-4">' +
-                        '<p class="editable-element">Resposta para a nova pergunta...</p>' +
-                    '</div>' +
-                '</div>';
-            
-            container.insertAdjacentHTML('beforeend', faqHTML);
-            
-            if(document.body.classList.contains('edit-active')) {
-                window.removeBlockToolbars();
-                window.injectBlockToolbars();
-                document.querySelectorAll('#faq-container .editable-block:last-of-type .editable-element').forEach(function(el) { el.contentEditable = "true"; });
-            }
-        };
-
-        // UI Event Listeners Base
-        document.addEventListener('DOMContentLoaded', function() {
-            var panel = document.getElementById('admin-panel');
-            var header = document.getElementById('admin-panel-header');
-            var isDragging = false, startX, startY, initialX, initialY;
-
-            if (header && panel) {
-                header.addEventListener('mousedown', function(e) {
-                    isDragging = true; startX = e.clientX; startY = e.clientY;
-                    var rect = panel.getBoundingClientRect();
-                    initialX = rect.left; initialY = rect.top;
-                    panel.style.right = 'auto'; panel.style.bottom = 'auto';
-                    panel.style.left = initialX + 'px'; panel.style.top = initialY + 'px';
-                    document.addEventListener('mousemove', onDrag);
-                    document.addEventListener('mouseup', stopDrag);
+            const contentHTML = document.getElementById('main-content-wrapper').innerHTML;
+            try {
+                const docPath = doc(db, 'artifacts', APP_ID, 'public', 'data', 'content', 'latest');
+                await setDoc(docPath, {
+                    html: contentHTML,
+                    updatedAt: new Date(),
+                    author: currentUser.email
                 });
-            }
-
-            function onDrag(e) {
-                if(!isDragging) return;
-                panel.style.left = (initialX + (e.clientX - startX)) + 'px';
-                panel.style.top = (initialY + (e.clientY - startY)) + 'px';
-            }
-
-            function stopDrag() {
-                isDragging = false;
-                document.removeEventListener('mousemove', onDrag);
-                document.removeEventListener('mouseup', stopDrag);
-            }
-
-            var formatBar = document.getElementById('format-toolbar');
-            document.addEventListener('selectionchange', function() {
-                if (!document.body.classList.contains('edit-active')) { formatBar.style.display = 'none'; return; }
-                var selection = window.getSelection();
-                if (selection.rangeCount > 0 && !selection.isCollapsed) {
-                    var range = selection.getRangeAt(0);
-                    var rect = range.getBoundingClientRect();
-                    if(selection.anchorNode.parentElement && selection.anchorNode.parentElement.isContentEditable) {
-                        formatBar.style.display = 'flex';
-                        formatBar.style.top = (rect.top + window.scrollY - 45) + 'px';
-                        formatBar.style.left = (rect.left + (rect.width / 2) - (formatBar.offsetWidth / 2)) + 'px';
-                    }
-                } else { formatBar.style.display = 'none'; }
-            });
-        });
-    </script>
-</head>
-<body class="overflow-hidden relative text-slate-800">
-
-    <!-- Loading Inicial -->
-    <div id="loader" class="fixed inset-0 bg-white z-[99999] flex flex-col items-center justify-center transition-opacity duration-500">
-        <i class="fas fa-circle-notch fa-spin text-4xl text-blue-600 mb-4"></i>
-        <p class="text-slate-600 font-medium" id="loader-text">Carregando Plataforma...</p>
-    </div>
-
-    <!-- TELA DE LOGIN OBRIGATÓRIA DA PLATAFORMA -->
-    <div id="platform-login-screen" class="fixed inset-0 bg-slate-900 z-[90000] flex flex-col items-center justify-center transition-opacity duration-500">
-        <div class="bg-white p-8 rounded-xl shadow-2xl max-w-sm w-full mx-4 text-center">
-            <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
-                <i class="fas fa-graduation-cap"></i>
-            </div>
-            <h2 class="text-2xl font-bold text-slate-800 mb-2">Escola de Governo</h2>
-            <p class="text-sm text-slate-500 mb-6">Capacitação Patrimonial. Faça login para acessar o conteúdo da plataforma.</p>
-            
-            <p id="platform-login-feedback" class="text-sm text-red-500 mb-4 hidden"></p>
-            
-            <input type="email" id="platform-email" class="w-full border border-slate-300 rounded-lg p-3 mb-3 outline-none focus:border-blue-500 text-left" placeholder="E-mail corporativo">
-            <input type="password" id="platform-password" class="w-full border border-slate-300 rounded-lg p-3 mb-4 outline-none focus:border-blue-500 text-left" placeholder="Senha" onkeyup="if(event && event.key === 'Enter') window.doPlatformLogin()">
-            
-            <button onclick="window.doPlatformLogin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg mb-3 transition shadow">Entrar na Plataforma</button>
-            <button onclick="window.doPlatformRegister()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 px-4 rounded-lg transition border border-slate-200">Criar Nova Conta</button>
-        </div>
-    </div>
-
-    <!-- WRAPPER DO SITE ORIGINAL -->
-    <div id="live-site" class="flex h-screen w-full relative opacity-0 transition-opacity duration-500">
-        <div id="mobile-overlay" class="fixed inset-0 bg-slate-900/50 z-20 hidden md:hidden" onclick="window.toggleSidebar()"></div>
-
-        <!-- Menu Lateral: Ordem Exata -->
-        <aside id="sidebar" class="bg-white w-72 h-full border-r border-slate-200 flex flex-col absolute md:relative z-30 transform -translate-x-full md:translate-x-0 transition-transform duration-300">
-            <div class="p-6 border-b border-slate-200 flex justify-between items-center">
-                <div>
-                    <h1 class="text-xl font-bold text-blue-700 leading-tight">Escola de Governo</h1>
-                    <p class="text-xs text-slate-500 mt-1">Prefeitura de Praia Grande</p>
-                </div>
-                <button onclick="window.toggleSidebar()" class="md:hidden text-slate-500 hover:text-slate-800">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-
-            <div class="flex-1 overflow-y-auto py-4">
-                <div class="px-6 mb-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">Módulos</div>
-                <nav class="space-y-1" id="nav-theory">
-                    <a href="#" onclick="window.navigateTo('home')" id="nav-home" class="nav-item active flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
-                        <i class="fas fa-home w-6 text-center mr-2"></i> <span class="nav-title editable-element">Início & Objetivos</span>
-                    </a>
-                    <a href="#" onclick="window.navigateTo('mod1')" id="nav-mod1" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
-                        <i class="fas fa-book w-6 text-center mr-2"></i> <span class="nav-title editable-element">Módulo 1: Conceitos</span>
-                    </a>
-                    <a href="#" onclick="window.navigateTo('mod2')" id="nav-mod2" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
-                        <i class="fas fa-tags w-6 text-center mr-2"></i> <span class="nav-title editable-element">Módulo 2: Incorporação</span>
-                    </a>
-                    <a href="#" onclick="window.navigateTo('mod3')" id="nav-mod3" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
-                        <i class="fas fa-user-shield w-6 text-center mr-2"></i> <span class="nav-title editable-element">Módulo 3: Responsabilidade</span>
-                    </a>
-                    <a href="#" onclick="window.navigateTo('mod4')" id="nav-mod4" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
-                        <i class="fas fa-file-contract w-6 text-center mr-2"></i> <span class="nav-title editable-element">Módulo 4: Documentos - Termos e Guias</span>
-                    </a>
-                    <a href="#" onclick="window.navigateTo('mod5')" id="nav-mod5" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
-                        <i class="fas fa-toolbox w-6 text-center mr-2"></i> <span class="nav-title editable-element">Módulo 5: Ferramentas</span>
-                    </a>
-                    <a href="#" onclick="window.navigateTo('mod6')" id="nav-mod6" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
-                        <i class="fas fa-trash-alt w-6 text-center mr-2"></i> <span class="nav-title editable-element">Módulo 6: Baixa</span>
-                    </a>
-                    <a href="#" onclick="window.navigateTo('mod7')" id="nav-mod7" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
-                        <i class="fas fa-folder-open w-6 text-center mr-2"></i> <span class="nav-title editable-element">Módulo 7: Processo (Responsabilidade)</span>
-                    </a>
-                    <a href="#" onclick="window.navigateTo('faq')" id="nav-faq" class="nav-item flex items-center px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">
-                        <i class="fas fa-question-circle w-6 text-center mr-2"></i> <span class="nav-title editable-element">FAQ</span>
-                    </a>
-                </nav>
-            </div>
-            
-            <div class="p-4 border-t border-slate-200">
-                <div class="bg-blue-50 rounded-lg p-4 flex items-start">
-                    <div class="bg-blue-100 p-2 rounded-full mr-3 text-blue-600 flex-shrink-0 mt-1">
-                        <i class="fas fa-headset"></i>
-                    </div>
-                    <div class="flex-1">
-                        <p class="text-xs font-bold text-slate-700 editable-element">Dúvidas?</p>
-                        <p class="text-xs text-slate-500 editable-element">Ramais: 5624 e 5644</p>
-                        <div class="mt-2 pt-2 border-t border-blue-200/50 flex justify-between items-center" id="admin-auth-area">
-                            <span class="text-[11px] font-semibold text-slate-500" id="user-email-display">Usuário</span>
-                            <button onclick="window.logoutPlatform()" class="text-[11px] font-semibold text-red-400 hover:text-red-600 transition-colors flex items-center" title="Sair da Plataforma">
-                                <i class="fas fa-sign-out-alt"></i> Sair
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </aside>
-
-        <!-- Main Content Area -->
-        <main class="flex-1 flex flex-col h-full relative">
-            <header class="md:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center">
-                <h1 class="text-lg font-bold text-blue-700">Patrimônio PG</h1>
-                <button onclick="window.toggleSidebar()" class="text-slate-600 hover:text-slate-900 focus:outline-none">
-                    <i class="fas fa-bars text-2xl"></i>
-                </button>
-            </header>
-
-            <!-- Area de Injeção de Conteúdo Dinâmico -->
-            <div class="flex-1 overflow-y-auto p-6 md:p-12 scroll-smooth relative" id="content-container">
-                <!-- Conteúdo carregará aqui via JavaScript -->
-            </div>
-        </main>
-    </div>
-
-    <!-- Modais Base UI -->
-    <div id="custom-modal" class="fixed inset-0 bg-slate-900/60 z-[1000] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 transform scale-95 transition-transform duration-300" id="modal-content-box">
-            <div class="p-6 text-center">
-                <div id="modal-icon" class="w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 text-3xl"></div>
-                <h3 id="modal-title" class="text-2xl font-bold text-slate-800 mb-2">Título</h3>
-                <p id="modal-message" class="text-slate-600 mb-6">Mensagem</p>
-                <div id="modal-action-area" class="flex gap-2 justify-center">
-                    <button onclick="window.closeModal()" id="modal-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition">
-                        Continuar
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Adicionar PDF Genérico -->
-    <div id="pdf-form-modal" class="fixed inset-0 bg-slate-900/80 z-[1050] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
-        <div class="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 transform scale-95 transition-transform duration-300">
-            <h3 class="text-lg font-bold text-slate-800 mb-4" id="pdf-modal-title">Adicionar PDF à Galeria</h3>
-            <input type="hidden" id="pdf-id">
-            <input type="text" id="pdf-title" class="w-full border border-slate-300 rounded-lg p-2.5 mb-3 outline-none focus:border-blue-500 transition-all" placeholder="Título do Documento (Obrigatório)">
-            <textarea id="pdf-desc" class="w-full border border-slate-300 rounded-lg p-2.5 mb-3 outline-none focus:border-blue-500 transition-all" placeholder="Descrição rápida..." rows="2"></textarea>
-            
-            <label class="block text-sm font-medium text-slate-700 mb-1">Upload (PDF, máx. 10MB):</label>
-            <input type="file" id="pdf-file" accept="application/pdf" class="w-full border border-slate-300 rounded-lg p-2 mb-4 outline-none focus:border-blue-500 transition-all text-sm">
-            
-            <div class="text-center text-xs text-slate-400 mb-2">- OU -</div>
-            
-            <input type="url" id="pdf-url" class="w-full border border-slate-300 rounded-lg p-2.5 mb-3 outline-none focus:border-blue-500 transition-all" placeholder="URL Externa do Arquivo (Opcional)">
-            <input type="number" id="pdf-order" class="w-full border border-slate-300 rounded-lg p-2.5 mb-4 outline-none focus:border-blue-500 transition-all" placeholder="Ordem de Exibição (Ex: 1)">
-            
-            <div class="flex justify-end space-x-2">
-                <button onclick="window.closePDFModal()" class="px-4 py-2 text-slate-600 hover:bg-slate-100 font-medium rounded-lg transition-colors">Cancelar</button>
-                <button onclick="window.savePDF()" class="px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 font-medium rounded-lg transition-colors">Salvar PDF</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Anexar PDF Operacional (Módulo 4) -->
-    <div id="op-pdf-modal" class="fixed inset-0 bg-slate-900/80 z-[1050] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
-        <div class="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 transform scale-95 transition-transform duration-300">
-            <h3 class="text-lg font-bold text-slate-800 mb-2">Anexar Documento PDF</h3>
-            <p class="text-sm text-slate-600 mb-4" id="op-pdf-title-display"></p>
-            <input type="hidden" id="op-pdf-id">
-            
-            <label class="block text-sm font-medium text-slate-700 mb-1">Selecione o arquivo (.pdf, máx 10MB):</label>
-            <input type="file" id="op-pdf-file" accept="application/pdf" class="w-full border border-slate-300 rounded-lg p-2 mb-4 outline-none focus:border-blue-500 transition-all text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-            
-            <div class="flex justify-end space-x-2">
-                <button onclick="window.closeOpPdfUpload()" class="px-4 py-2 text-slate-600 hover:bg-slate-100 font-medium rounded-lg transition-colors">Cancelar</button>
-                <button onclick="window.saveOpPdf()" class="px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 font-medium rounded-lg transition-colors">Enviar PDF</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Visualizador de PDF Avançado (Sobreposto com Controles) -->
-    <div id="adv-pdf-viewer-modal" class="fixed inset-0 bg-slate-900/90 z-[9999] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
-        <div id="adv-pdf-box" class="bg-white flex flex-col w-11/12 h-[90vh] rounded-xl shadow-2xl overflow-hidden transition-all duration-300">
-            <!-- Barra Superior do Visualizador -->
-            <div class="bg-slate-800 text-white flex justify-between items-center p-3 select-none">
-                <div class="flex items-center">
-                    <i class="fas fa-file-pdf text-red-400 text-xl mr-3 ml-2"></i>
-                    <h3 class="text-md font-bold truncate pr-4 max-w-sm md:max-w-md" id="adv-viewer-title">Visualizador de Documentos</h3>
-                </div>
-                
-                <!-- Botões (Nova Aba, Maximizar, Fechar) -->
-                <div class="flex space-x-1">
-                    <a id="adv-pdf-link" href="#" target="_blank" title="Abrir em Nova Aba" class="w-10 h-10 flex items-center justify-center rounded hover:bg-slate-700 transition-colors text-slate-300 hover:text-white">
-                        <i class="fas fa-external-link-alt"></i>
-                    </a>
-                    <button onclick="window.toggleMaximizePDF()" title="Maximizar / Restaurar Tela" class="w-10 h-10 flex items-center justify-center rounded hover:bg-slate-700 transition-colors text-slate-300 hover:text-white">
-                        <i id="adv-maximize-icon" class="fas fa-expand"></i>
-                    </button>
-                    <button onclick="window.closePDFViewer()" title="Fechar Visualizador" class="w-10 h-10 flex items-center justify-center rounded hover:bg-red-600 transition-colors text-slate-300 hover:text-white">
-                        <i class="fas fa-times text-xl"></i>
-                    </button>
-                </div>
-            </div>
-            <!-- Iframe -->
-            <div class="flex-1 bg-slate-200 w-full h-full relative">
-                <iframe id="adv-pdf-iframe" class="w-full h-full border-0 absolute inset-0" src=""></iframe>
-            </div>
-        </div>
-    </div>
-
-    <!-- Painel de Administrador Flutuante -->
-    <div id="admin-panel" class="fixed bottom-6 right-6 bg-slate-800 text-white rounded-xl shadow-2xl z-[900] hidden flex-col border border-slate-700 w-80">
-        <div id="admin-panel-header" class="text-sm font-bold flex items-center justify-between border-b border-slate-600 p-3 bg-slate-900 rounded-t-xl select-none">
-            <span class="flex items-center"><i class="fas fa-grip-lines text-slate-500 mr-3"></i> Painel de Administração</span>
-            <button onclick="window.logoutAdmin()" class="text-slate-400 hover:text-red-400" title="Sair da Sessão de Edição"><i class="fas fa-sign-out-alt"></i> Sair</button>
-        </div>
-        <div class="p-4 flex flex-col gap-3">
-            <button onclick="window.toggleEditMode()" id="btn-toggle-simple-edit" class="bg-teal-600 hover:bg-teal-500 px-2 py-3 rounded text-sm font-bold transition flex items-center justify-center shadow">
-                <i class="fas fa-pen mr-2"></i> Ativar Edição Simples
-            </button>
-            <div class="grid grid-cols-2 gap-2" id="simple-edit-controls" style="display: none;">
-                <button onclick="window.addPage()" class="bg-indigo-600 hover:bg-indigo-500 px-2 py-2 rounded text-xs font-medium transition flex items-center justify-center shadow">
-                    <i class="fas fa-file-medical mr-2"></i> Nova Página
-                </button>
-                <button onclick="window.addTextBox()" class="bg-emerald-600 hover:bg-emerald-500 px-2 py-2 rounded text-xs font-medium transition flex items-center justify-center shadow">
-                    <i class="fas fa-plus-square mr-2"></i> Novo Bloco
-                </button>
-                <button onclick="window.addFAQ()" class="col-span-2 bg-amber-600 hover:bg-amber-500 px-2 py-2 rounded text-xs font-medium transition flex items-center justify-center shadow">
-                    <i class="fas fa-question-circle mr-2"></i> Adicionar Nova FAQ
-                </button>
-            </div>
-            <button onclick="window.saveSimpleChanges()" id="btn-save-simple" class="bg-green-600 hover:bg-green-500 px-4 py-2 rounded text-sm font-medium transition items-center justify-center shadow-lg shadow-green-900/50 hidden">
-                <i class="fas fa-cloud-upload-alt mr-2"></i> Salvar na Nuvem
-            </button>
-            <button onclick="window.resetToFactory()" class="text-xs text-red-400 hover:text-red-300 mt-2 text-center underline transition-colors">
-                Restaurar Original de Fábrica
-            </button>
-        </div>
-    </div>
-
-    <!-- CONTEÚDO DE FÁBRICA ORIGINAL (Oculto em local seguro, intocável, layout rigorosamente atualizado) -->
-    <div id="factory-content" class="hidden">
-        <!-- VIEW: HOME -->
-        <section id="view-home" class="view-section fade-in max-w-4xl mx-auto">
-            <div class="content-wrapper flex flex-wrap gap-6 w-full items-start">
-                <div class="editable-block w-full bg-blue-600 rounded-2xl p-8 md:p-12 text-white shadow-lg">
-                    <h2 class="text-3xl md:text-4xl font-bold mb-4 editable-element">Noções de Patrimônio Público</h2>
-                    <p class="text-blue-100 text-lg max-w-2xl editable-element">Capacitação para os servidores da Secretaria de Serviços Urbanos da Prefeitura da Estância Balneária de Praia Grande.</p>
-                </div>
-                
-                <div class="editable-block w-[calc(50%-0.75rem)] flex-grow bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                    <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center text-xl mb-4">
-                        <i class="fas fa-bullseye"></i>
-                    </div>
-                    <h3 class="text-xl font-bold mb-2 editable-element">Objetivos</h3>
-                    <ul class="space-y-2 text-slate-600">
-                        <li class="flex items-start"><i class="fas fa-check text-green-500 mt-1 mr-2"></i> <span class="editable-element">Orientar e conscientizar os servidores.</span></li>
-                        <li class="flex items-start"><i class="fas fa-check text-green-500 mt-1 mr-2"></i> <span class="editable-element">Facilitar a auditoria interna no município.</span></li>
-                        <li class="flex items-start"><i class="fas fa-check text-green-500 mt-1 mr-2"></i> <span class="editable-element">Gerar informações mais precisas ao Tribunal de Contas do Estado de São.</span></li>
-                    </ul>
-                </div>
-                
-                <div class="editable-block w-[calc(50%-0.75rem)] flex-grow bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                    <div class="w-12 h-12 bg-green-100 text-green-600 rounded-lg flex items-center justify-center text-xl mb-4">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-                    <h3 class="text-xl font-bold mb-2 editable-element">Resultado Esperado</h3>
-                    <p class="text-slate-600 editable-element">Utilização responsável dos bens com a efetiva colaboração de todos os servidores do departamento.</p>
-                    <button onclick="window.navigateTo('mod1')" class="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors">
-                        Começar o Curso <i class="fas fa-arrow-right ml-2"></i>
-                    </button>
-                </div>
-            </div>
-        </section>
-
-        <!-- VIEW: MODULE 1 -->
-        <section id="view-mod1" class="view-section hidden fade-in max-w-4xl mx-auto">
-            <span class="text-blue-600 font-semibold tracking-wider text-sm uppercase editable-element">Módulo 1</span>
-            <h2 class="text-3xl font-bold text-slate-800 mt-2 mb-6 editable-element">O que é o Patrimônio Público?</h2>
-            
-            <div class="content-wrapper flex flex-wrap gap-6 w-full items-start">
-                <div class="editable-block w-full prose prose-slate max-w-none text-slate-600">
-                    <p class="text-lg editable-element">O Patrimônio Público Municipal é composto por todos os bens <strong>móveis, imóveis e semoventes</strong> pertencentes ao Município.</p>
-                </div>
-                
-                <div class="editable-block w-full bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg">
-                    <p class="m-0 text-yellow-800 editable-element">Especificamente quanto aos bens móveis, a Secretaria do Tesouro Nacional (STN) classifica-os, para fins de aquisição, em bens de consumo e <strong>bens permanentes</strong>.</p>
-                </div>
-
-                <div class="editable-block w-full bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                    <h3 class="text-xl font-bold text-slate-800 mb-4 editable-element">Critérios dos Bens Permanentes</h3>
-                    <p class="editable-element text-slate-600 mb-6">Os bens permanentes são adquiridos por compra ou recebidos em doação e são incorporados ao patrimônio tendo em vista as suas propriedades físicas. Características principais:</p>
-                    
-                    <ul class="space-y-3 mb-6 list-none pl-0 text-slate-600">
-                        <li class="flex items-center"><i class="fas fa-calendar-alt text-blue-500 w-6"></i> <span class="editable-element">Possuem inúmeras aplicações durante um longo período.</span></li>
-                        <li class="flex items-center"><i class="fas fa-hourglass-half text-blue-500 w-6"></i> <span class="editable-element">Durabilidade superior a dois anos sem perder suas características.</span></li>
-                        <li class="flex items-center"><i class="fas fa-money-bill-wave text-blue-500 w-6"></i> <span class="editable-element">Valor que justifique o registro e o controle patrimonial.</span></li>
-                        <li class="flex items-center"><i class="fas fa-tools text-blue-500 w-6"></i> <span class="editable-element">São econômica e tecnicamente passíveis de revisões e manutenção.</span></li>
-                    </ul>
-
-                    <p class="editable-element text-slate-600 text-sm"><em>Nota:</em> A Prefeitura pode receber bens em doação (novos ou em perfeito estado de utilização), consoante as normas do Decreto Municipal nº 4.107, de 31 de julho de 2006.</p>
-                </div>
-            </div>
-            
-            <div class="mt-10 flex justify-between w-full nav-buttons-area">
-                <button onclick="window.navigateTo('home')" class="px-5 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium transition"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
-                <button onclick="window.navigateTo('mod2')" class="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium transition">Próximo <i class="fas fa-arrow-right ml-2"></i></button>
-            </div>
-        </section>
-
-        <!-- VIEW: MODULE 2 -->
-        <section id="view-mod2" class="view-section hidden fade-in max-w-4xl mx-auto">
-            <span class="text-blue-600 font-semibold tracking-wider text-sm uppercase editable-element">Módulo 2</span>
-            <h2 class="text-3xl font-bold text-slate-800 mt-2 mb-6 editable-element">Incorporação e Proteção dos Bens</h2>
-            
-            <div class="content-wrapper flex flex-wrap gap-6 w-full items-start">
-                <div class="editable-block w-full">
-                    <p class="text-slate-600 text-lg editable-element">A incorporação consiste no <strong>registro dos bens</strong>, que devem ser perfeitamente identificados. Eles devem possuir valor unitário, origem (documento de aquisição) e localização física perfeitamente definidos.</p>
-                </div>
-
-                <div class="editable-block w-[calc(50%-0.75rem)] flex-grow bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                    <div class="text-blue-600 mb-2"><i class="fas fa-desktop text-2xl"></i></div>
-                    <h4 class="font-bold text-slate-800 editable-element">1. Registro no SIP</h4>
-                    <p class="text-sm mt-2 text-slate-600 editable-element">Sistema de Patrimônio gerenciado pela CONAM.</p>
-                </div>
-                
-                <div class="editable-block w-[calc(50%-0.75rem)] flex-grow bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                    <div class="text-blue-600 mb-2"><i class="fas fa-barcode text-2xl"></i></div>
-                    <h4 class="font-bold text-slate-800 editable-element">2. Incorporação Física</h4>
-                    <p class="text-sm mt-2 text-slate-600 editable-element">Colocação de plaqueta, com código de barras gerado pelo SIP, em local visível.</p>
-                </div>
-
-                <div class="editable-block w-full bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg shadow-sm">
-                    <p class="m-0 text-yellow-800 text-sm flex items-start">
-                        <i class="fas fa-exclamation-triangle mt-0.5 mr-3 text-yellow-600 text-lg"></i>
-                        <span class="editable-element"><strong>Atenção:</strong> Não realize a movimentação de bens que ainda não receberam a plaqueta de identificação. Caso o faça, mantenha um registro ou anotação de sua localização.</span>
-                    </p>
-                </div>
-
-                <div class="editable-block w-full bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                    <h3 class="text-xl font-bold text-slate-800 mb-4 editable-element">Doação de Bens</h3>
-                    <p class="text-slate-600 mb-4 editable-element">Comunique a Divisão de Patrimônio, por meio de e-mail, informando os seguintes dados:</p>
-                    <ul class="space-y-3 text-slate-600 mb-4 list-none pl-0">
-                        <li class="flex items-start">
-                            <i class="fas fa-id-card text-blue-500 mt-1 mr-3 w-5 text-center"></i> 
-                            <span class="editable-element"><strong>Documento do doador</strong> com foto (CNH, RG, DNI).</span>
-                        </li>
-                        <li class="flex items-start">
-                            <i class="fas fa-list-alt text-blue-500 mt-1 mr-3 w-5 text-center"></i> 
-                            <span class="editable-element"><strong>Descrição do bem</strong> em doação, com marca e modelo, quando couber.</span>
-                        </li>
-                        <li class="flex items-start">
-                            <i class="fas fa-camera text-blue-500 mt-1 mr-3 w-5 text-center"></i> 
-                            <span class="editable-element"><strong>Foto</strong> do bem em doação.</span>
-                        </li>
-                        <li class="flex items-start">
-                            <i class="fas fa-file-signature text-blue-500 mt-1 mr-3 w-5 text-center"></i> 
-                            <span class="editable-element"><strong>Termo de doação preenchido</strong> com os dados do doador e devidamente assinado.</span>
-                        </li>
-                    </ul>
-                    <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg mt-4 shadow-sm">
-                        <p class="m-0 text-red-700 font-bold text-sm flex items-center">
-                            <i class="fas fa-exclamation-circle mr-2 text-red-500 text-lg"></i> <span class="editable-element">ATENÇÃO: O termo não pode ser assinado digitalmente.</span>
-                        </p>
-                    </div>
-                </div>
-
-                <div class="editable-block w-full">
-                    <h3 class="text-xl font-bold text-slate-800 mb-4 editable-element">Controle Patrimonial (Interno e Externo)</h3>
-                    <div class="overflow-x-auto rounded-lg border border-slate-200">
-                        <table class="min-w-full divide-y divide-slate-200 bg-white">
-                            <thead class="bg-slate-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider editable-element">Tipo</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider editable-element">Exercido Por</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider editable-element">Métodos</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-200">
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap font-medium text-slate-900 editable-element">Interno</td>
-                                    <td class="px-6 py-4 text-sm text-slate-500 editable-element">Departamento de Patrimônio</td>
-                                    <td class="px-6 py-4 text-sm text-slate-500 editable-element">Notas de Recebimento, Guia de Transferência e Auditoria Anual.</td>
-                                </tr>
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap font-medium text-slate-900 editable-element">Externo</td>
-                                    <td class="px-6 py-4 text-sm text-slate-500 editable-element">TCE-SP</td>
-                                    <td class="px-6 py-4 text-sm text-slate-500 editable-element">Confere livros e relatórios com o SIP (o registro no sistema e a localização física devem coincidir).</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="mt-10 flex justify-between w-full nav-buttons-area">
-                <button onclick="window.navigateTo('home')" class="px-5 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium transition"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
-                <button onclick="window.navigateTo('mod3')" class="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium transition">Próximo <i class="fas fa-arrow-right ml-2"></i></button>
-            </div>
-        </section>
-
-        <!-- VIEW: MODULE 3 -->
-        <section id="view-mod3" class="view-section hidden fade-in max-w-4xl mx-auto">
-            <span class="text-blue-600 font-semibold tracking-wider text-sm uppercase editable-element">Módulo 3</span>
-            <h2 class="text-3xl font-bold text-slate-800 mt-2 mb-6 editable-element">Responsabilidade Funcional</h2>
-            
-            <div class="content-wrapper flex flex-wrap gap-6 w-full items-start">
-                <div class="editable-block w-full bg-red-50 border-l-4 border-red-500 p-5 rounded-r-lg">
-                    <h3 class="text-red-800 font-bold flex items-center"><i class="fas fa-exclamation-triangle mr-2"></i> <span class="editable-element">Atenção, Servidor!</span></h3>
-                    <p class="text-red-700 mt-2 text-sm editable-element">O funcionário que negligenciar a guarda dos bens públicos e manuseá-los como se fossem particulares responde administrativa, civil e criminalmente pelos prejuízos que causar ao erário (Art. 144 a 147 da Lei Complementar nº 15/1992).</p>
-                </div>
-
-                <div class="editable-block w-full flex items-start bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
-                    <div class="bg-blue-100 text-blue-600 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 mt-1 mr-4 font-bold">1</div>
-                    <div>
-                        <h4 class="font-bold text-slate-800 editable-element">Comunicação Imediata</h4>
-                        <p class="text-sm mt-1 text-slate-600 editable-element">Toda e qualquer movimentação de bens deve ser imediatamente comunicada ao Departamento de Patrimônio para as devidas alterações no SIP (localização física e chefia responsável).</p>
-                    </div>
-                </div>
-                
-                <div class="editable-block w-full flex items-start bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
-                    <div class="bg-blue-100 text-blue-600 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 mt-1 mr-4 font-bold">2</div>
-                    <div>
-                        <h4 class="font-bold text-slate-800 editable-element">Em Caso de Danos</h4>
-                        <p class="text-sm mt-1 text-slate-600 editable-element">Na ocorrência de dano (furto, roubo, extravio, quebra), o responsável pela unidade deverá cumprir o Decreto Municipal nº 4.033/2006, obedecendo rigorosamente aos prazos fixados pelo TCE-SP.</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="mt-10 flex justify-between w-full nav-buttons-area">
-                <button onclick="window.navigateTo('mod2')" class="px-5 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium transition"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
-                <button onclick="window.navigateTo('mod4')" class="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium transition">Próximo <i class="fas fa-arrow-right ml-2"></i></button>
-            </div>
-        </section>
-
-        <!-- VIEW: MODULE 4 (Documentos - Termos e Guias) -->
-        <section id="view-mod4" class="view-section hidden fade-in max-w-4xl mx-auto">
-            <span class="text-blue-600 font-semibold tracking-wider text-sm uppercase editable-element">Módulo 4</span>
-            <h2 class="text-3xl font-bold text-slate-800 mt-2 mb-6 editable-element">Documentos - Termos e Guias</h2>
-            
-            <div class="content-wrapper flex flex-wrap gap-6 w-full items-start">
-                
-                <!-- Termo de Aquisição -->
-                <div class="editable-block w-full bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-2xl font-bold text-slate-800 editable-element">Termo de Aquisição</h3>
-                        <div id="op-btn-termo_aquisicao" contenteditable="false" class="flex gap-2"></div>
-                    </div>
-                    <p class="text-slate-600 mb-4 editable-element">O Termo de Aquisição Patrimonial (ou Termo de Recebimento/Responsabilidade) é o documento oficial utilizado para registrar a entrada, a atribuição de guarda e a responsabilidade de um bem adquirido. Ele oficializa a transferência do item do setor de compras para o usuário final.</p>
-                    <p class="text-slate-600 mb-4 editable-element">O documento é enviado para conferência e assinatura do responsável, não sendo necessária a sua guarda para a inclusão no processo de inventário.</p>
-                </div>
-
-                <!-- Termo de Responsabilidade Patrimonial -->
-                <div class="editable-block w-full bg-white p-6 rounded-xl shadow-sm border border-slate-200 mt-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-2xl font-bold text-slate-800 editable-element">Termo de Responsabilidade Patrimonial</h3>
-                        <div id="op-btn-termo_responsabilidade" contenteditable="false" class="flex gap-2"></div>
-                    </div>
-                    <p class="text-slate-600 mb-4 editable-element">O Termo de Responsabilidade Patrimonial é o documento oficial no qual um servidor ou colaborador assume a guarda, o uso e a conservação de bens. Ele é acompanhado pela relação de bens, uma lista que detalha os itens (como número de tombamento, descrição e valor) alocados sob sua responsabilidade.</p>
-                </div>
-
-                <!-- Guia de Movimentação -->
-                <div class="editable-block w-full bg-white p-6 rounded-xl shadow-sm border border-slate-200 mt-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-2xl font-bold text-slate-800 editable-element">Guia de Movimentação</h3>
-                        <div id="op-btn-guia_movimentacao" contenteditable="false" class="flex gap-2"></div>
-                    </div>
-                    <p class="text-slate-600 mb-4 editable-element">A Guia de Movimentação de Bens Patrimoniais é o documento utilizado para registrar e formalizar a transferência ou a baixa de ativos. Ela garante a rastreabilidade, evita extravios e mantém o controle atualizado do patrimônio da organização.</p>
-                    <p class="text-sm text-slate-500 mb-6 italic"><span class="editable-element">* O modelo é disponibilizado pela administração por meio do portal da intranet.</span></p>
-
-                    <h4 class="font-bold text-slate-700 mb-2 editable-element">Transferência Interna/Externa</h4>
-                    <p class="text-sm text-slate-600 mb-4 editable-element">Mudança de um bem permanente entre diferentes setores, divisões, departamentos e secretarias.</p>
-
-                    <h4 class="font-bold text-slate-700 mb-2 editable-element">Baixa/Descarte</h4>
-                    <p class="text-sm text-slate-600 mb-4 editable-element">Recolhimento de bens inservíveis, obsoletos ou danificados.</p>
-                </div>
-
-                <!-- Termo de Doação -->
-                <div class="editable-block w-full bg-white p-6 rounded-xl shadow-sm border border-slate-200 mt-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-2xl font-bold text-slate-800 editable-element">Termo de Doação</h3>
-                        <div id="op-btn-termo_doacao" contenteditable="false" class="flex gap-2"></div>
-                    </div>
-                    <p class="text-slate-600 mb-4 editable-element">O termo de doação de bem móvel é um contrato jurídico formal que registra a transferência gratuita e voluntária da propriedade de um objeto móvel de uma pessoa (doador) para outra (donatário).</p>
-                </div>
-
-            </div>
-
-            <div class="mt-10 flex justify-between w-full nav-buttons-area">
-                <button onclick="window.navigateTo('mod3')" class="px-5 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium transition"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
-                <button onclick="window.navigateTo('mod5')" class="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium transition">Próximo <i class="fas fa-arrow-right ml-2"></i></button>
-            </div>
-        </section>
-
-        <!-- VIEW: MODULE 5 (Ferramentas) -->
-        <section id="view-mod5" class="view-section hidden fade-in max-w-4xl mx-auto pb-10">
-            <span class="text-blue-600 font-semibold tracking-wider text-sm uppercase editable-element">Módulo 5</span>
-            <h2 class="text-3xl font-bold text-slate-800 mt-2 mb-6 editable-element">Ferramentas</h2>
-            
-            <div class="content-wrapper flex flex-wrap gap-6 w-full items-start">
-                
-                <div class="editable-block w-full bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                    <h3 class="text-2xl font-bold text-slate-800 mb-4 editable-element">Processo Digital</h3>
-                    <p class="text-slate-600 mb-4 editable-element">Ferramenta criada para gerenciar, tramitar e automatizar fluxos de trabalho e documentos em um ambiente totalmente sem papel, esse recurso vem para promover mais eficiência e celeridade nas tarefas diárias.</p>
-                    <p class="text-slate-600 mb-6 editable-element">O Processo Digital é muito semelhante ao que conhecemos no meio físico, mas é completamente gerenciado, transmitido e validado por meio eletrônico.</p>
-                    
-                    <h4 class="font-bold text-lg text-slate-800 mb-3 border-b pb-2 editable-element">Objetivos do Sistema:</h4>
-                    <div class="grid md:grid-cols-2 gap-4">
-                        <div class="bg-slate-50 p-4 rounded-lg">
-                            <h5 class="font-bold text-blue-700 editable-element"><i class="fas fa-bolt mr-2"></i>Agilidade</h5>
-                            <p class="text-sm text-slate-600 editable-element">Informação disponibilizada de forma imediata.</p>
-                        </div>
-                        <div class="bg-slate-50 p-4 rounded-lg">
-                            <h5 class="font-bold text-blue-700 editable-element"><i class="fas fa-piggy-bank mr-2"></i>Economia</h5>
-                            <p class="text-sm text-slate-600 editable-element">Economia de recursos e espaço com manutenção de processos físicos.</p>
-                        </div>
-                        <div class="bg-slate-50 p-4 rounded-lg">
-                            <h5 class="font-bold text-blue-700 editable-element"><i class="fas fa-route mr-2"></i>Rastreabilidade</h5>
-                            <p class="text-sm text-slate-600 editable-element">Controle sobre a localização e histórico de tramitação do processo, indicando todo o caminho que o processo percorreu.</p>
-                        </div>
-                        <div class="bg-slate-50 p-4 rounded-lg">
-                            <h5 class="font-bold text-blue-700 editable-element"><i class="fas fa-shield-alt mr-2"></i>Segurança de Dados</h5>
-                            <p class="text-sm text-slate-600 editable-element">Segurança, Adequação à LGPD, confiabilidade, certificação digital e impossibilidade de alteração.</p>
-                        </div>
-                        <div class="bg-slate-50 p-4 rounded-lg">
-                            <h5 class="font-bold text-blue-700 editable-element"><i class="fas fa-chalkboard-teacher mr-2"></i>Capacitação</h5>
-                            <p class="text-sm text-slate-600 editable-element">Capacitação on-line disponibilizada a todos os servidores que irão utilizar o sistema.</p>
-                        </div>
-                        <div class="bg-slate-50 p-4 rounded-lg">
-                            <h5 class="font-bold text-blue-700 editable-element"><i class="fas fa-leaf mr-2"></i>Meio Ambiente</h5>
-                            <p class="text-sm text-slate-600 editable-element">Economia de papel, transporte e armazenamento com a utilização do Processo Digital, respeitando a preservação do meio ambiente.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="editable-block w-full bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                    <h3 class="text-2xl font-bold text-slate-800 mb-4 editable-element">Assinador Digital</h3>
-                    <p class="text-slate-600 mb-4 editable-element">O Assinador Digital Externo é a plataforma oficial da Prefeitura Municipal de Praia Grande (SP) criada para que servidores, cidadãos, empresas e fornecedores possam assinar documentos digitalmente com validade jurídica, além de verificar a autenticidade de arquivos já assinados.</p>
-                    <p class="text-slate-600 mb-4 editable-element">Essa assinatura substitui a assinatura feita à caneta e o reconhecimento de firma em cartório, garantindo três coisas fundamentais:</p>
-                    
-                    <ul class="space-y-3 list-none pl-0 text-slate-600">
-                        <li class="flex items-start"><i class="fas fa-user-check text-blue-500 mt-1 mr-3 w-5 text-center"></i> <span class="editable-element"><strong>Autoria:</strong> Confirma a identidade de quem assinou.</span></li>
-                        <li class="flex items-start"><i class="fas fa-file-shield text-blue-500 mt-1 mr-3 w-5 text-center"></i> <span class="editable-element"><strong>Integridade:</strong> Garante que o conteúdo do documento não foi alterado ou adulterado após a assinatura.</span></li>
-                        <li class="flex items-start"><i class="fas fa-balance-scale text-blue-500 mt-1 mr-3 w-5 text-center"></i> <span class="editable-element"><strong>Validade Jurídica:</strong> Tem respaldo legal para processos oficiais.</span></li>
-                    </ul>
-                </div>
-
-                <div class="editable-block w-full bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-2xl font-bold text-slate-800 editable-element">Visualizador de Documentos Genéricos (PDF)</h3>
-                        <button id="btn-add-pdf" onclick="window.openPDFModal()" class="hidden bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium shadow transition-colors">
-                            <i class="fas fa-plus mr-2"></i> Novo PDF
-                        </button>
-                    </div>
-                    <p class="text-slate-600 mb-8 text-lg editable-element">Acesse abaixo os manuais e ferramentas disponibilizados pela administração.</p>
-                    <div id="pdf-dynamic-list" class="grid md:grid-cols-2 gap-6 w-full">
-                        <!-- Lista renderizada via JS (Firebase) -->
-                    </div>
-                </div>
-
-            </div>
-
-            <div class="mt-10 flex justify-between w-full nav-buttons-area">
-                <button onclick="window.navigateTo('mod4')" class="px-5 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium transition"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
-                <button onclick="window.navigateTo('mod6')" class="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium transition">Próximo <i class="fas fa-arrow-right ml-2"></i></button>
-            </div>
-        </section>
-
-        <!-- VIEW: MODULE 6 (Baixa) -->
-        <section id="view-mod6" class="view-section hidden fade-in max-w-4xl mx-auto">
-            <span class="text-blue-600 font-semibold tracking-wider text-sm uppercase editable-element">Módulo 6</span>
-            <h2 class="text-3xl font-bold text-slate-800 mt-2 mb-6 editable-element">Desincorporação (Baixa)</h2>
-            
-            <div class="content-wrapper flex flex-wrap gap-6 w-full items-start">
-                <div class="editable-block w-full">
-                    <p class="text-slate-600 text-lg editable-element">Consiste no cancelamento do registro de uso do bem e em sua imediata transferência para a relação de bens excluídos. O motivo mais comum para a baixa é a <strong>inservibilidade</strong>.</p>
-                </div>
-                
-                <div class="editable-block w-full bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                    <h3 class="text-xl font-bold text-slate-800 mb-4 editable-element">Critérios de Inservibilidade:</h3>
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-                        <div class="bg-slate-50 p-3 rounded border text-center text-sm shadow-sm editable-element">Desgaste pelo uso intenso</div>
-                        <div class="bg-slate-50 p-3 rounded border text-center text-sm shadow-sm editable-element">Tecnologia ultrapassada</div>
-                        <div class="bg-slate-50 p-3 rounded border text-center text-sm shadow-sm editable-element">Falta de peças no mercado</div>
-                        <div class="bg-slate-50 p-3 rounded border text-center text-sm shadow-sm editable-element">Manutenção superior ao valor do bem</div>
-                        <div class="bg-slate-50 p-3 rounded border text-center text-sm shadow-sm editable-element">Uso incompatível</div>
-                        <div class="bg-slate-50 p-3 rounded border text-center text-sm shadow-sm editable-element">Sucata (inaproveitável)</div>
-                    </div>
-                </div>
-
-                <div class="editable-block w-full bg-blue-50 p-6 rounded-xl border border-blue-100 text-blue-900">
-                    <h4 class="font-bold flex items-center mb-2"><i class="fas fa-info-circle mr-2"></i> <span class="editable-element">Destinação Final</span></h4>
-                    <p class="text-sm editable-element">Os bens inservíveis e inaproveitáveis são recolhidos e guardados pelo Departamento de Patrimônio. Permanecem no local até que o Prefeito decida por sua <strong>doação</strong> a uma entidade ou por <strong>leilão público</strong>. Até o final do processo de desincorporação, os bens não podem ser extraviados e devem aguardar a decisão final.</p>
-                </div>
-            </div>
-
-            <div class="mt-10 flex justify-between w-full nav-buttons-area">
-                <button onclick="window.navigateTo('mod5')" class="px-5 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium transition"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
-                <button onclick="window.navigateTo('mod7')" class="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium transition">Próximo <i class="fas fa-arrow-right ml-2"></i></button>
-            </div>
-        </section>
-
-        <!-- VIEW: MODULE 7 (Processo Digital) -->
-        <section id="view-mod7" class="view-section hidden fade-in max-w-4xl mx-auto pb-10">
-            <span class="text-blue-600 font-semibold tracking-wider text-sm uppercase editable-element">Módulo 7</span>
-            <h2 class="text-3xl font-bold text-slate-800 mt-2 mb-6 editable-element">Processo (Responsabilidade)</h2>
-            
-            <div class="content-wrapper flex flex-wrap gap-6 w-full items-start">
-                <div class="editable-block w-full">
-                    <p class="text-slate-600 text-lg editable-element">Como etapa final da gestão documental, é indispensável organizar os documentos corretamente no processo digital. A ordem para inclusão dos documentos facilita a auditoria e comprova a lisura dos atos.</p>
-                </div>
-
-                <!-- Movimentação de Bens -->
-                <div class="editable-block w-[calc(50%-0.75rem)] flex-grow bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden h-full">
-                    <div class="bg-slate-50 p-4 border-b border-slate-200">
-                        <h3 class="font-bold text-slate-800 text-lg flex items-center">
-                            <i class="fas fa-exchange-alt text-blue-500 mr-2"></i> <span class="editable-element">Movimentação de Bens</span>
-                        </h3>
-                    </div>
-                    <div class="p-6">
-                        <p class="text-sm text-slate-500 mb-4 editable-element">Ordem para inclusão dos documentos:</p>
-                        <div class="space-y-3">
-                            <div class="flex items-center bg-white border border-slate-200 p-3 rounded-lg shadow-sm">
-                                <div class="bg-blue-100 text-blue-800 font-bold w-8 h-8 rounded-full flex items-center justify-center mr-3 flex-shrink-0 text-sm">1</div>
-                                <h4 class="font-bold text-slate-700 text-sm editable-element">Guias de transferência</h4>
-                            </div>
-                            <div class="flex items-center bg-white border border-slate-200 p-3 rounded-lg shadow-sm">
-                                <div class="bg-blue-100 text-blue-800 font-bold w-8 h-8 rounded-full flex items-center justify-center mr-3 flex-shrink-0 text-sm">2</div>
-                                <h4 class="font-bold text-slate-700 text-sm editable-element">Guias de baixa</h4>
-                            </div>
-                            <div class="flex items-center bg-white border border-slate-200 p-3 rounded-lg shadow-sm">
-                                <div class="bg-blue-100 text-blue-800 font-bold w-8 h-8 rounded-full flex items-center justify-center mr-3 flex-shrink-0 text-sm">3</div>
-                                <h4 class="font-bold text-slate-700 text-sm editable-element">Laudo ou fotos</h4>
-                            </div>
-                            <div class="flex items-center bg-white border border-slate-200 p-3 rounded-lg shadow-sm">
-                                <div class="bg-blue-100 text-blue-800 font-bold w-8 h-8 rounded-full flex items-center justify-center mr-3 flex-shrink-0 text-sm">4</div>
-                                <h4 class="font-bold text-slate-700 text-sm editable-element">Cota</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Inventário -->
-                <div class="editable-block w-[calc(50%-0.75rem)] flex-grow bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden h-full">
-                    <div class="bg-slate-50 p-4 border-b border-slate-200">
-                        <h3 class="font-bold text-slate-800 text-lg flex items-center">
-                            <i class="fas fa-clipboard-check text-green-500 mr-2"></i> <span class="editable-element">Inventário</span>
-                        </h3>
-                    </div>
-                    <div class="p-6">
-                        <p class="text-sm text-slate-500 mb-4 editable-element">Com inclusão de termo atualizado e curso:</p>
-                        <div class="space-y-3">
-                            <div class="flex items-center bg-white border border-slate-200 p-3 rounded-lg shadow-sm">
-                                <div class="bg-green-100 text-green-800 font-bold w-8 h-8 rounded-full flex items-center justify-center mr-3 flex-shrink-0 text-sm">1</div>
-                                <h4 class="font-bold text-slate-700 text-sm editable-element">Curso Noções de Patrimônio</h4>
-                            </div>
-                            <div class="flex items-center bg-white border border-slate-200 p-3 rounded-lg shadow-sm">
-                                <div class="bg-green-100 text-green-800 font-bold w-8 h-8 rounded-full flex items-center justify-center mr-3 flex-shrink-0 text-sm">2</div>
-                                <div>
-                                    <h4 class="font-bold text-slate-700 text-sm editable-element">Termo de Responsabilidade</h4>
-                                    <p class="text-xs text-slate-500 editable-element">Assinado digitalmente</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center bg-white border border-slate-200 p-3 rounded-lg shadow-sm">
-                                <div class="bg-green-100 text-green-800 font-bold w-8 h-8 rounded-full flex items-center justify-center mr-3 flex-shrink-0 text-sm">3</div>
-                                <h4 class="font-bold text-slate-700 text-sm editable-element">Cota</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="editable-block w-full bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-r-lg shadow-sm">
-                    <h3 class="text-yellow-800 font-bold text-lg mb-3 flex items-center"><i class="fas fa-exclamation-triangle mr-2"></i> <span class="editable-element">Regras de Assinatura</span></h3>
-                    <ul class="space-y-3 text-yellow-900">
-                        <li class="flex items-start">
-                            <i class="fas fa-check-double mt-1 mr-3 text-yellow-600"></i> 
-                            <span class="editable-element">Verifique sempre se as guias de movimentação estão com as <strong>duas assinaturas</strong>.</span>
-                        </li>
-                        <li class="flex items-start">
-                            <i class="fas fa-pen-alt mt-1 mr-3 text-yellow-600"></i> 
-                            <span class="editable-element">Para as guias de movimentação cujo objetivo seja a <strong>transferência de bem inservível</strong>, será exigida <strong>somente a assinatura do remetente</strong>.</span>
-                        </li>
-                    </ul>
-                </div>
-
-                <div class="editable-block w-full bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-lg">
-                    <p class="text-blue-900 text-lg italic editable-element">"A participação de cada um gera a utilização responsável dos bens e o seu efetivo controle, que é uma das obrigações da Administração Pública."</p>
-                </div>
-            </div>
-
-            <div class="mt-10 flex justify-between w-full nav-buttons-area">
-                <button onclick="window.navigateTo('mod6')" class="px-5 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium transition"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
-                <button onclick="window.navigateTo('faq')" class="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium transition">Próximo <i class="fas fa-arrow-right ml-2"></i></button>
-            </div>
-        </section>
-
-        <!-- VIEW: FAQ -->
-        <section id="view-faq" class="view-section hidden fade-in max-w-4xl mx-auto pb-10">
-            <span class="text-blue-600 font-semibold tracking-wider text-sm uppercase editable-element">Dúvidas Frequentes</span>
-            <h2 class="text-3xl font-bold text-slate-800 mt-2 mb-6 border-b pb-2 editable-element">Perguntas Frequentes (FAQ)</h2>
-            
-            <div class="content-wrapper flex flex-wrap gap-6 w-full items-start" id="faq-container">
-                <!-- Pergunta 1 -->
-                <div class="editable-block w-full bg-white p-6 rounded-xl shadow-sm border border-slate-200 transition-all duration-200">
-                    <div class="flex items-center justify-between cursor-pointer select-none" onclick="window.toggleFAQ(1)">
-                        <h4 class="font-bold text-lg text-slate-800 flex items-start">
-                            <i class="fas fa-question-circle text-blue-500 mt-1 mr-3 text-xl"></i> 
-                            <span class="editable-element">1. Guia de movimentação, onde encontrar e como preencher?</span>
-                        </h4>
-                        <i id="faq-icon-1" class="fas fa-chevron-down text-slate-400 text-xl transition-transform duration-300 ml-4"></i>
-                    </div>
-                    <div id="faq-ans-1" class="hidden mt-4 text-slate-600 text-sm space-y-4 ml-8 border-t border-slate-100 pt-4">
-                        <p class="editable-element">O modelo para preenchimento pode ser encontrado na <strong>INTRANET &gt; Downloads &gt; Transferência de Bens do Patrimônio &gt; Transferência de Bens do Patrimônio</strong> ou baixe aqui: <a href="https://www.intra.pg/SEAD/SiteAssets/SitePages/Patrimonio/GuiaDeTransferencia.xlsx" target="_blank" class="text-blue-600 hover:underline font-medium">Guia de Movimentação</a>.</p>
-                        
-                        <p class="editable-element">O <strong>Tipo de Ocorrência</strong> descreve a movimentação a ser realizada. São elas:</p>
-                        <ul class="list-none pl-0 space-y-1 bg-slate-50 p-4 rounded-lg border border-slate-200">
-                            <li><span class="editable-element"><strong>1</strong> - Transferência de bem inservível com laudo técnico</span></li>
-                            <li><span class="editable-element"><strong>2</strong> - Transferência de bem inservível sem laudo técnico</span></li>
-                            <li><span class="editable-element"><strong>3</strong> - Transferência de bem servível</span></li>
-                        </ul>
-
-                        <ul class="space-y-2">
-                            <li><span class="editable-element"><strong class="text-slate-800">OCORRÊNCIA NÚMERO:</strong> Preencha com o tipo de ocorrência.</span></li>
-                            <li><span class="editable-element"><strong class="text-slate-800">PATRIMÔNIO NÚMERO:</strong> Número de patrimônio do bem.</span></li>
-                            <li><span class="editable-element"><strong class="text-slate-800">DESCRIÇÃO DO BEM:</strong> Descreva o bem conforme o número de patrimônio apresentado no Termo de Responsabilidade.</span></li>
-                            <li><span class="editable-element"><strong class="text-slate-800">DESTINO / OBSERVAÇÃO:</strong> Sigla do setor para onde será movimentado. <br><em class="text-blue-700">*Em caso de baixa, será sempre a Divisão de Patrimônio Mobiliário - SEAD 5132, Júlia dos Santos Almeida de Carvalho</em></span></li>
-                        </ul>
-
-                        <p class="editable-element">Por fim, preencha o nome dos respectivos responsáveis, setor e sigla:</p>
-                        <div class="bg-slate-50 p-4 rounded border border-slate-200 text-center font-mono grid grid-cols-2 gap-4">
-                            <div class="space-y-1">
-                                <p class="editable-element">[Nome do Diretor Remetente]</p>
-                                <p class="editable-element">[setor]</p>
-                                <p class="editable-element">[SIGLA]</p>
-                            </div>
-                            <div class="space-y-1">
-                                <p class="editable-element">[Diretor Destinatário]</p>
-                                <p class="editable-element">[setor]</p>
-                                <p class="editable-element">[SIGLA]</p>
-                            </div>
-                        </div>
-                        
-                        <p class="editable-element">Pronto! Finalizado o preenchimento, salve o documento em PDF e siga com o recolhimento das assinaturas dos responsáveis.</p>
-
-                        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg mt-4">
-                            <p class="text-yellow-800 m-0"><i class="fas fa-exclamation-circle mr-2"></i><span class="editable-element"><strong>Observação:</strong> Nas ocorrências 1 e 2 (transferência de bem inservível com ou sem laudo técnico), apenas o diretor remetente assina.</span></p>
-                        </div>
-
-                        <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg mt-4">
-                            <p class="text-red-800 m-0"><i class="fas fa-exclamation-triangle mr-2"></i><span class="editable-element"><strong>IMPORTANTE:</strong> Na ocorrência 3 (Transferência de bem servível) – Antes de salvar a cópia para a juntada no processo, certifique-se de emitir a via já com as <strong>duas assinaturas</strong>.</span></p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Pergunta 2 -->
-                <div class="editable-block w-full bg-white p-6 rounded-xl shadow-sm border border-slate-200 transition-all duration-200">
-                    <div class="flex items-center justify-between cursor-pointer select-none" onclick="window.toggleFAQ(2)">
-                        <h4 class="font-bold text-lg text-slate-800 flex items-start">
-                            <i class="fas fa-question-circle text-blue-500 mt-1 mr-3 text-xl"></i> 
-                            <span class="editable-element">2. Como faço para recolher a assinatura dos diretores responsáveis?</span>
-                        </h4>
-                        <i id="faq-icon-2" class="fas fa-chevron-down text-slate-400 text-xl transition-transform duration-300 ml-4"></i>
-                    </div>
-                    <div id="faq-ans-2" class="hidden mt-4 text-slate-600 text-sm space-y-2 ml-8 border-t border-slate-100 pt-4">
-                        <ol class="list-decimal pl-5 space-y-2">
-                            <li><span class="editable-element">Na intranet, navegue até <strong>UTILIDADES &gt; ASSINADOR DIGITAL</strong>.</span></li>
-                            <li><span class="editable-element">Na página do assinador &gt; Vá em "Selecione os documentos PDF" &gt; Adicionar &gt; Localize e selecione o documento desejado &gt; <strong>Preparar assinatura</strong>.</span></li>
-                            <li><span class="editable-element">Após clicar em preparar assinatura, serão habilitadas as ferramentas para compartilhar, fazer o download e visualizar.</span></li>
-                            <li><span class="editable-element">Clique em <strong>compartilhar</strong>.</span></li>
-                            <li><span class="editable-element">Envie o link de compartilhamento para o responsável.</span></li>
-                        </ol>
-                    </div>
-                </div>
-
-                <!-- Pergunta 3 -->
-                <div class="editable-block w-full bg-white p-6 rounded-xl shadow-sm border border-slate-200 transition-all duration-200">
-                    <div class="flex items-center justify-between cursor-pointer select-none" onclick="window.toggleFAQ(3)">
-                        <h4 class="font-bold text-lg text-slate-800 flex items-start">
-                            <i class="fas fa-question-circle text-blue-500 mt-1 mr-3 text-xl"></i> 
-                            <span class="editable-element">3. Após recolher as assinaturas, qual versão baixo: VERSÃO DE IMPRESSÃO ou VERSÃO ASSINADA?</span>
-                        </h4>
-                        <i id="faq-icon-3" class="fas fa-chevron-down text-slate-400 text-xl transition-transform duration-300 ml-4"></i>
-                    </div>
-                    <div id="faq-ans-3" class="hidden mt-4 text-slate-600 text-sm ml-8 border-t border-slate-100 pt-4">
-                        <p class="editable-element">Para juntada no Processo Digital utilize sempre a <strong>"VERSÃO ASSINADA"</strong>, pois a "VERSÃO DE IMPRESSÃO" (com o carimbo visual de assinatura) é considerada uma cópia simples sem validade jurídica.</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="mt-10 flex justify-between w-full nav-buttons-area">
-                <button onclick="window.navigateTo('mod7')" class="px-5 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-medium transition"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
-                <button onclick="window.finishCourse()" class="px-8 py-3 bg-green-600 text-white hover:bg-green-700 rounded-lg font-bold shadow-lg shadow-green-200 transition transform hover:-translate-y-1"><i class="fas fa-check-circle mr-2"></i> Finalizar Curso</button>
-            </div>
-        </section>
-    </div>
-
-    <!-- SCRIPT 2: FIREBASE BACKEND E PERSISTÊNCIA -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, addDoc, serverTimestamp, onSnapshot, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
-
-        // =====================================
-        // APP CONFIG (Caminhos e Limites)
-        // =====================================
-        const APP_CONFIG = {
-            limits: { maxPdfSize: 10 * 1024 * 1024 }, // 10MB
-            paths: {
-                content: 'artifacts/' + window.appId + '/public/data/site_content',
-                history: 'artifacts/' + window.appId + '/public/data/site_history',
-                pdfTools: 'artifacts/' + window.appId + '/public/data/pdf_tools',
-                pdfOps: 'artifacts/' + window.appId + '/public/data/operational_pdfs',
-                roles: 'artifacts/' + window.appId + '/public/data/roles',
-                logs: 'artifacts/' + window.appId + '/public/data/change_logs'
+                showModal('success', 'Salvo na Nuvem!', 'Todo o conteúdo textual foi guardado com sucesso.');
+            } catch (error) {
+                console.error(error);
+                showModal('error', 'Erro ao Salvar', 'Não foi possível gravar os dados. Verifique as permissões.');
             }
         };
 
-        const manualFirebaseConfig = {
-            apiKey: "AIzaSyCYIHNbK5Hnx6K-qEQSrsCFDYZQ3QKj7vc",
-            authDomain: "capacitapatrimonio.firebaseapp.com",
-            projectId: "capacitapatrimonio",
-            storageBucket: "capacitapatrimonio.firebasestorage.app",
-            messagingSenderId: "394627190126",
-            appId: "1:394627190126:web:c3d656b216336abefe857f"
-        };
-
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : manualFirebaseConfig;
-        window.isPlaceholderKey = firebaseConfig.apiKey === "COLE_SUA_API_KEY_AQUI";
-        
-        try {
-            if (!window.isPlaceholderKey) {
-                const app = initializeApp(firebaseConfig);
-                window.auth = getAuth(app);
-                window.db = getFirestore(app);
-                window.storage = getStorage(app);
+        async function loadContentFromCloud() {
+            if(isOfflineMode || !currentUser) return;
+            try {
+                const docPath = doc(db, 'artifacts', APP_ID, 'public', 'data', 'content', 'latest');
+                const docSnap = await getDoc(docPath);
+                if (docSnap.exists() && docSnap.data().html) {
+                    document.getElementById('main-content-wrapper').innerHTML = docSnap.data().html;
+                }
+            } catch (error) {
+                console.log("Conteúdo de nuvem não encontrado ou sem permissão. Carregando padrão de fábrica.");
             }
-        } catch (err) {
-            console.error("Erro na inicialização do Firebase.", err);
-            window.isPlaceholderKey = true;
         }
 
-        document.addEventListener('DOMContentLoaded', async () => {
+        // --- SISTEMA DE LOGIN / MODAIS ---
+        window.openLoginModal = function() {
+            document.getElementById('modal-login').classList.remove('hidden');
+        };
+        window.closeLoginModal = function() {
+            document.getElementById('modal-login').classList.add('hidden');
+        };
+        window.doLogin = async function() {
+            if(isOfflineMode) {
+                showModal('error', 'Modo Offline', "Modo Offline ativo. Autenticação desativada.");
+                return;
+            }
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-password').value;
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+                closeLoginModal();
+                showModal('success', 'Bem-vindo!', 'Login de administrador realizado com sucesso.');
+            } catch(e) {
+                showModal('error', 'Erro', "Falha ao fazer login: " + e.message);
+            }
+        };
+        window.doLogout = async function() {
+            if(auth) {
+                await signOut(auth);
+                // Retorna ao modo anônimo após o logout do admin
+                await signInAnonymously(auth); 
+            }
+            window.navigateTo('home');
+        };
+
+        window.showModal = function(type, title, message) {
+            const modal = document.getElementById('custom-modal');
+            const icon = document.getElementById('modal-icon');
+            const btn = document.getElementById('modal-btn');
             
-            // --- CORE LOGIN LOGIC ---
-            window.doPlatformLogin = async () => {
-                const email = document.getElementById('platform-email').value;
-                const pass = document.getElementById('platform-password').value;
-                const feedback = document.getElementById('platform-login-feedback');
-                
-                if(!email || !pass) { feedback.innerText = "Preencha e-mail e senha."; feedback.classList.remove('hidden'); return; }
-                if(window.isPlaceholderKey) { feedback.innerText = "Offline: API Firebase não configurada."; feedback.classList.remove('hidden'); return; }
-
-                feedback.innerText = "Autenticando...";
-                feedback.classList.remove('text-red-500'); feedback.classList.add('text-blue-500'); feedback.classList.remove('hidden');
-                try {
-                    await signInWithEmailAndPassword(window.auth, email, pass);
-                } catch(error) { 
-                    feedback.classList.add('text-red-500'); feedback.classList.remove('text-blue-500');
-                    feedback.innerText = "Erro: E-mail ou senha incorretos."; 
-                }
-            };
-
-            window.doPlatformRegister = async () => {
-                const email = document.getElementById('platform-email').value;
-                const pass = document.getElementById('platform-password').value;
-                const feedback = document.getElementById('platform-login-feedback');
-                
-                if(!email || !pass) { feedback.innerText = "Preencha e-mail e senha."; feedback.classList.remove('hidden'); return; }
-                if(window.isPlaceholderKey) { feedback.innerText = "Offline: API Firebase não configurada."; feedback.classList.remove('hidden'); return; }
-
-                feedback.innerText = "Criando conta...";
-                feedback.classList.remove('text-red-500'); feedback.classList.add('text-blue-500'); feedback.classList.remove('hidden');
-                try {
-                    await createUserWithEmailAndPassword(window.auth, email, pass);
-                } catch(error) { 
-                    feedback.classList.add('text-red-500'); feedback.classList.remove('text-blue-500');
-                    if (error.code === 'auth/email-already-in-use') { feedback.innerText = "Erro: Este e-mail já está em uso."; } 
-                    else if (error.code === 'auth/weak-password') { feedback.innerText = "Erro: A senha deve ter pelo menos 6 caracteres."; } 
-                    else { feedback.innerText = "Erro ao criar conta: " + error.message; }
-                }
-            };
-
-            window.logoutPlatform = async () => {
-                try { await signOut(window.auth); window.location.reload(); } catch(e) { console.error(e); }
-            };
-
-            window.verifyAdminPin = async () => {
-                const pin = document.getElementById('admin-pin').value;
-                const feedback = document.getElementById('admin-login-feedback');
-                
-                if (pin !== 'admin') {
-                    feedback.innerText = "Código incorreto!"; feedback.classList.add('text-red-500'); return;
-                }
-                
-                if (window.isPlaceholderKey) {
-                    window.isUserAdmin = true;
-                    window.closeAdminLogin();
-                    document.getElementById('admin-panel').classList.remove('hidden');
-                    document.getElementById('admin-panel').classList.add('flex');
-                    if(window.renderOpPDFs) window.renderOpPDFs();
-                    if(window.renderPDFs) window.renderPDFs();
-                    return;
-                }
-
-                feedback.innerText = "Verificando permissões na nuvem...";
-                feedback.classList.remove('text-red-500'); feedback.classList.add('text-blue-500');
-                
-                try {
-                    const email = window.auth.currentUser.email;
-                    const rolesRef = doc(window.db, APP_CONFIG.paths.roles, 'admin_list');
-                    const snap = await getDoc(rolesRef);
-                    
-                    let isAuthorized = false;
-                    if(snap.exists()) {
-                        if(snap.data().emails.includes(email)) isAuthorized = true;
-                    } else {
-                        await setDoc(rolesRef, { emails: [email] });
-                        isAuthorized = true;
-                    }
-
-                    if(isAuthorized) {
-                        window.isUserAdmin = true;
-                        window.closeAdminLogin();
-                        document.getElementById('admin-panel').classList.remove('hidden');
-                        document.getElementById('admin-panel').classList.add('flex');
-                        if(window.renderOpPDFs) window.renderOpPDFs();
-                        if(window.renderPDFs) window.renderPDFs();
-                        document.getElementById('admin-pin').value = '';
-                    } else {
-                        feedback.innerText = "E-mail não autorizado para edição.";
-                        feedback.classList.add('text-red-500'); feedback.classList.remove('text-blue-500');
-                    }
-                } catch(err) {
-                    feedback.innerText = "Erro de validação: " + err.message;
-                    feedback.classList.add('text-red-500'); feedback.classList.remove('text-blue-500');
-                }
-            };
-
-            window.logoutAdmin = async () => {
-                if(document.body.classList.contains('edit-active')) window.toggleEditMode();
-                window.isUserAdmin = false;
-                document.getElementById('admin-panel').classList.add('hidden');
-                document.getElementById('admin-panel').classList.remove('flex');
-                if(window.renderOpPDFs) window.renderOpPDFs();
-                if(window.renderPDFs) window.renderPDFs();
-                window.showModal('info', 'Sessão Encerrada', 'O modo de edição foi desativado.');
-            };
-
-            const initAuth = async () => {
-                if (window.isPlaceholderKey) {
-                    document.getElementById('platform-login-feedback').innerText = "Modo Offline ativo. Bypass ativado.";
-                    document.getElementById('platform-login-feedback').classList.remove('hidden');
-                    document.getElementById('platform-login-screen').classList.add('opacity-0');
-                    setTimeout(() => document.getElementById('platform-login-screen').classList.add('hidden'), 500);
-                    return; 
-                }
-                try {
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(window.auth, __initial_auth_token);
-                    }
-                } catch(e) { console.error("Auth init error:", e); }
-            };
-            await initAuth();
-
-            if (!window.isPlaceholderKey && window.auth) {
-                onAuthStateChanged(window.auth, (user) => {
-                    const loginScreen = document.getElementById('platform-login-screen');
-                    const liveSite = document.getElementById('live-site');
-                    const loader = document.getElementById('loader');
-
-                    if (user && !user.isAnonymous) {
-                        loginScreen.classList.add('opacity-0');
-                        setTimeout(() => loginScreen.classList.add('hidden'), 500);
-                        
-                        window.isUserAdmin = false; 
-                        document.getElementById('admin-panel').classList.add('hidden');
-                        document.getElementById('admin-panel').classList.remove('flex');
-                        liveSite.classList.remove('opacity-0');
-                        
-                        if(window.renderOpPDFs) window.renderOpPDFs();
-                        if(window.renderPDFs) window.renderPDFs();
-                    } else {
-                        loginScreen.classList.remove('hidden');
-                        setTimeout(() => loginScreen.classList.remove('opacity-0'), 10);
-                        liveSite.classList.add('opacity-0');
-                        loader.classList.add('opacity-0');
-                        setTimeout(() => loader.classList.add('hidden'), 500);
-                        
-                        window.isUserAdmin = false;
-                        document.getElementById('admin-panel').classList.add('hidden');
-                        document.getElementById('admin-panel').classList.remove('flex');
-                    }
-                });
+            if(type === 'success') {
+                icon.className = "w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 text-3xl bg-green-100 text-green-500";
+                icon.innerHTML = '<i class="fa-solid fa-check"></i>';
+                btn.className = "w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg";
+            } else if(type === 'error') {
+                icon.className = "w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 text-3xl bg-red-100 text-red-500";
+                icon.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+                btn.className = "w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 px-4 rounded-lg";
+            } else {
+                icon.className = "w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 text-3xl bg-blue-100 text-blue-500";
+                icon.innerHTML = '<i class="fa-solid fa-info"></i>';
+                btn.className = "w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg";
             }
+            
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-message').innerText = message;
+            btn.innerText = "Fechar";
+            modal.classList.remove('hidden');
+        };
+        window.closeCustomModal = function() { document.getElementById('custom-modal').classList.add('hidden'); };
 
-            // --- FUNÇÕES DE NUVEM ---
-            window.renderOpPDFs = () => {
-                const docs = [
-                    { id: 'termo_aquisicao', title: 'Termo de Aquisição' },
-                    { id: 'termo_responsabilidade', title: 'Termo de Responsabilidade Patrimonial' },
-                    { id: 'guia_movimentacao', title: 'Guia de Movimentação' },
-                    { id: 'termo_doacao', title: 'Termo de Doação' }
-                ];
-
-                docs.forEach(d => {
-                    document.querySelectorAll(`#op-btn-${d.id}`).forEach(container => {
-                        container.innerHTML = '';
-                        const url = window.operationalPDFs ? window.operationalPDFs[d.id] : null;
-                        
-                        if (url) {
-                            container.innerHTML += `<button onclick="window.openPDFViewer('${url}', '${d.title}')" title="Visualizar Documento" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold py-1.5 px-3 rounded shadow transition-colors mr-2"><i class="fas fa-eye mr-1"></i> Ver PDF</button>`;
-                        } else {
-                            container.innerHTML += `<button onclick="window.showModal('info', 'Documento Indisponível', 'Este documento ainda não foi anexado pela administração.')" title="Visualizar Documento" class="bg-slate-300 text-white text-xs font-bold py-1.5 px-3 rounded shadow transition-colors cursor-not-allowed mr-2"><i class="fas fa-eye-slash mr-1"></i> Ver PDF</button>`;
-                        }
-                        
-                        if (window.isUserAdmin) {
-                            container.innerHTML += `<button onclick="window.openOpPdfUpload('${d.id}', '${d.title}')" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-1.5 px-3 rounded shadow transition-colors"><i class="fas fa-upload mr-1"></i> ${url ? 'Atualizar' : 'Anexar'}</button>`;
-                        }
-                    });
-                });
-            };
-
-            window.saveOpPdf = async () => {
-                if(!window.isUserAdmin) return;
-                const docId = document.getElementById('op-pdf-id').value;
-                const fileInput = document.getElementById('op-pdf-file');
-                const file = fileInput.files[0];
-
-                if(!file) { window.showModal('error', 'Arquivo Faltando', 'Por favor, selecione um arquivo PDF!'); return; }
-                if(file.type !== 'application/pdf') { window.showModal('error', 'Formato Inválido', 'Apenas arquivos PDF são permitidos.'); return; }
-                if(file.size > APP_CONFIG.limits.maxPdfSize) { window.showModal('error', 'Arquivo muito grande', 'O PDF deve ter no máximo 10MB.'); return; }
-                
-                if (window.isPlaceholderKey) { window.showModal('info', 'Modo Offline', 'Não é possível fazer upload de arquivos no momento.'); return; }
-
-                try {
-                    window.showModal('info', 'Fazendo Upload...', 'Enviando documento. Aguarde...');
-                    const storageRef = ref(window.storage, `${APP_CONFIG.paths.pdfOps}/${docId}_${Date.now()}.pdf`);
-                    const snapshot = await uploadBytes(storageRef, file);
-                    const url = await getDownloadURL(snapshot.ref);
-
-                    const docRef = doc(window.db, APP_CONFIG.paths.pdfOps, docId);
-                    await setDoc(docRef, { url, updatedAt: serverTimestamp() });
-                    
-                    if(window.auth && window.auth.currentUser) {
-                        const logRef = collection(window.db, APP_CONFIG.paths.logs);
-                        await addDoc(logRef, { userEmail: window.auth.currentUser.email, timestamp: serverTimestamp(), action: `Atualizou o PDF operacional: ${docId}` });
-                    }
-                    
-                    window.closeOpPdfUpload();
-                    setTimeout(() => window.showModal('success', 'Upload Concluído', 'Documento anexado com sucesso.'), 350);
-                } catch(e) { window.showModal('error', 'Erro ao Salvar', e.message); }
-            };
-
-            window.renderPDFs = () => {
-                document.querySelectorAll('#pdf-dynamic-list').forEach(container => {
-                    container.innerHTML = '';
-                    window.pdfList.forEach(pdf => {
-                        const adminControls = window.isUserAdmin ? `
-                            <div class="mt-4 pt-4 border-t border-slate-100 flex justify-end space-x-3">
-                                <button onclick="window.editPDF('${pdf.id}')" class="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors"><i class="fas fa-edit"></i> Editar</button>
-                                <button onclick="window.deletePDF('${pdf.id}')" class="text-xs text-red-600 hover:text-red-800 font-medium transition-colors"><i class="fas fa-trash"></i> Excluir</button>
-                            </div>` : '';
-
-                        container.innerHTML += `
-                            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col h-full hover:shadow-md transition-shadow">
-                                <div class="flex items-center mb-3">
-                                    <div class="w-10 h-10 bg-red-100 text-red-600 rounded-lg flex items-center justify-center text-xl mr-3 flex-shrink-0"><i class="fas fa-file-pdf"></i></div>
-                                    <h4 class="font-bold text-slate-800 leading-tight">${pdf.title}</h4>
-                                </div>
-                                <p class="text-sm text-slate-600 flex-grow mb-4">${pdf.description || ''}</p>
-                                <button onclick="window.openPDFViewer('${pdf.url}', '${pdf.title}')" class="w-full bg-slate-800 hover:bg-slate-900 text-white text-sm font-medium py-2.5 rounded-lg transition-colors shadow">
-                                    <i class="fas fa-eye mr-1"></i> Visualizar Documento
-                                </button>
-                                ${adminControls}
-                            </div>`;
-                    });
-                    if(window.pdfList.length === 0) {
-                        container.innerHTML = '<div class="col-span-2 text-center p-8 bg-slate-50 rounded-lg border border-dashed border-slate-300"><i class="fas fa-folder-open text-3xl text-slate-300 mb-2"></i><p class="text-slate-500 italic">Nenhum documento PDF cadastrado no momento.</p></div>';
-                    }
-                });
-            };
-
-            window.savePDF = async () => {
-                if(!window.isUserAdmin) return;
-                const id = document.getElementById('pdf-id').value;
-                const title = document.getElementById('pdf-title').value;
-                const desc = document.getElementById('pdf-desc').value;
-                let url = document.getElementById('pdf-url').value;
-                const order = parseInt(document.getElementById('pdf-order').value) || 0;
-                const fileInput = document.getElementById('pdf-file');
-                const file = fileInput.files[0];
-
-                if(!title) { window.showModal('error', 'Campos Obrigatórios', 'O Título do Documento é obrigatório!'); return; }
-                if(!url && !file) { window.showModal('error', 'Sem Arquivo', 'Faça o upload do PDF ou forneça uma URL externa.'); return; }
-                
-                if(file) {
-                    if(file.type !== 'application/pdf') { window.showModal('error', 'Formato Inválido', 'Apenas arquivos PDF são permitidos.'); return; }
-                    if(file.size > APP_CONFIG.limits.maxPdfSize) { window.showModal('error', 'Arquivo muito grande', 'O PDF deve ter no máximo 10MB.'); return; }
-                }
-
-                if (window.isPlaceholderKey) { window.showModal('info', 'Modo Offline', 'Upload desativado. API Key ausente.'); return; }
-
-                try {
-                    if(file) {
-                        window.showModal('info', 'Fazendo Upload...', 'A enviar arquivo para a nuvem...');
-                        const storageRef = ref(window.storage, `${APP_CONFIG.paths.pdfTools}/${Date.now()}_${file.name}`);
-                        const snapshot = await uploadBytes(storageRef, file);
-                        url = await getDownloadURL(snapshot.ref);
-                    }
-
-                    if(id) {
-                        const docRef = doc(window.db, APP_CONFIG.paths.pdfTools, id);
-                        await updateDoc(docRef, { title, description: desc, url, order });
-                    } else {
-                        const colRef = collection(window.db, APP_CONFIG.paths.pdfTools);
-                        await addDoc(colRef, { title, description: desc, url, order, createdAt: serverTimestamp() });
-                    }
-                    
-                    window.closePDFModal();
-                    setTimeout(() => window.showModal('success', 'Documento Salvo', 'O PDF foi salvo com sucesso.'), 350);
-                } catch(e) { window.showModal('error', 'Erro ao Salvar', e.message); }
-            };
-
-            window.deletePDF = async (id) => {
-                if(!window.isUserAdmin) return;
-                const pdf = window.pdfList.find(p => p.id === id);
-                if (window.isPlaceholderKey) { window.showModal('info', 'Offline', 'Ação indisponível.'); return; }
-                
-                if(confirm(`ATENÇÃO: Confirma a exclusão definitiva do documento "${pdf?.title}"?`)) {
-                    try {
-                        const docRef = doc(window.db, APP_CONFIG.paths.pdfTools, id);
-                        await deleteDoc(docRef);
-                        window.showModal('success', 'Removido!', 'Documento retirado com sucesso.');
-                    } catch(e) { window.showModal('error', 'Erro', e.message); }
-                }
-            };
-
-            window.saveSimpleChanges = async () => {
-                if(!window.isUserAdmin) return;
-                if(document.body.classList.contains('edit-active')) window.toggleEditMode();
-                const contentHTML = document.getElementById('content-container').innerHTML;
-                const navHTML = document.getElementById('nav-theory').innerHTML;
-                
-                if (window.isPlaceholderKey) {
-                    window.showModal('info', 'Modo Offline', 'As alterações não serão salvas. API Key do Firebase ausente no código.');
-                    return;
-                }
-                
-                window.showModal('info', 'Salvando...', 'A gravar nova versão do layout na nuvem...');
-                try {
-                    const docRef = doc(window.db, APP_CONFIG.paths.content, 'v3_latest');
-                    
-                    // Lógica de Versionamento (Histórico)
-                    const snap = await getDoc(docRef);
-                    if(snap.exists() && window.auth.currentUser) {
-                        const historyRef = collection(window.db, APP_CONFIG.paths.history);
-                        await addDoc(historyRef, Object.assign({}, snap.data(), { archivedAt: serverTimestamp(), archivedBy: window.auth.currentUser.email }));
-                    }
-
-                    await setDoc(docRef, { content: contentHTML, nav: navHTML, updatedAt: serverTimestamp() });
-                    
-                    if(window.auth && window.auth.currentUser) {
-                        const logRef = collection(window.db, APP_CONFIG.paths.logs);
-                        await addDoc(logRef, { userEmail: window.auth.currentUser.email, timestamp: serverTimestamp(), action: "Publicou atualizações de texto/layout." });
-                    }
-
-                    window.showModal('success', 'Salvo na Nuvem!', 'Página atualizada com sucesso.');
-                } catch (err) { window.showModal('error', 'Falha', 'Erro ao salvar: ' + err.message); }
-            };
-
-            window.resetToFactory = async () => {
-                if(confirm("Tem certeza absoluta? Isso restaurará o conteúdo e a estrutura para o original de fábrica!")) {
-                    document.getElementById('content-container').innerHTML = document.getElementById('factory-content').innerHTML;
-                    if(window.isPlaceholderKey) { window.location.reload(); return; }
-                    
-                    window.showModal('info', 'Restaurando...', 'Apagando versão na nuvem...');
-                    try {
-                        const docRef = doc(window.db, APP_CONFIG.paths.content, 'v3_latest');
-                        await deleteDoc(docRef);
-                        window.showModal('success', 'Restaurado!', 'Conteúdo de fábrica restabelecido.', () => window.location.reload());
-                    } catch(e) { window.showModal('error', 'Erro', 'Falha ao restaurar: ' + e.message); }
-                }
-            };
-
-            const loadContentFromCloud = async () => {
-                const finishLoad = () => {
-                    if(window.renderOpPDFs) window.renderOpPDFs();
-                    if(window.renderPDFs) window.renderPDFs();
-                    setTimeout(() => {
-                        document.getElementById('loader').classList.add('opacity-0');
-                        setTimeout(() => document.getElementById('loader').classList.add('hidden'), 500);
-                        window.navigateTo('home');
-                    }, 800);
-                };
-
-                if (window.isPlaceholderKey || !window.db) {
-                    document.getElementById('content-container').innerHTML = document.getElementById('factory-content').innerHTML;
-                    finishLoad(); return;
-                }
-
-                try {
-                    const docRef = doc(window.db, APP_CONFIG.paths.content, 'v3_latest');
-                    const docSnap = await getDoc(docRef);
-                    if (docSnap.exists()) {
-                        document.getElementById('content-container').innerHTML = docSnap.data().content;
-                        document.getElementById('nav-theory').innerHTML = docSnap.data().nav;
-                    } else { 
-                        document.getElementById('content-container').innerHTML = document.getElementById('factory-content').innerHTML; 
-                    }
-
-                    const qTools = collection(window.db, APP_CONFIG.paths.pdfTools);
-                    onSnapshot(qTools, (snapshot) => {
-                        window.pdfList = [];
-                        snapshot.forEach((docSnap) => { window.pdfList.push(Object.assign({ id: docSnap.id }, docSnap.data())); });
-                        window.pdfList.sort((a, b) => (a.order || 0) - (b.order || 0));
-                        if(window.renderPDFs) window.renderPDFs();
-                    });
-
-                    const qOps = collection(window.db, APP_CONFIG.paths.pdfOps);
-                    onSnapshot(qOps, (snapshot) => {
-                        window.operationalPDFs = {};
-                        snapshot.forEach((docSnap) => { window.operationalPDFs[docSnap.id] = docSnap.data().url; });
-                        if(window.renderOpPDFs) window.renderOpPDFs();
-                    });
-
-                } catch(e) {
-                    console.error("Cloud load error:", e);
-                    document.getElementById('content-container').innerHTML = document.getElementById('factory-content').innerHTML;
-                } finally { finishLoad(); }
-            };
-
-            await loadContentFromCloud();
-        });
-
-        // Event Listeners Dinâmicos
-        document.addEventListener('DOMContentLoaded', () => {
-            const panel = document.getElementById('admin-panel');
-            const header = document.getElementById('admin-panel-header');
-            let isDragging = false, startX, startY, initialX, initialY;
-
-            if (header && panel) {
-                header.addEventListener('mousedown', (e) => {
-                    isDragging = true; startX = e.clientX; startY = e.clientY;
-                    const rect = panel.getBoundingClientRect();
-                    initialX = rect.left; initialY = rect.top;
-                    panel.style.right = 'auto'; panel.style.bottom = 'auto';
-                    panel.style.left = initialX + 'px'; panel.style.top = initialY + 'px';
-                    document.addEventListener('mousemove', onDrag);
-                    document.addEventListener('mouseup', stopDrag);
-                });
-            }
-
-            function onDrag(e) {
-                if(!isDragging) return;
-                panel.style.left = (initialX + (e.clientX - startX)) + 'px';
-                panel.style.top = (initialY + (e.clientY - startY)) + 'px';
-            }
-
-            function stopDrag() {
-                isDragging = false;
-                document.removeEventListener('mousemove', onDrag);
-                document.removeEventListener('mouseup', stopDrag);
-            }
-
+        window.toggleFAQ = function(id) {
+            if(document.body.classList.contains('edit-active')) return;
+            const content = document.getElementById('faq-ans-' + id);
+            const icon = document.getElementById('faq-icon-' + id);
+            if(content) content.classList.toggle('hidden');
+            if(icon) icon.classList.toggle('rotate-180');
+        };
+        
+        window.formatText = function(command) { document.execCommand(command, false, null); };
+        
+        // Setup Formatação de texto flutuante
+        document.addEventListener('selectionchange', () => {
             const formatBar = document.getElementById('format-toolbar');
-            document.addEventListener('selectionchange', () => {
-                if (!document.body.classList.contains('edit-active')) { formatBar.style.display = 'none'; return; }
-                const selection = window.getSelection();
-                if (selection.rangeCount > 0 && !selection.isCollapsed) {
-                    const range = selection.getRangeAt(0);
-                    const rect = range.getBoundingClientRect();
-                    if(selection.anchorNode.parentElement && selection.anchorNode.parentElement.isContentEditable) {
-                        formatBar.style.display = 'flex';
-                        formatBar.style.top = (rect.top + window.scrollY - 45) + 'px';
-                        formatBar.style.left = (rect.left + (rect.width / 2) - (formatBar.offsetWidth / 2)) + 'px';
-                    }
-                } else { formatBar.style.display = 'none'; }
-            });
+            if (!document.body.classList.contains('edit-active')) {
+                formatBar.style.display = 'none'; return;
+            }
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0 && !selection.isCollapsed) {
+                const range = selection.getRangeAt(0);
+                const rect = range.getBoundingClientRect();
+                if(selection.anchorNode.parentElement && selection.anchorNode.parentElement.isContentEditable) {
+                    formatBar.style.display = 'flex';
+                    formatBar.style.top = `${rect.top + window.scrollY - 45}px`;
+                    formatBar.style.left = `${rect.left + (rect.width / 2) - (formatBar.offsetWidth / 2)}px`;
+                }
+            } else { formatBar.style.display = 'none'; }
         });
     </script>
+
+    <!-- TELA DE CARREGAMENTO -->
+    <div id="loading-screen" class="fixed inset-0 bg-slate-900 z-50 flex flex-col items-center justify-center text-white">
+        <i class="fa-solid fa-circle-notch fa-spin text-5xl text-blue-500 mb-4"></i>
+        <h2 class="text-xl font-semibold">Carregando Plataforma...</h2>
+        <p class="text-slate-400 text-sm mt-2">Conectando ao Firebase</p>
+    </div>
+
+    <!-- MENU LATERAL -->
+    <aside id="sidebar" class="w-72 bg-white border-r border-slate-200 flex flex-col shadow-sm z-20 transition-transform duration-300">
+        <div class="p-6 border-b border-slate-200 bg-slate-50 flex items-center gap-4">
+            <div class="w-12 h-12 bg-blue-600 text-white rounded-lg flex items-center justify-center text-2xl shadow-inner">
+                <i class="fa-solid fa-building-columns"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold text-slate-800 leading-tight">Patrimônio<br>Público</h1>
+                <p class="text-xs text-slate-500 font-medium">Prefeitura Praia Grande</p>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto p-4 space-y-1">
+            <a id="nav-home" onclick="window.navigateTo('home')" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 hover:bg-slate-100 cursor-pointer font-medium bg-blue-50 text-blue-700 border-r-4 border-blue-600">
+                <i class="fa-solid fa-house w-5 text-center"></i> Início & Objetivos
+            </a>
+            <a id="nav-mod1" onclick="window.navigateTo('mod1')" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 hover:bg-slate-100 cursor-pointer font-medium">
+                <i class="fa-solid fa-book w-5 text-center"></i> Módulo 1: Conceitos
+            </a>
+            <a id="nav-mod2" onclick="window.navigateTo('mod2')" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 hover:bg-slate-100 cursor-pointer font-medium">
+                <i class="fa-solid fa-box-open w-5 text-center"></i> Módulo 2: Incorporação
+            </a>
+            <a id="nav-mod3" onclick="window.navigateTo('mod3')" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 hover:bg-slate-100 cursor-pointer font-medium">
+                <i class="fa-solid fa-user-shield w-5 text-center"></i> Módulo 3: Responsabilidade
+            </a>
+            <a id="nav-mod4" onclick="window.navigateTo('mod4')" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 hover:bg-slate-100 cursor-pointer font-medium">
+                <i class="fa-solid fa-file-signature w-5 text-center"></i> Módulo 4: Documentos - Termos e Guias
+            </a>
+            <a id="nav-mod5" onclick="window.navigateTo('mod5')" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 hover:bg-slate-100 cursor-pointer font-medium">
+                <i class="fa-solid fa-laptop-file w-5 text-center"></i> Módulo 5: Ferramentas
+            </a>
+            <a id="nav-mod6" onclick="window.navigateTo('mod6')" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 hover:bg-slate-100 cursor-pointer font-medium">
+                <i class="fa-solid fa-arrow-down-up-lock w-5 text-center"></i> Módulo 6: Baixa
+            </a>
+            <a id="nav-faq" onclick="window.navigateTo('faq')" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 hover:bg-slate-100 cursor-pointer font-medium">
+                <i class="fa-solid fa-circle-question w-5 text-center"></i> Perguntas Frequentes (FAQ)
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-slate-200 bg-slate-50">
+            <div class="flex items-center gap-3 text-sm text-slate-600 mb-3 px-2">
+                <i class="fa-solid fa-headset text-blue-500"></i>
+                <span class="font-medium">Dúvidas? Ramais 5624 e 5644</span>
+            </div>
+            <button id="btn-login-header" onclick="window.openLoginModal()" class="w-full bg-white border border-slate-300 text-slate-700 font-medium py-2 px-4 rounded-lg hover:bg-slate-50 transition text-sm flex justify-center items-center gap-2 shadow-sm">
+                <i class="fa-solid fa-right-to-bracket"></i> Acesso Restrito
+            </button>
+            <button id="btn-logout-header" onclick="window.doLogout()" class="hidden w-full bg-red-50 border border-red-200 text-red-600 font-medium py-2 px-4 rounded-lg hover:bg-red-100 transition text-sm flex justify-center items-center gap-2 shadow-sm">
+                <i class="fa-solid fa-right-from-bracket"></i> Sair da Conta
+            </button>
+        </div>
+    </aside>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden bg-slate-50 relative">
+        
+        <!-- Painel de Administração (Oculto por Padrão) -->
+        <div id="admin-tools" class="hidden bg-slate-800 text-white p-3 flex justify-between items-center shadow-md z-10 shrink-0">
+            <div class="flex items-center gap-3">
+                <div class="bg-blue-600 p-2 rounded-lg"><i class="fa-solid fa-shield-halved"></i></div>
+                <div>
+                    <h3 class="font-bold text-sm leading-tight">Painel do Administrador</h3>
+                    <p class="text-xs text-slate-300">Modo de Edição de Texto e Links PDF</p>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button id="btn-toggle-edit" onclick="window.toggleEditMode()" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-medium transition flex items-center">
+                    <i class="fa-solid fa-pen mr-2"></i> Ativar Edição Simples
+                </button>
+                <button onclick="window.saveContentToCloud()" class="bg-green-600 hover:bg-green-500 px-4 py-2 rounded-lg text-sm font-medium transition shadow-lg shadow-green-900/20 flex items-center">
+                    <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Salvar na Nuvem
+                </button>
+            </div>
+        </div>
+
+        <!-- Barra Flutuante de Formatação -->
+        <div id="format-toolbar" class="flex">
+            <button onclick="window.formatText('bold')" title="Negrito"><i class="fa-solid fa-bold"></i></button>
+            <button onclick="window.formatText('italic')" title="Itálico"><i class="fa-solid fa-italic"></i></button>
+            <button onclick="window.formatText('underline')" title="Sublinhado"><i class="fa-solid fa-underline"></i></button>
+            <div class="w-px h-5 bg-slate-600 mx-1 my-auto"></div>
+            <button onclick="window.formatText('justifyLeft')" title="Esquerda"><i class="fa-solid fa-align-left"></i></button>
+            <button onclick="window.formatText('justifyCenter')" title="Centro"><i class="fa-solid fa-align-center"></i></button>
+            <button onclick="window.formatText('justifyFull')" title="Justificar"><i class="fa-solid fa-align-justify"></i></button>
+        </div>
+
+        <div id="content-container" class="flex-1 overflow-y-auto p-8 scroll-smooth">
+            <div id="main-content-wrapper" class="max-w-4xl mx-auto space-y-6">
+
+                <!-- HOME -->
+                <section id="view-home" class="view-section fade-in">
+                    <div class="bg-gradient-to-r from-blue-700 to-blue-900 rounded-2xl p-10 text-white shadow-xl mb-8 relative overflow-hidden">
+                        <i class="fa-solid fa-landmark absolute -right-10 -bottom-10 text-9xl text-white/10"></i>
+                        <div class="relative z-10">
+                            <span class="bg-white/20 px-3 py-1 rounded-full text-sm font-semibold tracking-wider mb-4 inline-block">CAPACITAÇÃO OFICIAL</span>
+                            <h1 class="text-4xl font-extrabold mb-4 editable-text">Noções de Patrimônio Público</h1>
+                            <p class="text-blue-100 text-lg max-w-2xl editable-text">Secretaria de Serviços Urbanos - Prefeitura de Praia Grande. A capacitação contínua e a organização do conhecimento são fundamentais para uma excelente gestão pública.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+                        <h2 class="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-3 editable-text">
+                            <i class="fa-solid fa-bullseye text-blue-600"></i> Objetivos e Resultados Esperados
+                        </h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="flex items-start gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                                <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0"><i class="fa-solid fa-users"></i></div>
+                                <div><h3 class="font-bold text-slate-700 editable-text">Conscientização</h3><p class="text-sm text-slate-600 editable-text">Garantir a orientação e conscientização de todos os servidores envolvidos.</p></div>
+                            </div>
+                            <div class="flex items-start gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                                <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
+                                <div><h3 class="font-bold text-slate-700 editable-text">Auditoria</h3><p class="text-sm text-slate-600 editable-text">Facilitar a auditoria interna no município e processos de verificação.</p></div>
+                            </div>
+                            <div class="flex items-start gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                                <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0"><i class="fa-solid fa-file-contract"></i></div>
+                                <div><h3 class="font-bold text-slate-700 editable-text">Transparência</h3><p class="text-sm text-slate-600 editable-text">Gerar informações mais precisas ao Tribunal de Contas do Estado de São Paulo.</p></div>
+                            </div>
+                            <div class="flex items-start gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                                <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0"><i class="fa-solid fa-handshake-angle"></i></div>
+                                <div><h3 class="font-bold text-slate-700 editable-text">Colaboração</h3><p class="text-sm text-slate-600 editable-text">Alcançar a utilização responsável dos bens com efetiva colaboração de todos.</p></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- MÓDULO 1: CONCEITOS -->
+                <section id="view-mod1" class="view-section hidden">
+                    <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+                        <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-100 text-blue-600 mb-6 text-xl">
+                            <i class="fa-solid fa-book"></i>
+                        </div>
+                        <h2 class="text-3xl font-bold text-slate-800 mb-4 editable-text">Módulo 1: O Que é o Patrimônio Público?</h2>
+                        <div class="space-y-4 text-slate-600 editable-text">
+                            <p>O Patrimônio Público Municipal é composto por todos os bens móveis, imóveis e semoventes pertencentes ao Município. Especificamente quanto aos bens móveis, a Secretaria do Tesouro Nacional (STN) classifica-os, para fins de aquisição, em bens de consumo e bens permanentes.</p>
+                            <h3 class="text-xl font-bold text-slate-800 mt-6">Critérios dos Bens Permanentes</h3>
+                            <p>Os bens permanentes são adquiridos por compra ou recebidos em doação e são incorporados ao patrimônio tendo em vista as suas propriedades físicas. As principais características incluem:</p>
+                            <ul class="list-disc pl-5 space-y-2">
+                                <li>Possuem inúmeras aplicações durante um longo período.</li>
+                                <li>Apresentam durabilidade superior a 2 anos sem perder as suas características.</li>
+                                <li>Possuem valor que justifique o registro e o controle patrimonial.</li>
+                                <li>São econômica e tecnicamente passíveis de revisões, reparos e manutenção.</li>
+                                <li>São todos aqueles elencados pela Portaria Ministerial nº. 448, de 13/Set/2002.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- MÓDULO 2: INCORPORAÇÃO -->
+                <section id="view-mod2" class="view-section hidden">
+                    <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+                        <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-100 text-blue-600 mb-6 text-xl">
+                            <i class="fa-solid fa-box-open"></i>
+                        </div>
+                        <h2 class="text-3xl font-bold text-slate-800 mb-4 editable-text">Módulo 2: Incorporação e Proteção dos Bens</h2>
+                        <div class="space-y-6 text-slate-600 editable-text">
+                            <p>A incorporação consiste no registro dos bens que devem ser perfeitamente identificados. Para isso, devem estar corretamente descritos, possuir valor unitário, ter origem (documento de aquisição) e localização física (unidade administrativa) perfeitamente definidas. A incorporação é executada de duas formas:</p>
+                            <ol class="list-decimal pl-5 space-y-2">
+                                <li>Registro no Sistema de Patrimônio (SIP), gerenciado pela CONAM (Consultoria de Administração Municipal).</li>
+                                <li>Incorporação física com a colocação de uma plaqueta (ou gravação) em local visível. A plaqueta contém o número do bem fornecido automaticamente pelo SIP, impresso em código de barras.</li>
+                            </ol>
+                            
+                            <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-r-lg my-4">
+                                <p class="text-sm text-yellow-800 font-medium"><i class="fa-solid fa-triangle-exclamation mr-2"></i><strong>Atenção:</strong> Não realize movimentação de bens que ainda não receberam a plaqueta de identificação. Caso o faça, mantenha registro / anotação da sua localização.</p>
+                            </div>
+
+                            <h3 class="text-xl font-bold text-slate-800 mt-6"><i class="fa-solid fa-hand-holding-heart text-blue-500 mr-2"></i> Doação de Bens</h3>
+                            <p>Comunicar a divisão de patrimônio através de e-mail com os seguintes dados:</p>
+                            <ul class="list-disc pl-5 space-y-2">
+                                <li>Documento do doador com foto (CNH, RG, DNI).</li>
+                                <li>Descrição do bem em doação com marca e modelo quando couber.</li>
+                                <li>Foto do bem em doação.</li>
+                                <li>Preenchimento do termo de doação com os dados do doador devidamente assinado.</li>
+                            </ul>
+                            <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg mt-2">
+                                <p class="text-sm text-red-800 font-medium"><strong>Importante:</strong> O Termo de Doação NÃO PODE ser assinado digitalmente.</p>
+                            </div>
+
+                            <h3 class="text-xl font-bold text-slate-800 mt-6">Controle Patrimonial</h3>
+                            <p>O Patrimônio Público necessita de um conjunto de atividades interligadas direcionadas para um objetivo único. Há duas espécies de controle para a proteção dos bens:</p>
+                            <div class="overflow-x-auto mt-4">
+                                <table class="min-w-full bg-white border border-slate-200">
+                                    <thead class="bg-slate-50">
+                                        <tr>
+                                            <th class="py-2 px-4 border-b text-left text-sm font-semibold text-slate-700">Tipo de Controle</th>
+                                            <th class="py-2 px-4 border-b text-left text-sm font-semibold text-slate-700">Exercido Por</th>
+                                            <th class="py-2 px-4 border-b text-left text-sm font-semibold text-slate-700">Métodos de Verificação</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="py-2 px-4 border-b text-sm">Interno</td>
+                                            <td class="py-2 px-4 border-b text-sm">Departamento de Patrimônio, representando o Prefeito.</td>
+                                            <td class="py-2 px-4 border-b text-sm">Efetuado através das Notas de Recebimento, Guia de Transferência e da Auditoria realizada no mínimo uma vez por ano.</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="py-2 px-4 border-b text-sm">Externo</td>
+                                            <td class="py-2 px-4 border-b text-sm">Tribunal de Contas do Estado de São Paulo.</td>
+                                            <td class="py-2 px-4 border-b text-sm">Confere Livros, Relatórios e os registros do SIP, comparando-os com a localização física (não pode haver divergência).</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- MÓDULO 3: RESPONSABILIDADE -->
+                <section id="view-mod3" class="view-section hidden">
+                    <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+                        <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-100 text-blue-600 mb-6 text-xl">
+                            <i class="fa-solid fa-user-shield"></i>
+                        </div>
+                        <h2 class="text-3xl font-bold text-slate-800 mb-4 editable-text">Módulo 3: Responsabilidade Funcional</h2>
+                        <div class="space-y-4 text-slate-600 editable-text">
+                            <p>Os bens, após incorporados, geram responsabilidades para a Administração Pública e individualmente para cada funcionário que o utiliza. Regras Essenciais de Conduta:</p>
+                            <ul class="list-disc pl-5 space-y-3">
+                                <li>Toda e qualquer movimentação de bens deve ser <strong>imediatamente comunicada</strong> ao Departamento de Patrimônio.</li>
+                                <li>Esta comunicação visa providenciar, no SIP, as devidas alterações da localização física e da chefia responsável pela guarda e zelo do bem.</li>
+                                <li>O funcionário que negligenciar a guarda dos bens públicos e manuseá-los como se fossem particulares responde pelos prejuízos que causar ao erário.</li>
+                                <li>Essa responsabilidade ocorre nas esferas administrativa, civil e criminal, nos termos dos artigos 144/147 da Lei Complementar n.º 15, de 25/05/1992.</li>
+                                <li>Na ocorrência de qualquer dano (furto, roubo, extravio, vandalismo, incêndio, vidro quebrado ou fiação furtada), o funcionário responsável pela unidade deverá cumprir o Decreto Municipal n°. 4033, de 02/Fev/2006.</li>
+                                <li>O cumprimento deste decreto exige ênfase aos prazos fixados e controlados pelo Tribunal de Contas do Estado de São Paulo.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- MÓDULO 4: DOCUMENTOS - TERMOS E GUIAS -->
+                <section id="view-mod4" class="view-section hidden">
+                    <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+                        <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-100 text-blue-600 mb-6 text-xl">
+                            <i class="fa-solid fa-file-signature"></i>
+                        </div>
+                        <h2 class="text-3xl font-bold text-slate-800 mb-4 editable-text">Módulo 4: Documentos - Termos e Guias</h2>
+                        
+                        <div class="space-y-8 mt-6">
+                            <!-- Termo de Aquisição -->
+                            <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="text-xl font-bold text-slate-800 editable-text"><i class="fa-solid fa-file-import text-blue-500 mr-2"></i>Termo de Aquisição</h3>
+                                    <!-- AÇÕES DO PDF -->
+                                    <div class="flex gap-2">
+                                        <button id="btn-view-termo_aquisicao" onclick="window.viewPdf('termo_aquisicao')" class="opacity-50 cursor-not-allowed bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-1.5 rounded-lg text-sm font-semibold transition shadow-sm flex items-center gap-2">
+                                            <i class="fa-solid fa-eye"></i> Visualizar PDF
+                                        </button>
+                                        <button onclick="window.openPdfModal('termo_aquisicao')" class="admin-only hidden bg-slate-800 text-white hover:bg-slate-700 px-3 py-1.5 rounded-lg text-sm font-semibold transition shadow-sm flex items-center gap-2">
+                                            <i class="fa-solid fa-link"></i> Inserir Link
+                                        </button>
+                                    </div>
+                                </div>
+                                <p class="text-slate-600 leading-relaxed editable-text mb-4">O Termo de Aquisição Patrimonial (ou Termo de Recebimento/Responsabilidade) é o documento oficial utilizado para registrar a entrada, a atribuição de guarda e a responsabilidade de um bem adquirido. Ele oficializa a transferência do item do setor de compras para o usuário final.</p>
+                                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
+                                    <p class="text-sm text-blue-800 font-medium editable-text">O documento é enviado para conferência e assinatura do responsável, não sendo necessária a sua guarda para a inclusão no processo de inventário.</p>
+                                </div>
+                            </div>
+
+                            <!-- Termo de Responsabilidade -->
+                            <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="text-xl font-bold text-slate-800 editable-text"><i class="fa-solid fa-file-shield text-blue-500 mr-2"></i>Termo de Responsabilidade Patrimonial</h3>
+                                    <!-- AÇÕES DO PDF -->
+                                    <div class="flex gap-2">
+                                        <button id="btn-view-termo_responsabilidade" onclick="window.viewPdf('termo_responsabilidade')" class="opacity-50 cursor-not-allowed bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-1.5 rounded-lg text-sm font-semibold transition shadow-sm flex items-center gap-2">
+                                            <i class="fa-solid fa-eye"></i> Visualizar PDF
+                                        </button>
+                                        <button onclick="window.openPdfModal('termo_responsabilidade')" class="admin-only hidden bg-slate-800 text-white hover:bg-slate-700 px-3 py-1.5 rounded-lg text-sm font-semibold transition shadow-sm flex items-center gap-2">
+                                            <i class="fa-solid fa-link"></i> Inserir Link
+                                        </button>
+                                    </div>
+                                </div>
+                                <p class="text-slate-600 leading-relaxed editable-text">O Termo de Responsabilidade Patrimonial é o documento oficial no qual um servidor ou colaborador assume a guarda, o uso e a conservação de bens. Ele é acompanhado pela relação de bens, uma lista que detalha os itens (como número de tombamento, descrição e valor) alocados sob sua responsabilidade.</p>
+                            </div>
+
+                            <!-- Guia de Movimentação -->
+                            <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="text-xl font-bold text-slate-800 editable-text"><i class="fa-solid fa-file-export text-blue-500 mr-2"></i>Guia de Movimentação</h3>
+                                    <!-- AÇÕES DO PDF -->
+                                    <div class="flex gap-2">
+                                        <button id="btn-view-guia_movimentacao" onclick="window.viewPdf('guia_movimentacao')" class="opacity-50 cursor-not-allowed bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-1.5 rounded-lg text-sm font-semibold transition shadow-sm flex items-center gap-2">
+                                            <i class="fa-solid fa-eye"></i> Visualizar PDF
+                                        </button>
+                                        <button onclick="window.openPdfModal('guia_movimentacao')" class="admin-only hidden bg-slate-800 text-white hover:bg-slate-700 px-3 py-1.5 rounded-lg text-sm font-semibold transition shadow-sm flex items-center gap-2">
+                                            <i class="fa-solid fa-link"></i> Inserir Link
+                                        </button>
+                                    </div>
+                                </div>
+                                <p class="text-slate-600 leading-relaxed editable-text mb-4">A Guia de Movimentação de Bens Patrimoniais é o documento utilizado para registrar e formalizar a transferência ou a baixa de ativos. Ela garante a rastreabilidade, evita extravios e mantém o controle atualizado do patrimônio da organização.</p>
+                                <ul class="list-disc pl-5 space-y-2 text-slate-600 editable-text">
+                                    <li><strong class="text-slate-800">Transferência Interna/Externa:</strong> Mudança de um bem permanente entre diferentes setores, divisões, departamentos e secretarias.</li>
+                                    <li><strong class="text-slate-800">Baixa/Descarte:</strong> Recolhimento de bens inservíveis, obsoletos ou danificados.</li>
+                                </ul>
+                            </div>
+
+                            <!-- Termo de Doação -->
+                            <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="text-xl font-bold text-slate-800 editable-text"><i class="fa-solid fa-hand-holding-heart text-blue-500 mr-2"></i>Termo de Doação</h3>
+                                    <!-- AÇÕES DO PDF -->
+                                    <div class="flex gap-2">
+                                        <button id="btn-view-termo_doacao" onclick="window.viewPdf('termo_doacao')" class="opacity-50 cursor-not-allowed bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-1.5 rounded-lg text-sm font-semibold transition shadow-sm flex items-center gap-2">
+                                            <i class="fa-solid fa-eye"></i> Visualizar PDF
+                                        </button>
+                                        <button onclick="window.openPdfModal('termo_doacao')" class="admin-only hidden bg-slate-800 text-white hover:bg-slate-700 px-3 py-1.5 rounded-lg text-sm font-semibold transition shadow-sm flex items-center gap-2">
+                                            <i class="fa-solid fa-link"></i> Inserir Link
+                                        </button>
+                                    </div>
+                                </div>
+                                <p class="text-slate-600 leading-relaxed editable-text">O termo de doação de bem móvel é um contrato jurídico formal que registra a transferência gratuita e voluntária da propriedade de um objeto móvel de uma pessoa (doador) para outra (donatário).</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- MÓDULO 5: FERRAMENTAS -->
+                <section id="view-mod5" class="view-section hidden">
+                    <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+                        <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-100 text-blue-600 mb-6 text-xl">
+                            <i class="fa-solid fa-laptop-file"></i>
+                        </div>
+                        <h2 class="text-3xl font-bold text-slate-800 mb-4 editable-text">Módulo 5: Ferramentas</h2>
+                        
+                        <div class="space-y-8 text-slate-600">
+                            <!-- Processo Digital -->
+                            <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                                <h3 class="text-xl font-bold text-slate-800 mb-3 editable-text"><i class="fa-solid fa-desktop text-blue-500 mr-2"></i>Processo Digital</h3>
+                                <p class="editable-text mb-4">Ferramenta criada para gerenciar, tramitar e automatizar fluxos de trabalho e documentos em um ambiente totalmente sem papel, esse recurso vem para promover mais eficiência e celeridade nas tarefas diárias. O Processo Digital é muito semelhante ao que conhecemos no meio físico, mas é completamente gerenciado, transmitido e validado por meio eletrônico.</p>
+                                <h4 class="font-bold text-slate-800 mt-4 mb-2 editable-text">Objetivos do Sistema:</h4>
+                                <ul class="list-none space-y-3 editable-text">
+                                    <li><i class="fa-solid fa-bolt text-yellow-500 w-5"></i> <strong>Agilidade:</strong> Informação disponibilizada de forma imediata.</li>
+                                    <li><i class="fa-solid fa-piggy-bank text-pink-500 w-5"></i> <strong>Economia:</strong> Economia de recursos e espaço com manutenção de processos físicos.</li>
+                                    <li><i class="fa-solid fa-route text-blue-500 w-5"></i> <strong>Rastreabilidade:</strong> Controle sobre a localização e histórico de tramitação do processo.</li>
+                                    <li><i class="fa-solid fa-shield-halved text-green-500 w-5"></i> <strong>Segurança de Dados:</strong> Adequação à LGPD, confiabilidade e impossibilidade de alteração.</li>
+                                    <li><i class="fa-solid fa-leaf text-green-600 w-5"></i> <strong>Meio Ambiente:</strong> Economia de papel, transporte e armazenamento.</li>
+                                </ul>
+                            </div>
+
+                            <!-- Assinador Digital -->
+                            <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                                <h3 class="text-xl font-bold text-slate-800 mb-3 editable-text"><i class="fa-solid fa-file-signature text-blue-500 mr-2"></i>Assinador Digital</h3>
+                                <p class="editable-text mb-4">O Assinador Digital Externo é a plataforma oficial da Prefeitura Municipal de Praia Grande (SP) criada para que servidores, cidadãos, empresas e fornecedores possam assinar documentos digitalmente com validade jurídica, além de verificar a autenticidade de arquivos já assinados. Essa assinatura substitui a assinatura feita à caneta e o reconhecimento de firma em cartório, garantindo três coisas fundamentais:</p>
+                                <ul class="list-disc pl-5 space-y-2 editable-text">
+                                    <li><strong>Autoria:</strong> Confirma a identidade de quem assinou.</li>
+                                    <li><strong>Integridade:</strong> Garante que o conteúdo do documento não foi alterado ou adulterado após a assinatura.</li>
+                                    <li><strong>Validade Jurídica:</strong> Tem respaldo legal para processos oficiais.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- MÓDULO 6: BAIXA -->
+                <section id="view-mod6" class="view-section hidden">
+                    <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+                        <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-100 text-blue-600 mb-6 text-xl">
+                            <i class="fa-solid fa-arrow-down-up-lock"></i>
+                        </div>
+                        <h2 class="text-3xl font-bold text-slate-800 mb-4 editable-text">Módulo 6: Baixa</h2>
+                        <div class="space-y-4 text-slate-600 editable-text">
+                            <p>A desincorporação consiste na baixa do bem do rol do Patrimônio Municipal. Isso significa o cancelamento do seu registro de uso e a imediata transferência para a relação dos bens excluídos.</p>
+                            
+                            <h3 class="text-xl font-bold text-slate-800 mt-6">Motivos para Inservibilidade</h3>
+                            <p>O motivo mais comum para a baixa é a inservibilidade, que decorre dos seguintes aspectos:</p>
+                            <ul class="list-disc pl-5 space-y-2">
+                                <li>Desgaste pelo uso intenso e prolongado.</li>
+                                <li>Equipamento tecnologicamente ultrapassado.</li>
+                                <li>Peças para reposição inexistentes no mercado.</li>
+                                <li>Custo de manutenção e reparos superior ao valor do bem.</li>
+                                <li>Uso não mais compatível oriundo de fatores externos.</li>
+                                <li>Bens que se tornem inaproveitáveis ou sucata.</li>
+                            </ul>
+                            
+                            <h3 class="text-xl font-bold text-slate-800 mt-6">Destinação Final</h3>
+                            <ul class="list-disc pl-5 space-y-2">
+                                <li>Os bens inservíveis e inaproveitáveis são recolhidos e guardados em local apropriado após verificação e análise do Departamento de Patrimônio.</li>
+                                <li>Eles permanecem guardados até regular processo para a execução da sua desincorporação.</li>
+                                <li>A desincorporação será determinada pelo Prefeito, que decidirá pela doação a alguma entidade ou pelo leilão público.</li>
+                                <li>Até o final do processo de desincorporação, os bens não podem ser extraviados e devem aguardar a decisão da sua destinação.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- FAQ -->
+                <section id="view-faq" class="view-section hidden">
+                    <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+                        <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-100 text-blue-600 mb-6 text-xl">
+                            <i class="fa-solid fa-circle-question"></i>
+                        </div>
+                        <h2 class="text-3xl font-bold text-slate-800 mb-6 editable-text">Perguntas Frequentes (FAQ)</h2>
+                        
+                        <div class="space-y-4">
+                            <!-- FAQ 1 -->
+                            <div class="border border-slate-200 rounded-lg">
+                                <button onclick="window.toggleFAQ('1')" class="w-full flex justify-between items-center p-4 text-left font-bold text-slate-700 hover:bg-slate-50 transition rounded-lg">
+                                    <span class="editable-text">1. Guia de movimentação, onde encontrar e como preencher?</span>
+                                    <i id="faq-icon-1" class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                                </button>
+                                <div id="faq-ans-1" class="hidden p-4 pt-0 text-slate-600 border-t border-slate-200 editable-text">
+                                    <p class="mb-2 mt-2">O modelo para preenchimento pode ser encontrado na INTRANET > Downloads > Transferência de Bens do Patrimônio > Transferência de Bens do Patrimônio ou baixe aqui: <a href="https://www.intra.pg/SEAD/SiteAssets/SitePages/Patrimonio/GuiaDeTransferencia.xlsx" target="_blank" class="text-blue-600 underline">Guia de Movimentação</a>.</p>
+                                    <p class="mb-2"><strong>Tipo de ocorrência:</strong> descreve a movimentação a ser realizada, sendo elas:</p>
+                                    <ul class="list-none pl-5 mb-2">
+                                        <li><strong>1</strong> - Transferência de bem inservível com laudo técnico</li>
+                                        <li><strong>2</strong> - Transferência de bem inservível sem laudo técnico</li>
+                                        <li><strong>3</strong> - Transferência de bem servível</li>
+                                    </ul>
+                                    <ul class="list-disc pl-5 mb-4">
+                                        <li><strong>OCORRÊNCIA NÚMERO:</strong> Preencha com o tipo de ocorrência.</li>
+                                        <li><strong>PATRIMÔNIO NÚMERO:</strong> Número de patrimônio do bem.</li>
+                                        <li><strong>DESCRIÇÃO DO BEM:</strong> Descreve o bem conforme numero de patrimônio apresentado no termo de responsabilidade.</li>
+                                        <li><strong>DESTINO / OBSERVAÇÃO:</strong> Sigla do setor para onde será movimentado. <em>*Em caso de baixa, será sempre a Divisão de Patrimônio Mobiliário - SEAD 5132, Júlia dos Santos Almeida de Carvalho</em>.</li>
+                                    </ul>
+                                    <div class="bg-blue-50 p-4 rounded-lg">
+                                        <p class="font-medium mb-2">Por fim, preencha o nome dos respectivos responsáveis, setor e sigla:</p>
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <p>[Nome do Diretor Remetente]</p>
+                                                <p>[setor]</p>
+                                                <p>[SIGLA]</p>
+                                            </div>
+                                            <div>
+                                                <p>[Diretor Destinatário]</p>
+                                                <p>[setor]</p>
+                                                <p>[SIGLA]</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- FAQ 2 -->
+                            <div class="border border-slate-200 rounded-lg">
+                                <button onclick="window.toggleFAQ('2')" class="w-full flex justify-between items-center p-4 text-left font-bold text-slate-700 hover:bg-slate-50 transition rounded-lg">
+                                    <span class="editable-text">2. Como faço para recolher a assinatura dos diretores responsáveis?</span>
+                                    <i id="faq-icon-2" class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                                </button>
+                                <div id="faq-ans-2" class="hidden p-4 pt-0 text-slate-600 border-t border-slate-200 editable-text">
+                                    <ol class="list-decimal pl-5 space-y-2 mb-4 mt-2">
+                                        <li>Na intranet, navegue até UTILIDADES > ASSINADOR DIGITAL.</li>
+                                        <li>Na página do assinador > Vá em "Selecione os documentos PDF" > Adicionar > Localize e selecione o documento desejado > Preparar assinatura.</li>
+                                        <li>Após clicar em preparar assinatura serão habilitadas as ferramentas para compartilhar, download e visualizar.</li>
+                                        <li>Clique em compartilhar.</li>
+                                        <li>Envie o link de compartilhamento para o responsável.</li>
+                                    </ol>
+                                    <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-r-lg">
+                                        <p class="font-bold text-yellow-800">Após recolher as assinaturas qual versão baixo: VERSÃO DE IMPRESSÃO ou VERSÃO ASSINADA?</p>
+                                        <p class="text-yellow-800 mt-1">Para juntada no Processo Digital utilize sempre a <strong>"VERSÃO ASSINADA"</strong>, pois a "VERSÃO DE IMPRESSÃO" (com o carimbo visual de assinatura) é considerada uma cópia simples sem validade jurídica.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL INSERIR LINK DO PDF -->
+    <div id="modal-pdf-link" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center">
+        <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl p-6 relative">
+            <button onclick="window.closePdfModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xl mb-4"><i class="fa-solid fa-link"></i></div>
+            <h3 class="text-xl font-bold text-slate-800 mb-2">Vincular Documento</h3>
+            <p class="text-slate-500 text-sm mb-4">Insira abaixo o link público do documento (Google Drive, OneDrive ou Intranet). O sistema salvará este endereço no banco de dados.</p>
+            
+            <input type="hidden" id="pdf-ref-id">
+            <div class="mb-5">
+                <label class="block text-sm font-semibold text-slate-700 mb-2">URL do Documento</label>
+                <input type="url" id="pdf-link-input" placeholder="https://drive.google.com/file/d/..." class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            
+            <button onclick="window.savePdfLink()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition shadow-md shadow-blue-500/20">
+                Salvar Link na Nuvem
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL DE MENSAGENS E ALERTAS -->
+    <div id="custom-modal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl p-8 text-center relative transition-transform transform">
+            <div id="modal-icon"></div>
+            <h3 id="modal-title" class="text-2xl font-bold text-slate-800 mb-2"></h3>
+            <p id="modal-message" class="text-slate-600 mb-6"></p>
+            <button id="modal-btn" onclick="window.closeCustomModal()"></button>
+        </div>
+    </div>
+
+    <!-- MODAL DE LOGIN (Acesso Restrito Administrador) -->
+    <div id="modal-login" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl p-8 relative">
+            <button onclick="window.closeLoginModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-slate-100 text-slate-700 rounded-full flex items-center justify-center text-3xl mx-auto mb-4"><i class="fa-solid fa-shield-halved"></i></div>
+                <h3 class="text-xl font-bold text-slate-800">Acesso Restrito</h3>
+                <p class="text-sm text-slate-500 mt-1">Efetue login de Administrador para editar textos e links PDF.</p>
+            </div>
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">E-mail</label>
+                    <input type="email" id="login-email" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-2 text-slate-700 focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Senha</label>
+                    <input type="password" id="login-password" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-2 text-slate-700 focus:outline-none focus:border-blue-500">
+                </div>
+            </div>
+            <button onclick="window.doLogin()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 px-4 rounded-lg transition">Entrar no Sistema</button>
+        </div>
+    </div>
+
 </body>
 </html>
