@@ -65,10 +65,12 @@
     <!-- SCRIPT 1: FUNÇÕES SÍNCRONAS DE UI E NAVEGAÇÃO -->
     <script>
         // Variáveis Globais Essenciais
-        window.appId = (typeof __app_id !== 'undefined' && __app_id) ? String(__app_id) : 'patrimonio-app';
+        window.appId = 'patrimonio-app';
+        if (typeof __app_id !== 'undefined' && __app_id) { window.appId = String(__app_id); }
+        
         window.bgColors = ['bg-white', 'bg-slate-50', 'bg-blue-50', 'bg-yellow-50', 'bg-green-50', 'bg-red-50', 'bg-blue-600'];
-        window.pdfList = [];
         window.operationalPDFs = {};
+        window.pdfList = [];
         window.isUserAdmin = false;
         window.currentModalAction = null;
         window.isPDFMaximized = false;
@@ -166,22 +168,6 @@
 
         window.finishCourse = function() {
             window.showModal('success', 'Parabéns! Curso Concluído', 'Você finalizou a trilha de capacitação sobre Patrimônio Público!<br><br>Consulte o Departamento pelos ramais <strong>5624</strong> ou <strong>5644</strong>.', function() { window.navigateTo('home'); });
-        };
-
-        // Login Admin
-        window.openAdminLogin = function() {
-            document.getElementById('admin-login-modal').classList.remove('hidden');
-            setTimeout(function() {
-                document.getElementById('admin-login-modal').classList.remove('opacity-0');
-                document.getElementById('admin-login-box').classList.remove('scale-95');
-                document.getElementById('admin-pin').focus();
-            }, 10);
-        };
-
-        window.closeAdminLogin = function() {
-            document.getElementById('admin-login-modal').classList.add('opacity-0');
-            document.getElementById('admin-login-box').classList.add('scale-95');
-            setTimeout(function() { document.getElementById('admin-login-modal').classList.add('hidden'); }, 300);
         };
 
         // PDFs Gerais (Ferramentas)
@@ -454,9 +440,8 @@
             }
         };
 
-        // Funções para Iniciar a Configuração Visual
+        // UI Event Listeners Base
         document.addEventListener('DOMContentLoaded', function() {
-            // Arrastar Painel Admin
             var panel = document.getElementById('admin-panel');
             var header = document.getElementById('admin-panel-header');
             var isDragging = false, startX, startY, initialX, initialY;
@@ -485,7 +470,6 @@
                 document.removeEventListener('mouseup', stopDrag);
             }
 
-            // Barra de Formatação Textual Seguindo Seleção
             var formatBar = document.getElementById('format-toolbar');
             document.addEventListener('selectionchange', function() {
                 if (!document.body.classList.contains('edit-active')) { formatBar.style.display = 'none'; return; }
@@ -534,7 +518,7 @@
     <div id="live-site" class="flex h-screen w-full relative opacity-0 transition-opacity duration-500">
         <div id="mobile-overlay" class="fixed inset-0 bg-slate-900/50 z-20 hidden md:hidden" onclick="window.toggleSidebar()"></div>
 
-        <!-- Menu Lateral -->
+        <!-- Menu Lateral: Ordem Exata -->
         <aside id="sidebar" class="bg-white w-72 h-full border-r border-slate-200 flex flex-col absolute md:relative z-30 transform -translate-x-full md:translate-x-0 transition-transform duration-300">
             <div class="p-6 border-b border-slate-200 flex justify-between items-center">
                 <div>
@@ -588,9 +572,7 @@
                         <p class="text-xs font-bold text-slate-700 editable-element">Dúvidas?</p>
                         <p class="text-xs text-slate-500 editable-element">Ramais: 5624 e 5644</p>
                         <div class="mt-2 pt-2 border-t border-blue-200/50 flex justify-between items-center" id="admin-auth-area">
-                            <button onclick="window.openAdminLogin()" class="text-[11px] font-semibold text-slate-400 hover:text-blue-600 transition-colors flex items-center w-full justify-start">
-                                <i class="fas fa-lock mr-1.5"></i> Acesso Admin
-                            </button>
+                            <span class="text-[11px] font-semibold text-slate-500" id="user-email-display">Usuário</span>
                             <button onclick="window.logoutPlatform()" class="text-[11px] font-semibold text-red-400 hover:text-red-600 transition-colors flex items-center" title="Sair da Plataforma">
                                 <i class="fas fa-sign-out-alt"></i> Sair
                             </button>
@@ -608,18 +590,6 @@
                     <i class="fas fa-bars text-2xl"></i>
                 </button>
             </header>
-
-            <!-- Barra de formatação flutuante -->
-            <div id="format-toolbar">
-                <button onmousedown="event.preventDefault(); window.formatText('bold')" title="Negrito"><i class="fas fa-bold"></i></button>
-                <button onmousedown="event.preventDefault(); window.formatText('italic')" title="Itálico"><i class="fas fa-italic"></i></button>
-                <button onmousedown="event.preventDefault(); window.formatText('underline')" title="Sublinhado"><i class="fas fa-underline"></i></button>
-                <div class="divider"></div>
-                <button onmousedown="event.preventDefault(); window.formatText('justifyLeft')" title="Alinhar à Esquerda"><i class="fas fa-align-left"></i></button>
-                <button onmousedown="event.preventDefault(); window.formatText('justifyCenter')" title="Centralizar"><i class="fas fa-align-center"></i></button>
-                <button onmousedown="event.preventDefault(); window.formatText('justifyRight')" title="Alinhar à Direita"><i class="fas fa-align-right"></i></button>
-                <button onmousedown="event.preventDefault(); window.formatText('justifyFull')" title="Justificar"><i class="fas fa-align-justify"></i></button>
-            </div>
 
             <!-- Area de Injeção de Conteúdo Dinâmico -->
             <div class="flex-1 overflow-y-auto p-6 md:p-12 scroll-smooth relative" id="content-container">
@@ -644,24 +614,6 @@
         </div>
     </div>
 
-    <!-- Modal Login Administrador (Senha/PIN Mestre) -->
-    <div id="admin-login-modal" class="fixed inset-0 bg-slate-900/80 z-[1000] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
-        <div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full mx-4 transform scale-95 transition-transform duration-300" id="admin-login-box">
-            <div class="flex items-center mb-4">
-                <div class="w-10 h-10 bg-slate-100 text-slate-600 rounded-lg flex items-center justify-center text-xl mr-3">
-                    <i class="fas fa-user-shield"></i>
-                </div>
-                <h3 class="text-lg font-bold text-slate-800">Desbloquear Edição</h3>
-            </div>
-            <p class="text-sm text-slate-600 mb-4" id="admin-login-feedback">Insira o código de administrador para ativar as ferramentas de edição (Padrão: admin).</p>
-            <input type="password" id="admin-pin" class="w-full border border-slate-300 rounded-lg p-3 mb-4 outline-none focus:border-blue-500 transition-all text-center tracking-widest text-lg" placeholder="***" onkeyup="if(event && event.key === 'Enter') window.verifyAdminPin()">
-            <div class="flex justify-end space-x-2">
-                <button onclick="window.closeAdminLogin()" class="px-4 py-2 text-slate-600 hover:bg-slate-100 font-medium rounded-lg">Cancelar</button>
-                <button onclick="window.verifyAdminPin()" class="px-4 py-2 bg-slate-800 text-white hover:bg-slate-900 font-medium rounded-lg">Desbloquear</button>
-            </div>
-        </div>
-    </div>
-
     <!-- Modal Adicionar PDF Genérico -->
     <div id="pdf-form-modal" class="fixed inset-0 bg-slate-900/80 z-[1050] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
         <div class="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 transform scale-95 transition-transform duration-300">
@@ -670,7 +622,7 @@
             <input type="text" id="pdf-title" class="w-full border border-slate-300 rounded-lg p-2.5 mb-3 outline-none focus:border-blue-500 transition-all" placeholder="Título do Documento (Obrigatório)">
             <textarea id="pdf-desc" class="w-full border border-slate-300 rounded-lg p-2.5 mb-3 outline-none focus:border-blue-500 transition-all" placeholder="Descrição rápida..." rows="2"></textarea>
             
-            <label class="block text-sm font-medium text-slate-700 mb-1">Upload (Preferencial):</label>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Upload (PDF, máx. 10MB):</label>
             <input type="file" id="pdf-file" accept="application/pdf" class="w-full border border-slate-300 rounded-lg p-2 mb-4 outline-none focus:border-blue-500 transition-all text-sm">
             
             <div class="text-center text-xs text-slate-400 mb-2">- OU -</div>
@@ -714,7 +666,7 @@
                 
                 <!-- Botões (Nova Aba, Maximizar, Fechar) -->
                 <div class="flex space-x-1">
-                    <a id="adv-pdf-link" href="#" target="_blank" title="Abrir em Nova Aba do Navegador" class="w-10 h-10 flex items-center justify-center rounded hover:bg-slate-700 transition-colors text-slate-300 hover:text-white">
+                    <a id="adv-pdf-link" href="#" target="_blank" title="Abrir em Nova Aba" class="w-10 h-10 flex items-center justify-center rounded hover:bg-slate-700 transition-colors text-slate-300 hover:text-white">
                         <i class="fas fa-external-link-alt"></i>
                     </a>
                     <button onclick="window.toggleMaximizePDF()" title="Maximizar / Restaurar Tela" class="w-10 h-10 flex items-center justify-center rounded hover:bg-slate-700 transition-colors text-slate-300 hover:text-white">
@@ -725,8 +677,7 @@
                     </button>
                 </div>
             </div>
-            
-            <!-- Iframe de Renderização -->
+            <!-- Iframe -->
             <div class="flex-1 bg-slate-200 w-full h-full relative">
                 <iframe id="adv-pdf-iframe" class="w-full h-full border-0 absolute inset-0" src=""></iframe>
             </div>
@@ -739,12 +690,10 @@
             <span class="flex items-center"><i class="fas fa-grip-lines text-slate-500 mr-3"></i> Painel de Administração</span>
             <button onclick="window.logoutAdmin()" class="text-slate-400 hover:text-red-400" title="Sair da Sessão de Edição"><i class="fas fa-sign-out-alt"></i> Sair</button>
         </div>
-        
         <div class="p-4 flex flex-col gap-3">
             <button onclick="window.toggleEditMode()" id="btn-toggle-simple-edit" class="bg-teal-600 hover:bg-teal-500 px-2 py-3 rounded text-sm font-bold transition flex items-center justify-center shadow">
                 <i class="fas fa-pen mr-2"></i> Ativar Edição Simples
             </button>
-
             <div class="grid grid-cols-2 gap-2" id="simple-edit-controls" style="display: none;">
                 <button onclick="window.addPage()" class="bg-indigo-600 hover:bg-indigo-500 px-2 py-2 rounded text-xs font-medium transition flex items-center justify-center shadow">
                     <i class="fas fa-file-medical mr-2"></i> Nova Página
@@ -756,11 +705,9 @@
                     <i class="fas fa-question-circle mr-2"></i> Adicionar Nova FAQ
                 </button>
             </div>
-
             <button onclick="window.saveSimpleChanges()" id="btn-save-simple" class="bg-green-600 hover:bg-green-500 px-4 py-2 rounded text-sm font-medium transition items-center justify-center shadow-lg shadow-green-900/50 hidden">
                 <i class="fas fa-cloud-upload-alt mr-2"></i> Salvar na Nuvem
             </button>
-
             <button onclick="window.resetToFactory()" class="text-xs text-red-400 hover:text-red-300 mt-2 text-center underline transition-colors">
                 Restaurar Original de Fábrica
             </button>
@@ -1083,7 +1030,7 @@
                     </div>
                     <p class="text-slate-600 mb-8 text-lg editable-element">Acesse abaixo os manuais e ferramentas disponibilizados pela administração.</p>
                     <div id="pdf-dynamic-list" class="grid md:grid-cols-2 gap-6 w-full">
-                        <!-- Lista renderizada via JS -->
+                        <!-- Lista renderizada via JS (Firebase) -->
                     </div>
                 </div>
 
@@ -1095,7 +1042,7 @@
             </div>
         </section>
 
-        <!-- VIEW: MODULE 6 (Antigo Baixa) -->
+        <!-- VIEW: MODULE 6 (Baixa) -->
         <section id="view-mod6" class="view-section hidden fade-in max-w-4xl mx-auto">
             <span class="text-blue-600 font-semibold tracking-wider text-sm uppercase editable-element">Módulo 6</span>
             <h2 class="text-3xl font-bold text-slate-800 mt-2 mb-6 editable-element">Desincorporação (Baixa)</h2>
@@ -1129,7 +1076,7 @@
             </div>
         </section>
 
-        <!-- VIEW: MODULE 7 (Antigo Processo Digital) -->
+        <!-- VIEW: MODULE 7 (Processo Digital) -->
         <section id="view-mod7" class="view-section hidden fade-in max-w-4xl mx-auto pb-10">
             <span class="text-blue-600 font-semibold tracking-wider text-sm uppercase editable-element">Módulo 7</span>
             <h2 class="text-3xl font-bold text-slate-800 mt-2 mb-6 editable-element">Processo (Responsabilidade)</h2>
@@ -1330,6 +1277,9 @@
         import { getFirestore, doc, setDoc, getDoc, collection, addDoc, serverTimestamp, onSnapshot, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
+        // =====================================
+        // APP CONFIG (Caminhos e Limites)
+        // =====================================
         const APP_CONFIG = {
             limits: { maxPdfSize: 10 * 1024 * 1024 }, // 10MB
             paths: {
@@ -1368,6 +1318,7 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             
+            // --- CORE LOGIN LOGIC ---
             window.doPlatformLogin = async () => {
                 const email = document.getElementById('platform-email').value;
                 const pass = document.getElementById('platform-password').value;
@@ -1494,13 +1445,15 @@
                     const liveSite = document.getElementById('live-site');
                     const loader = document.getElementById('loader');
 
-                    if (user) {
+                    if (user && !user.isAnonymous) {
                         loginScreen.classList.add('opacity-0');
                         setTimeout(() => loginScreen.classList.add('hidden'), 500);
+                        
                         window.isUserAdmin = false; 
                         document.getElementById('admin-panel').classList.add('hidden');
                         document.getElementById('admin-panel').classList.remove('flex');
                         liveSite.classList.remove('opacity-0');
+                        
                         if(window.renderOpPDFs) window.renderOpPDFs();
                         if(window.renderPDFs) window.renderPDFs();
                     } else {
@@ -1509,6 +1462,7 @@
                         liveSite.classList.add('opacity-0');
                         loader.classList.add('opacity-0');
                         setTimeout(() => loader.classList.add('hidden'), 500);
+                        
                         window.isUserAdmin = false;
                         document.getElementById('admin-panel').classList.add('hidden');
                         document.getElementById('admin-panel').classList.remove('flex');
@@ -1516,28 +1470,28 @@
                 });
             }
 
-            // Centralized PDF Tools
+            // --- FUNÇÕES DE NUVEM ---
             window.renderOpPDFs = () => {
                 const docs = [
                     { id: 'termo_aquisicao', title: 'Termo de Aquisição' },
-                    { id: 'termo_responsabilidade', title: 'Termo de Resp. Patrimonial' },
+                    { id: 'termo_responsabilidade', title: 'Termo de Responsabilidade Patrimonial' },
                     { id: 'guia_movimentacao', title: 'Guia de Movimentação' },
                     { id: 'termo_doacao', title: 'Termo de Doação' }
                 ];
 
                 docs.forEach(d => {
-                    document.querySelectorAll('#op-btn-' + d.id).forEach(container => {
+                    document.querySelectorAll(`#op-btn-${d.id}`).forEach(container => {
                         container.innerHTML = '';
                         const url = window.operationalPDFs ? window.operationalPDFs[d.id] : null;
                         
                         if (url) {
-                            container.innerHTML += '<button onclick="window.openPDFViewer(\'' + url + '\', \'' + d.title + '\')" title="Visualizar Documento" class="text-blue-600 hover:text-blue-800 transition-colors text-xl mr-3"><i class="fas fa-eye"></i></button>';
+                            container.innerHTML += `<button onclick="window.openPDFViewer('${url}', '${d.title}')" title="Visualizar Documento" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold py-1.5 px-3 rounded shadow transition-colors mr-2"><i class="fas fa-eye mr-1"></i> Ver PDF</button>`;
                         } else {
-                            container.innerHTML += '<button onclick="window.showModal(\'info\', \'Documento Indisponível\', \'Este documento ainda não foi anexado pela administração.\')" title="Visualizar Documento" class="text-slate-300 transition-colors text-xl mr-3 cursor-not-allowed"><i class="fas fa-eye-slash"></i></button>';
+                            container.innerHTML += `<button onclick="window.showModal('info', 'Documento Indisponível', 'Este documento ainda não foi anexado pela administração.')" title="Visualizar Documento" class="bg-slate-300 text-white text-xs font-bold py-1.5 px-3 rounded shadow transition-colors cursor-not-allowed mr-2"><i class="fas fa-eye-slash mr-1"></i> Ver PDF</button>`;
                         }
                         
                         if (window.isUserAdmin) {
-                            container.innerHTML += '<button onclick="window.openOpPdfUpload(\'' + d.id + '\', \'' + d.title + '\')" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-1.5 px-3 rounded shadow transition-colors"><i class="fas fa-upload mr-1"></i> ' + (url ? 'Atualizar PDF' : 'Anexar PDF') + '</button>';
+                            container.innerHTML += `<button onclick="window.openOpPdfUpload('${d.id}', '${d.title}')" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-1.5 px-3 rounded shadow transition-colors"><i class="fas fa-upload mr-1"></i> ${url ? 'Atualizar' : 'Anexar'}</button>`;
                         }
                     });
                 });
@@ -1557,16 +1511,16 @@
 
                 try {
                     window.showModal('info', 'Fazendo Upload...', 'Enviando documento. Aguarde...');
-                    const storageRef = ref(window.storage, APP_CONFIG.paths.pdfOps + '/' + docId + '_' + Date.now() + '.pdf');
+                    const storageRef = ref(window.storage, `${APP_CONFIG.paths.pdfOps}/${docId}_${Date.now()}.pdf`);
                     const snapshot = await uploadBytes(storageRef, file);
                     const url = await getDownloadURL(snapshot.ref);
 
                     const docRef = doc(window.db, APP_CONFIG.paths.pdfOps, docId);
-                    await setDoc(docRef, { url: url, updatedAt: serverTimestamp() });
+                    await setDoc(docRef, { url, updatedAt: serverTimestamp() });
                     
                     if(window.auth && window.auth.currentUser) {
                         const logRef = collection(window.db, APP_CONFIG.paths.logs);
-                        await addDoc(logRef, { userEmail: window.auth.currentUser.email, timestamp: serverTimestamp(), action: 'Atualizou o PDF operacional: ' + docId });
+                        await addDoc(logRef, { userEmail: window.auth.currentUser.email, timestamp: serverTimestamp(), action: `Atualizou o PDF operacional: ${docId}` });
                     }
                     
                     window.closeOpPdfUpload();
@@ -1578,32 +1532,28 @@
                 document.querySelectorAll('#pdf-dynamic-list').forEach(container => {
                     container.innerHTML = '';
                     window.pdfList.forEach(pdf => {
-                        const adminControls = window.isUserAdmin ? 
-                            '<div class="mt-4 pt-4 border-t border-slate-100 flex justify-end space-x-3">' +
-                                '<button onclick="window.editPDF(\'' + pdf.id + '\')" class="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors"><i class="fas fa-edit"></i> Editar</button>' +
-                                '<button onclick="window.deletePDF(\'' + pdf.id + '\')" class="text-xs text-red-600 hover:text-red-800 font-medium transition-colors"><i class="fas fa-trash"></i> Excluir</button>' +
-                            '</div>' : '';
+                        const adminControls = window.isUserAdmin ? `
+                            <div class="mt-4 pt-4 border-t border-slate-100 flex justify-end space-x-3">
+                                <button onclick="window.editPDF('${pdf.id}')" class="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors"><i class="fas fa-edit"></i> Editar</button>
+                                <button onclick="window.deletePDF('${pdf.id}')" class="text-xs text-red-600 hover:text-red-800 font-medium transition-colors"><i class="fas fa-trash"></i> Excluir</button>
+                            </div>` : '';
 
-                        container.innerHTML += 
-                            '<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col h-full hover:shadow-md transition-shadow">' +
-                                '<div class="flex items-center mb-3">' +
-                                    '<div class="w-10 h-10 bg-red-100 text-red-600 rounded-lg flex items-center justify-center text-xl mr-3 flex-shrink-0"><i class="fas fa-file-pdf"></i></div>' +
-                                    '<h4 class="font-bold text-slate-800 leading-tight">' + pdf.title + '</h4>' +
-                                '</div>' +
-                                '<p class="text-sm text-slate-600 flex-grow mb-4">' + (pdf.description || '') + '</p>' +
-                                '<button onclick="window.openPDFViewer(\'' + pdf.url + '\', \'' + pdf.title + '\')" class="w-full bg-slate-800 hover:bg-slate-900 text-white text-sm font-medium py-2.5 rounded-lg transition-colors shadow">' +
-                                    '<i class="fas fa-eye mr-1"></i> Visualizar Documento' +
-                                '</button>' +
-                                adminControls +
-                            '</div>';
+                        container.innerHTML += `
+                            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col h-full hover:shadow-md transition-shadow">
+                                <div class="flex items-center mb-3">
+                                    <div class="w-10 h-10 bg-red-100 text-red-600 rounded-lg flex items-center justify-center text-xl mr-3 flex-shrink-0"><i class="fas fa-file-pdf"></i></div>
+                                    <h4 class="font-bold text-slate-800 leading-tight">${pdf.title}</h4>
+                                </div>
+                                <p class="text-sm text-slate-600 flex-grow mb-4">${pdf.description || ''}</p>
+                                <button onclick="window.openPDFViewer('${pdf.url}', '${pdf.title}')" class="w-full bg-slate-800 hover:bg-slate-900 text-white text-sm font-medium py-2.5 rounded-lg transition-colors shadow">
+                                    <i class="fas fa-eye mr-1"></i> Visualizar Documento
+                                </button>
+                                ${adminControls}
+                            </div>`;
                     });
                     if(window.pdfList.length === 0) {
                         container.innerHTML = '<div class="col-span-2 text-center p-8 bg-slate-50 rounded-lg border border-dashed border-slate-300"><i class="fas fa-folder-open text-3xl text-slate-300 mb-2"></i><p class="text-slate-500 italic">Nenhum documento PDF cadastrado no momento.</p></div>';
                     }
-                });
-
-                document.querySelectorAll('#btn-add-pdf').forEach(btn => {
-                    if(window.isUserAdmin) btn.classList.remove('hidden'); else btn.classList.add('hidden');
                 });
             };
 
@@ -1630,17 +1580,17 @@
                 try {
                     if(file) {
                         window.showModal('info', 'Fazendo Upload...', 'A enviar arquivo para a nuvem...');
-                        const storageRef = ref(window.storage, APP_CONFIG.paths.pdfTools + '/' + Date.now() + '_' + file.name);
+                        const storageRef = ref(window.storage, `${APP_CONFIG.paths.pdfTools}/${Date.now()}_${file.name}`);
                         const snapshot = await uploadBytes(storageRef, file);
                         url = await getDownloadURL(snapshot.ref);
                     }
 
                     if(id) {
                         const docRef = doc(window.db, APP_CONFIG.paths.pdfTools, id);
-                        await updateDoc(docRef, { title: title, description: desc, url: url, order: order });
+                        await updateDoc(docRef, { title, description: desc, url, order });
                     } else {
                         const colRef = collection(window.db, APP_CONFIG.paths.pdfTools);
-                        await addDoc(colRef, { title: title, description: desc, url: url, order: order, createdAt: serverTimestamp() });
+                        await addDoc(colRef, { title, description: desc, url, order, createdAt: serverTimestamp() });
                     }
                     
                     window.closePDFModal();
@@ -1653,7 +1603,7 @@
                 const pdf = window.pdfList.find(p => p.id === id);
                 if (window.isPlaceholderKey) { window.showModal('info', 'Offline', 'Ação indisponível.'); return; }
                 
-                if(confirm('ATENÇÃO: Confirma a exclusão definitiva do documento "' + (pdf ? pdf.title : '') + '"?')) {
+                if(confirm(`ATENÇÃO: Confirma a exclusão definitiva do documento "${pdf?.title}"?`)) {
                     try {
                         const docRef = doc(window.db, APP_CONFIG.paths.pdfTools, id);
                         await deleteDoc(docRef);
@@ -1675,7 +1625,7 @@
                 
                 window.showModal('info', 'Salvando...', 'A gravar nova versão do layout na nuvem...');
                 try {
-                    const docRef = doc(window.db, APP_CONFIG.paths.content, 'v2_latest');
+                    const docRef = doc(window.db, APP_CONFIG.paths.content, 'v3_latest');
                     
                     // Lógica de Versionamento (Histórico)
                     const snap = await getDoc(docRef);
@@ -1702,7 +1652,7 @@
                     
                     window.showModal('info', 'Restaurando...', 'Apagando versão na nuvem...');
                     try {
-                        const docRef = doc(window.db, APP_CONFIG.paths.content, 'v2_latest');
+                        const docRef = doc(window.db, APP_CONFIG.paths.content, 'v3_latest');
                         await deleteDoc(docRef);
                         window.showModal('success', 'Restaurado!', 'Conteúdo de fábrica restabelecido.', () => window.location.reload());
                     } catch(e) { window.showModal('error', 'Erro', 'Falha ao restaurar: ' + e.message); }
@@ -1726,12 +1676,11 @@
                 }
 
                 try {
-                    const docRef = doc(window.db, APP_CONFIG.paths.content, 'v2_latest');
+                    const docRef = doc(window.db, APP_CONFIG.paths.content, 'v3_latest');
                     const docSnap = await getDoc(docRef);
                     if (docSnap.exists()) {
-                        const data = docSnap.data();
-                        document.getElementById('content-container').innerHTML = data.content;
-                        document.getElementById('nav-theory').innerHTML = data.nav;
+                        document.getElementById('content-container').innerHTML = docSnap.data().content;
+                        document.getElementById('nav-theory').innerHTML = docSnap.data().nav;
                     } else { 
                         document.getElementById('content-container').innerHTML = document.getElementById('factory-content').innerHTML; 
                     }
@@ -1760,7 +1709,7 @@
             await loadContentFromCloud();
         });
 
-        // Drag do Painel e Barra de Formatação
+        // Event Listeners Dinâmicos
         document.addEventListener('DOMContentLoaded', () => {
             const panel = document.getElementById('admin-panel');
             const header = document.getElementById('admin-panel-header');
